@@ -1,0 +1,10 @@
+D:\Gram\Dev\QChat\QChat.Server\obj\Debug\QChat.Server.csprojAssemblyReference.cache
+D:\Gram\Dev\QChat\QChat.Server\obj\Debug\QChat.Server.csproj.CoreCompileInputs.cache
+D:\Gram\Dev\QChat\QChat.Server\bin\Debug\QChat.Server.exe.config
+D:\Gram\Dev\QChat\QChat.Server\bin\Debug\QChat.Server.exe
+D:\Gram\Dev\QChat\QChat.Server\bin\Debug\QChat.Server.pdb
+D:\Gram\Dev\QChat\QChat.Server\bin\Debug\QChat.Common.dll
+D:\Gram\Dev\QChat\QChat.Server\bin\Debug\QChat.Common.pdb
+D:\Gram\Dev\QChat\QChat.Server\obj\Debug\QChat.Server.csproj.CopyComplete
+D:\Gram\Dev\QChat\QChat.Server\obj\Debug\QChat.Server.exe
+D:\Gram\Dev\QChat\QChat.Server\obj\Debug\QChat.Server.pdb

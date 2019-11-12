@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29123.88
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.Common", "QChat.Common\QChat.Common.csproj", "{2672D4AA-8BEA-4AA7-97DA-C7ADA470D7B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.Server", "QChat.Server\QChat.Server.csproj", "{BE552974-7183-4C0F-B890-DB4F7CCA8113}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2672D4AA-8BEA-4AA7-97DA-C7ADA470D7B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2672D4AA-8BEA-4AA7-97DA-C7ADA470D7B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2672D4AA-8BEA-4AA7-97DA-C7ADA470D7B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2672D4AA-8BEA-4AA7-97DA-C7ADA470D7B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE552974-7183-4C0F-B890-DB4F7CCA8113}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE552974-7183-4C0F-B890-DB4F7CCA8113}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE552974-7183-4C0F-B890-DB4F7CCA8113}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE552974-7183-4C0F-B890-DB4F7CCA8113}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4B34B2FA-5D0A-41BF-9801-A23F00F34603}
+	EndGlobalSection
+EndGlobal
