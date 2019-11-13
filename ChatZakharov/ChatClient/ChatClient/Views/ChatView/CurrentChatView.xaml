@@ -1,0 +1,55 @@
+﻿<Grid x:Class="ChatClient.Views.ChatView.CurrentChatView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:ChatClient.Views.ChatView"
+      xmlns:utility ="clr-namespace:ChatClient.Utility"
+      xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+      xmlns:converters="clr-namespace:ChatClient.Converters"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      HorizontalAlignment="Stretch"
+      VerticalAlignment="Stretch"
+      DataContextChanged="Grid_DataContextChanged"
+      Loaded="Grid_Loaded">
+    <Grid.Resources>
+        <converters:WindowWidthToMessageWidthConverter x:Key="WinWidthToWidth" />
+        <sys:Int32 x:Key="Int3">3</sys:Int32>
+    </Grid.Resources>
+
+    <Grid.RowDefinitions>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="auto" MinHeight="50"/>
+    </Grid.RowDefinitions>
+
+    <ScrollViewer Grid.Row="0" Margin="10,10,4,10" utility:AutoScrollBehavior.AutoScroll="True">
+        <Grid Name="HistoryGrid" VerticalAlignment="Stretch"/>
+    </ScrollViewer>
+
+    <TextBox 
+        Name="curMessage"
+        Grid.Row="1"
+        HorizontalAlignment="Stretch"
+        HorizontalContentAlignment="Left"
+        VerticalContentAlignment="Center"
+        FontSize="16"
+        Controls:TextBoxHelper.TextButton="True" 
+        Controls:TextBoxHelper.Watermark="Type your message"
+        TextWrapping="Wrap"
+        AcceptsReturn="True"
+        MaxHeight="{Binding RelativeSource={RelativeSource AncestorType=Grid}, 
+        Path=ActualHeight,
+        Converter= {StaticResource WinWidthToWidth},
+        ConverterParameter={StaticResource Int3}}"
+        VerticalScrollBarVisibility="Visible">
+        <TextBox.InputBindings>
+            <KeyBinding 
+                Modifiers="Shift"
+                Key="Enter"
+                Command="{Binding NewLineCommand}" />
+            <KeyBinding 
+                Key="Enter"
+                Command="{Binding SendMessageCommand}" />
+        </TextBox.InputBindings>
+    </TextBox>
+</Grid>
