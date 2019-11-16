@@ -52,14 +52,14 @@ namespace QChat.Common
             return FromBytes(buff, 0);
         }
 
-        public static RequestHeader FromConnection<T>(T connection) where T : Connection
+        public static RequestHeader FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buff = new byte[ByteLength];
             connection.Read(buff, 0, ByteLength);
 
             return FromBytes(buff, 0);
         }
-        public static async Task<RequestHeader> FromConnectionAsync<T>(T connection) where T : Connection
+        public static async Task<RequestHeader> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buff = new byte[ByteLength];
             await connection.ReadAsync(buff, 0, ByteLength);

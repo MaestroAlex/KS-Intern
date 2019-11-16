@@ -18,13 +18,13 @@ namespace QChat.Common
             return new AuthorizationInfo() { UserInfo = UserInfo.FromBytes(buffer, offset) };
         }
 
-        public static AuthorizationInfo FromConnection<T>(T connection) where T : Connection
+        public static AuthorizationInfo FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
             connection.Read(buffer, 0, ByteLength);
             return FromBytes(buffer, 0);
         }
-        public static async Task<AuthorizationInfo> FromConnectionAsync<T>(T connection) where T : Connection
+        public static async Task<AuthorizationInfo> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
             await connection.ReadAsync(buffer, 0, ByteLength);

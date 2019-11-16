@@ -33,13 +33,13 @@ namespace QChat.Common
         };
         
 
-        public static RoomingHeader FromConnection<T>(T connection) where T : Connection
+        public static RoomingHeader FromConnection<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
             connection.Read(bytes, 0, ByteLength);
             return FromBytes(bytes, 0);
         }
-        public static async Task<RoomingHeader> FromConnectionAsync<T>(T connection) where T : Connection
+        public static async Task<RoomingHeader> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
             await connection.ReadAsync(bytes, 0, ByteLength);

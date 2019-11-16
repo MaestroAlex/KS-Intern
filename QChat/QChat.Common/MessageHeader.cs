@@ -30,14 +30,14 @@ namespace QChat.Common
             };
         }
 
-        public static MessageHeader FromConnection<C>(C connection) where C : Connection
+        public static MessageHeader FromConnection<C>(C connection) where C : IConnectionStream
         {
             var buffer = new byte[ByteLength];
             connection.Read(buffer, 0, ByteLength);
 
             return FromBytes(buffer, 0);
         }
-        public static async Task<MessageHeader> FromConnectionAsync<C>(C connection) where C : Connection
+        public static async Task<MessageHeader> FromConnectionAsync<C>(C connection) where C : IConnectionStream
         {
             var buffer = new byte[ByteLength];
             await connection.ReadAsync(buffer, 0, ByteLength);

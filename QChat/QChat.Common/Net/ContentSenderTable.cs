@@ -6,9 +6,15 @@ using System.Threading.Tasks;
 
 namespace QChat.Common.Net
 {
-    public class SenderTable
+    public class ContentSenderTable
     {
         private TextSender _textSender;
+
+
+        public ContentSenderTable()
+        {
+            _textSender = new TextSender();
+        }
 
         public T GetSender<T>() where T : TextSender
         {

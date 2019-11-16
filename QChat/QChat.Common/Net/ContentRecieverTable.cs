@@ -10,9 +10,15 @@ namespace QChat.Common.Net
     {
         private TextReciever _textReciever;
 
+
+        public RecieverTable()
+        {
+            _textReciever = new TextReciever();
+        }
+
         public T Get<T>() where T : TextReciever
         {
             return (T)_textReciever;
-        }
+        }        
     }
 }

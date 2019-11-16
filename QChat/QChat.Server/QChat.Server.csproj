@@ -47,9 +47,14 @@
     <Compile Include="Authorization\AuthorizationError.cs" />
     <Compile Include="Authorization\AuthorizationResult.cs" />
     <Compile Include="Authorization\AuthorizationManager.cs" />
+    <Compile Include="Authorization\IAuthorizator.cs" />
     <Compile Include="Authorization\Registrator.cs" />
+    <Compile Include="IManager.cs" />
+    <Compile Include="IManagerProvider.cs" />
+    <Compile Include="ManagerProvider.cs" />
     <Compile Include="Messaging\Group.cs" />
     <Compile Include="Messaging\GroupManager.cs" />
+    <Compile Include="Messaging\IRoomBroadcaster.cs" />
     <Compile Include="Messaging\MessagingResult.cs" />
     <Compile Include="Messaging\Room.cs" />
     <Compile Include="Messaging\RoomBroadcaster.cs" />

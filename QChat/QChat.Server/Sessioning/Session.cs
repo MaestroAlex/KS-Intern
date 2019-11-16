@@ -13,20 +13,21 @@ namespace QChat.Server.Sessioning
     class Session
     {
         private bool _continue = false;
-        private Messenger _messenger;
+
+        private MessagingManager _messenger;
         private RoomManager _roomManager;
 
         public ulong Id { get; private set; }
         public Connection Connection { get; private set; }
         public bool Active { get => _continue; }
 
-        public Session(Connection connection, Messenger messenger, RoomManager roomManager)
+        public Session(Connection connection, IManagerProvider managerProvider)
         {
             Id = connection.Id;
             Connection = connection;
 
-            _messenger = messenger;
-            _roomManager = roomManager;
+            _messenger = managerProvider.Get<MessagingManager>();
+            _roomManager = managerProvider.Get<RoomManager>();
         }
 
         public void Start()

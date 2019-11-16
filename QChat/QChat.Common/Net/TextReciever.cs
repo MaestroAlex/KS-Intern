@@ -7,9 +7,9 @@ using QChat.Common;
 
 namespace QChat.Common.Net
 {
-    public class TextReciever
+    public class TextReciever : IContentReciever
     {
-        public Content GetContent(MessageHeader header, Connection connection)
+        public Content GetContent(MessageHeader header, IConnectionStream connection)
         {
             var buffer = new byte[header.Length];
 
@@ -18,7 +18,7 @@ namespace QChat.Common.Net
             return Content.Wrap(buffer);
         }
 
-        public async Task<Content> GetContentAsync(MessageHeader header, Connection connection)
+        public async Task<Content> GetContentAsync(MessageHeader header, IConnectionStream connection)
         {
             var buffer = new byte[header.Length];
 

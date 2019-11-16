@@ -10,7 +10,13 @@ namespace QChat.Server.Sessioning
 {
     class UserManager
     {
-        public Dictionary<ulong, User> _activeUsers;        
+        public Dictionary<ulong, User> _activeUsers;      
+        
+
+        public UserManager()
+        {
+            _activeUsers = new Dictionary<ulong, User>();
+        }
 
         public void RegisterSession(UserInfo userInfo, Session session)
         {

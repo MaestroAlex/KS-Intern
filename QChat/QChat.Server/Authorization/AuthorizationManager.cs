@@ -13,10 +13,10 @@ namespace QChat.Server.Authorization
 {
     class AuthorizationManager
     {
-        private Authorizator _authorizator;
+        private IAuthorizator _authorizator;
 
 
-        public AuthorizationManager(Authorizator authorizator)
+        public AuthorizationManager(IAuthorizator authorizator)
         {
             _authorizator = authorizator;
         }

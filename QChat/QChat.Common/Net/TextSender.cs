@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace QChat.Common.Net
 {
-    public class TextSender : ISender
+    public class TextSender : IContentSender
     {
-        public bool SendContent(Connection connection, Content content)
+        public bool SendContent(IConnectionStream connection, Content content)
         {
             try
             {
@@ -22,7 +22,7 @@ namespace QChat.Common.Net
             return true;
         }
 
-        public async Task<bool> SendContentAsync(Connection connection, Content content)
+        public async Task<bool> SendContentAsync(IConnectionStream connection, Content content)
         {
             try
             {

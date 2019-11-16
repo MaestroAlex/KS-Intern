@@ -22,8 +22,7 @@ namespace QChat.Common
 
         static public Content Copy(byte[] src)
         {
-            var result = new Content();
-            result._buff = new byte[src.Length];
+            var result = new Content { _buff = new byte[src.Length] };
             src.CopyTo(result._buff, 0);
 
             return result;

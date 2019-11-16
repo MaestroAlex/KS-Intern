@@ -10,24 +10,25 @@ using QChat.Common;
 
 namespace QChat.Common.Net
 {
-    public class Connection : IDisposable, IStream
+    public class Connection : IConnection
     {
         private TcpClient _tcpClient;
         private readonly NetworkStream _stream;
-        private ConnectionManager _manager;
 
         private bool _disposed = false;
 
         public ulong Id { get; private set; }
+        public bool Connected { get; private set; }
 
-        public Connection(TcpClient tcpClient, ConnectionManager manager)
+        public event ConnectionClosedEventHandler ConnectionClosed;
+
+        public Connection(TcpClient tcpClient)
         {
             _tcpClient = tcpClient;
-            _manager = manager;
 
             _stream = _tcpClient.GetStream();
-        }     
-        
+        }
+
         public int Read(byte[] buffer, int offset, int length)
         {
             return _stream.Read(buffer, offset, length);
@@ -45,7 +46,7 @@ namespace QChat.Common.Net
         {
             await _stream.WriteAsync(buffer, offset, length);
         }
-        
+
         public void Dispose()
         {
             if (_disposed) return;
@@ -58,5 +59,7 @@ namespace QChat.Common.Net
         {
             Dispose();
         }
-    }   
+    }
+
+    public delegate void ConnectionClosedEventHandler(Connection sender, EventArgs eventArgs);
 }

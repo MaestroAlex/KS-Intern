@@ -19,11 +19,9 @@ namespace QChat.Common
             Array.Copy(bytes, 0, buffer, offset, ByteLength);
         }
 
-        public static SenderInfo FromBytes(byte[] buff, int offset)
+        public static SenderInfo FromBytes(byte[] buff, int offset) => new SenderInfo()
         {
-            if (buff.Length - offset < ByteLength) throw new ArgumentException();
-
-            return new SenderInfo() { Id = BitConverter.ToUInt64(buff, offset) };
-        }
+            Id = BitConverter.ToUInt64(buff, offset)
+        };
     }
 }

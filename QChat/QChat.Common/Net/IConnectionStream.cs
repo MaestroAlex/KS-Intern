@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QChat.Common
+namespace QChat.Common.Net
 {
-    public interface IStream
+    public interface IConnectionStream
     {
         int Read(byte[] buffer, int offset, int length);
         Task<int> ReadAsync(byte[] buffer, int offset, int length);

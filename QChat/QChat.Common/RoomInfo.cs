@@ -11,9 +11,7 @@ namespace QChat.Common
     {
         public ulong Id;
 
-
         public static readonly int ByteLength = sizeof(ulong);
-
 
 
         public byte[] AsBytes()
@@ -30,13 +28,13 @@ namespace QChat.Common
             return new RoomInfo { Id = BitConverter.ToUInt64(buffer, offset) };
         }
         
-        public static RoomInfo FromConnection<T>(T connection) where T : Connection
+        public static RoomInfo FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
             connection.Read(buffer, 0, ByteLength);
             return FromBytes(buffer, 0);
         }
-        public static async Task<RoomInfo> FromConnectionAsync<T>(T connection) where T : Connection
+        public static async Task<RoomInfo> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
             await connection.ReadAsync(buffer, 0, ByteLength);

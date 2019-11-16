@@ -11,8 +11,9 @@ namespace QChat.Server
     {
         static void Main(string[] args)
         {
-
-            
+            var server = new Server();
+            server.Initialize(IPAddress.Parse("127.0.0.1"), 47000);
+            server.Start();
         }
     }
 }

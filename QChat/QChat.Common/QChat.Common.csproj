@@ -45,12 +45,13 @@
     <Compile Include="Collections\CapacityArray.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="ContentType.cs" />
-    <Compile Include="IStream.cs" />
+    <Compile Include="Net\IConnectionStream.cs" />
     <Compile Include="MessageHeader.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="Net\Connection.cs" />
     <Compile Include="Net\ConnectionManager.cs" />
-    <Compile Include="Net\ISender.cs" />
+    <Compile Include="Net\IContentReciever.cs" />
+    <Compile Include="Net\IContentSender.cs" />
     <Compile Include="Net\RecieverTable.cs" />
     <Compile Include="Net\SenderTable.cs" />
     <Compile Include="Net\TextReciever.cs" />

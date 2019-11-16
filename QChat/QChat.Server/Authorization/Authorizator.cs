@@ -8,7 +8,7 @@ using QChat.Common;
 
 namespace QChat.Server.Authorization
 {
-    class Authorizator
+    class Authorizator : IAuthorizator
     {
         public AuthorizationResult Authorize(Connection connection)
         {

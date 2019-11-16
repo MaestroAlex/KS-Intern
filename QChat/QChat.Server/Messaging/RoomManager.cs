@@ -34,9 +34,8 @@ namespace QChat.Server.Messaging
         }
 
         public RoomInfo CreateRoom()
-        {
-            //TODO: Actual room creation
-            _rooms.Add(1, new Room(new RoomBroadcaster(), 1));
+        {          
+            _rooms.Add(1, new Room(1));
             return new RoomInfo { Id = 1 };
         }
     }

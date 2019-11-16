@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.Common", "QChat.Commo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.Server", "QChat.Server\QChat.Server.csproj", "{BE552974-7183-4C0F-B890-DB4F7CCA8113}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.CLient", "QChat.CLient\QChat.CLient.csproj", "{214E026B-0C6A-407A-AC87-20E88D040F20}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BE552974-7183-4C0F-B890-DB4F7CCA8113}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE552974-7183-4C0F-B890-DB4F7CCA8113}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE552974-7183-4C0F-B890-DB4F7CCA8113}.Release|Any CPU.Build.0 = Release|Any CPU
+		{214E026B-0C6A-407A-AC87-20E88D040F20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{214E026B-0C6A-407A-AC87-20E88D040F20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{214E026B-0C6A-407A-AC87-20E88D040F20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{214E026B-0C6A-407A-AC87-20E88D040F20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
