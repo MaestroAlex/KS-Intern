@@ -1,0 +1,7 @@
+C:\Users\Vanya\Source\Repos\ChatConsoleServer\ChatConsoleServer\bin\Debug\ChatConsoleServer.exe.config
+C:\Users\Vanya\Source\Repos\ChatConsoleServer\ChatConsoleServer\bin\Debug\ChatConsoleServer.exe
+C:\Users\Vanya\Source\Repos\ChatConsoleServer\ChatConsoleServer\bin\Debug\ChatConsoleServer.pdb
+C:\Users\Vanya\Source\Repos\ChatConsoleServer\ChatConsoleServer\obj\Debug\ChatConsoleServer.csprojAssemblyReference.cache
+C:\Users\Vanya\Source\Repos\ChatConsoleServer\ChatConsoleServer\obj\Debug\ChatConsoleServer.csproj.CoreCompileInputs.cache
+C:\Users\Vanya\Source\Repos\ChatConsoleServer\ChatConsoleServer\obj\Debug\ChatConsoleServer.exe
+C:\Users\Vanya\Source\Repos\ChatConsoleServer\ChatConsoleServer\obj\Debug\ChatConsoleServer.pdb
