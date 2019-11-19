@@ -4,12 +4,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using TransitPackage;
 
 namespace ChatClient.Models
 {
     public class MainModel
     {
-        public static ObservableCollection<string> ConnectedUsers { get; private set; }
+        public static ObservableCollection<Channel> ConnectedChannels { get; private set; }
 
         public static Client Client { get; private set; }
 
@@ -20,7 +21,7 @@ namespace ChatClient.Models
 
         public static void GetUsers()
         {
-            ConnectedUsers = new ObservableCollection<string>(Client.GetUsersActionRequest());
+            ConnectedChannels = new ObservableCollection<Channel>(Client.GetChannelsActionRequest());
         }
     }
 }

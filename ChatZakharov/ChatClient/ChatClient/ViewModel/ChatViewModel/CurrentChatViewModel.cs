@@ -19,37 +19,38 @@ namespace ChatClient.ViewModel.ChatViewModel
     class CurrentChatViewModel : ViewModelBase
     {
         public string UsernameSelf { get; private set; }
-        public string UsernameDestination { get; private set; }
+        public Channel ChannelDestination { get; private set; }
 
         public TextBox CurrentMessage { get; set; }
         public Grid MessagesHistoryGrid { get; set; }
 
-        public CurrentChatViewModel(string username)
+        public CurrentChatViewModel(Channel channel)
         {
             NewLineCommand = new RelayCommand<object>(NewLineCommandExecute, NewLineCommandCanExecute);
             SendMessageCommand = new RelayCommand<object>(SendMessageCommandExecute, SendMessageCommandCanExecute);
-            UsernameDestination = username;
+            ChannelDestination = channel;
             UsernameSelf = MainModel.Client.Name;
             MainModel.Client.MessageReceived += Client_MessageReceived;
         }
 
         private void Client_MessageReceived(object sender, Message e)
         {
-            if (e.From == UsernameDestination)
+            if (e.ChatDestination == ChannelDestination.Name)
                 Application.Current.Dispatcher
-                    .BeginInvoke(new Action<string>(ReceiveMessage), e.Text);
+                    .BeginInvoke(new Action<Message>(ReceiveMessage), e);
         }
 
-        private void ReceiveMessage(string messageText)
+        private void ReceiveMessage(Message receivedMessage)
         {
-            UIMessageInput Message = new UIMessageInput(new Message
-            {
-                From = UsernameDestination,
-                To = UsernameSelf,
-                Text = messageText
-            });
-            Message.CreateUIMessage();
-            BindNewMessageToGrid(Message);
+            UIMessage UIMessage = null;
+
+            if (receivedMessage.From == UsernameSelf) // когда загружаем историю
+                UIMessage = new UIMessageOutput(receivedMessage);
+            else
+                UIMessage = new UIMessageInput(receivedMessage);
+
+            UIMessage.CreateUIMessage();
+            BindNewMessageToGrid(UIMessage);
         }
 
         #region Commands
@@ -84,8 +85,9 @@ namespace ChatClient.ViewModel.ChatViewModel
             bool res = await Task.Run(() =>
                 MainModel.Client.SendMessageActionRequest(new Message()
                 {
-                    From = UsernameSelf,
-                    To = UsernameDestination,
+                    From = UsernameSelf, // если отправляем пользователю, то в чат себя у него, если в команту, то в чат комнаты у участников комнаты
+                    ChatDestination = ChannelDestination.Type == ChannelType.user ? UsernameSelf : ChannelDestination.Name,
+                    To = ChannelDestination.Name,
                     Text = currentMesageText
                 }));
 
@@ -98,7 +100,7 @@ namespace ChatClient.ViewModel.ChatViewModel
             UIMessageOutput Message = new UIMessageOutput(new Message
             {
                 From = UsernameSelf,
-                To = UsernameDestination,
+                To = ChannelDestination.Name,
                 Text = CurrentMessage.Text
             });
             Message.CreateUIMessage();

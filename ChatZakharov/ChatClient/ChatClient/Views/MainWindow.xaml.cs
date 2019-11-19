@@ -3,6 +3,7 @@ using ChatClient.Models;
 using ChatClient.ViewModel;
 using GalaSoft.MvvmLight.Ioc;
 using MahApps.Metro.Controls;
+using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,6 +34,13 @@ namespace ChatClient.Views
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             MainModel.Client.Dispose();
+        }
+
+        private void MetroWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            SimpleIoc.Default.GetInstance<IFrameNavigationService>().MainFrame =
+                LogicalTreeHelper.FindLogicalNode(Application.Current.MainWindow, "MainFrame") as Frame;
+            SimpleIoc.Default.GetInstance<IFrameNavigationService>().NavigateTo("LoginPage");
         }
     }
 }

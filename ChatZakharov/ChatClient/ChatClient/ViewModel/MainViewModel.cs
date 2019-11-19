@@ -41,15 +41,17 @@ namespace ChatClient.ViewModel
             this.navigation = navigation;
             MainWindowLoaded = new RelayCommand(() =>
             {
-                SimpleIoc.Default.GetInstance<IFrameNavigationService>().MainFrame =
-                LogicalTreeHelper.FindLogicalNode(Application.Current.MainWindow, "MainFrame") as Frame;
-                navigation.NavigateTo("LoginPage");
+                //при дебаге с брейкпоинтами не работает почему-то
+                //SimpleIoc.Default.GetInstance<IFrameNavigationService>().MainFrame =
+                //LogicalTreeHelper.FindLogicalNode(Application.Current.MainWindow, "MainFrame") as Frame;
+                //navigation.NavigateTo("LoginPage");
             });
 
             ReLoginCommand = new RelayCommand<object>(ReLoginCommandExecute, ReLoginCommandCanExecute);
             ReconnectCommand = new RelayCommand<object>(ReconnectCommandExecute, ReconnectCommandCanExecute);
             MainModel.Client.PropertyChanged += Client_PropertyChanged;
             Connect();
+            //GetConnectionChekInterval();
         }
 
         private void Client_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -68,6 +70,11 @@ namespace ChatClient.ViewModel
         {
             bool res = await Task.Run(() => MainModel.Client.Connect());
             return res;
+        }
+
+        private async Task GetConnectionChekInterval()
+        {
+            await Task.Run(() => MainModel.Client.GetConnectionChekInterval());
         }
 
         private void TitleChange()
@@ -106,11 +113,12 @@ namespace ChatClient.ViewModel
 
         private async void ReconnectCommandExecute(object obj)
         {
-            if (await Connect() && MainModel.Client.Name != null)
-            {
-                await Task.Run(() =>
-                MainModel.Client.LoginActionRequest(MainModel.Client.Name));
-            }
+            await Connect();
+            //if (await Connect() && MainModel.Client.Name != null)
+            //{
+            //    await Task.Run(() =>
+            //    MainModel.Client.LoginActionRequest(MainModel.Client.Name));
+            //}
         }
         #endregion
 

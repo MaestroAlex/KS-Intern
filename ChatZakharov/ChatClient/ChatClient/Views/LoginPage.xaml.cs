@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MahApps.Metro.Controls.Dialogs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,10 +25,6 @@ namespace ChatClient.Views
         {
             InitializeComponent();
         }
-
-        private void Page_Loaded(object sender, RoutedEventArgs e)
-        {
-            UsernameTextBox.Focus();
-        }
+        private void Page_Loaded(object sender, RoutedEventArgs e) => UsernameTextBox.Focus();
     }
 }

@@ -6,13 +6,12 @@
       xmlns:local="clr-namespace:ChatClient.Views.ChatView"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      Title="NoUsersChatPage"
-      DataContext="{Binding ChatContainer, Source={StaticResource Locator}}">
+      Title="NoUsersChatPage">
 
     <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
         <TextBlock 
             Foreground="NavajoWhite"
             FontSize="24"
-            Text="NO USERS ONLINE :("/>
+            Text="NO USERS EXIST :("/>
     </Grid>
 </Page>

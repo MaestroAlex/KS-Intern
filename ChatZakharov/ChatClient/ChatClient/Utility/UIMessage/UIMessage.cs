@@ -44,7 +44,7 @@ namespace ChatClient.Utility.UIMessage
 
             MessageTime = new TextBox()
             {
-                Text = DateTime.Now.ToString("MM.dd.yyyy HH:mm"),
+                Text = Message.Date.ToLocalTime().ToString("dd.MM.yyyy HH:mm"),
                 HorizontalAlignment = HorizontalAlignment.Right,
                 FontSize = 10,
                 Margin = new Thickness(-1, -1, 2, -1),

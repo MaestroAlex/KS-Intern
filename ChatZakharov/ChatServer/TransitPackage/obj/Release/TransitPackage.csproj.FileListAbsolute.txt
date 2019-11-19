@@ -1,0 +1,9 @@
+C:\Users\Andrew\source\repos\ChatServer\TransitPackage\bin\Release\TransitPackage.dll
+C:\Users\Andrew\source\repos\ChatServer\TransitPackage\bin\Release\TransitPackage.pdb
+C:\Users\Andrew\source\repos\ChatServer\TransitPackage\obj\Release\TransitPackage.dll
+C:\Users\Andrew\source\repos\ChatServer\TransitPackage\obj\Release\TransitPackage.pdb
+C:\Users\Andrew\source\repos\KS-Intern\ChatZakharov\ChatServer\TransitPackage\bin\Release\TransitPackage.dll
+C:\Users\Andrew\source\repos\KS-Intern\ChatZakharov\ChatServer\TransitPackage\bin\Release\TransitPackage.pdb
+C:\Users\Andrew\source\repos\KS-Intern\ChatZakharov\ChatServer\TransitPackage\obj\Release\TransitPackage.csprojAssemblyReference.cache
+C:\Users\Andrew\source\repos\KS-Intern\ChatZakharov\ChatServer\TransitPackage\obj\Release\TransitPackage.dll
+C:\Users\Andrew\source\repos\KS-Intern\ChatZakharov\ChatServer\TransitPackage\obj\Release\TransitPackage.pdb

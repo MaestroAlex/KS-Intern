@@ -78,7 +78,7 @@
         PaneBackground="{StaticResource AccentColorBrush4}"
         IsPaneOpen="True"
         ItemClick="HamburgerMenu_ItemClick"
-        ItemsSource="{Binding Users}"
+        ItemsSource="{Binding Channels}"
         ItemContainerStyle="{StaticResource HamburgerContainerStyle}"
         ItemTemplate="{StaticResource MenuItemTemplate}"
         ContentTemplate="{StaticResource ContentItemTemplate}"

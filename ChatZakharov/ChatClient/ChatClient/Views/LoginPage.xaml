@@ -5,6 +5,7 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:ChatClient"
       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+      xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       DataContext="{Binding Login, Source={StaticResource Locator}}"
@@ -17,31 +18,54 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
         </Grid.RowDefinitions>
 
         <TextBox
             Name="UsernameTextBox"
             Grid.Row="0" 
             Margin="5" 
-            Text="{Binding Path=Name, 
-            Mode=TwoWay, 
-            ValidatesOnDataErrors=True,
+            FontSize="16"
+            Text="{Binding Path=Login, 
+            Mode=TwoWay,
             UpdateSourceTrigger=PropertyChanged}"
-            Controls:TextBoxHelper.Watermark="Enter your name"
+            Controls:TextBoxHelper.Watermark="Enter login"
             Controls:TextBoxHelper.UseFloatingWatermark="True">
-            <TextBox.InputBindings>
+        </TextBox>
+
+        <PasswordBox
+            Name="PasswordTextBox"
+            Grid.Row="1" 
+            Margin="5" 
+            FontSize="16"
+            Controls:TextBoxHelper.Watermark="Enter password"
+            Controls:TextBoxHelper.UseFloatingWatermark="True">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="PasswordChanged">
+                    <i:InvokeCommandAction Command="{Binding PasswordChangedCommand}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+            <PasswordBox.InputBindings>
                 <KeyBinding 
                 Key="Enter"
                 Command="{Binding LoginTryCommand}"/>
-            </TextBox.InputBindings>
-        </TextBox>
+            </PasswordBox.InputBindings>
+        </PasswordBox>
 
         <Button 
-            Grid.Row="1" 
+            Grid.Row="2" 
             Margin="5" 
             Content="Start chating"
             Command="{Binding Path=LoginTryCommand}"
+            CommandParameter="{Binding ElementName=PasswordTextBox}"
             Style="{StaticResource MetroFlatButton}"/>
-
+        
+        <TextBlock 
+            Grid.Row="3"
+            Margin="10"
+            Foreground="Red"
+            HorizontalAlignment="Center"
+            Text="{Binding ValidationText}"/>
     </Grid>
 </Page>

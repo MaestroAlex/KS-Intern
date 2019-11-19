@@ -13,7 +13,8 @@
         Height="450" Width="700"
         MinHeight="400" MinWidth="600"
         DataContext="{Binding Main, Source={StaticResource Locator}}"
-        Closing="MetroWindow_Closing">
+        Closing="MetroWindow_Closing"
+        Loaded="MetroWindow_Loaded">
     
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
@@ -24,7 +25,6 @@
     <Controls:MetroWindow.Resources>
         <converters:ConnectionStateToIconConverter x:Key="ConnToConnIcon" />
         <converters:ConnectionStateToColorConverter x:Key="ConnToColor" />
-        <converters:ConnectionStateToBoolConverter x:Key="ConnToBool" />
         <converters:ConnectionStateToTextConverter x:Key="ConnToStr" />
         <converters:StringToBoolConverter x:Key="StrToBool" />
     </Controls:MetroWindow.Resources>

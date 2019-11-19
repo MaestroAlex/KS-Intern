@@ -34,6 +34,8 @@ namespace ChatClient.Models
         NetworkStream stream;
         NetworkMessageStream messageStream;
         bool streamIsOpen;
+        System.Timers.Timer connnectionCheckForClientTimer;
+        bool connectionCheckForClientExist;
         Mutex NetworkStreamMutex; // флаг, разрешающий чтение в потоке ожидания обновления данных 
                                   // (иначе он может вмешиваться в работу NetworkStream при реквестах)
 
@@ -42,6 +44,15 @@ namespace ChatClient.Models
             Name = null;
             ConnectionState = ClientState.Disconnected;
             NetworkStreamMutex = new Mutex();
+
+            connnectionCheckForClientTimer = new System.Timers.Timer(); // .Interval sets in GetConnectionChekInterval()
+            connnectionCheckForClientTimer.Elapsed += (sender, e) =>
+            {
+                if (connectionCheckForClientExist)
+                    connectionCheckForClientExist = false;
+                else
+                    Disconnect();
+            };
             this.config = config;
         }
 
@@ -58,93 +69,102 @@ namespace ChatClient.Models
                 if (streamIsOpen && stream.DataAvailable)
                 {
                     NetworkMessage networkMessage = messageStream.Read();
-                    Process(networkMessage);
+                    if (Process(networkMessage))
+                        connectionCheckForClientExist = true;
+
                 }
                 NetworkStreamMutex.ReleaseMutex();
                 Thread.Sleep(100);
             }
         }
 
-        private void Process(NetworkMessage networkMessage)
+        private bool Process(NetworkMessage networkMessage)
         {
             switch (networkMessage.Action)
             {
                 case ActionEnum.receive_message:
-                    ReceiveMessageActionResponse(networkMessage);
-                    break;
-                case ActionEnum.user_logged_in:
-                    UserLoggedInNotificationActionResponse(networkMessage);
-                    break;
-                case ActionEnum.user_logged_out:
-                    UserLoggedOutNotificationActionResponse(networkMessage);
-                    break;
+                    return ReceiveMessageActionResponse(networkMessage);
+                case ActionEnum.channel_created:
+                    return ChannelCreatedNotificationActionResponse(networkMessage);
+                case ActionEnum.channel_deleted:
+                    return ChannelDeletedNotificationActionResponse(networkMessage);
                 case ActionEnum.connection_check:
-                    ConnectionCheckActionResponse(networkMessage);
-                    break;
+                    return ConnectionCheckActionResponse(networkMessage);
             }
+            return false;
         }
 
-        private void UserLoggedOutNotificationActionResponse(NetworkMessage message)
+        private bool ChannelDeletedNotificationActionResponse(NetworkMessage message)
         {
             try
             {
                 Application.Current.Dispatcher.BeginInvoke(
-                    new Func<string, bool>(MainModel.ConnectedUsers.Remove), message.Obj.ToString());
+                    new Func<Channel, bool>(MainModel.ConnectedChannels.Remove), message.Obj);
+
+                return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine("UserLoggedIn exception");
                 Console.WriteLine(e.Message);
+
+                return false;
             }
         }
 
-        private void UserLoggedInNotificationActionResponse(NetworkMessage message)
+        private bool ChannelCreatedNotificationActionResponse(NetworkMessage message)
         {
             try
             {
                 Application.Current.Dispatcher.BeginInvoke(
-                    new Action<string>(MainModel.ConnectedUsers.Add), message.Obj.ToString());
+                    new Action<Channel>(MainModel.ConnectedChannels.Add), message.Obj);
+
+                return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine("UserLoggedIn exception");
                 Console.WriteLine(e.Message);
+
+                return false;
             }
         }
 
-        private void ConnectionCheckActionResponse(NetworkMessage message)
+        private bool ConnectionCheckActionResponse(NetworkMessage message)
         {
-            if (Name == "debug")
-                Console.WriteLine("Enter ConnectionCheck");
-
             try
             {
                 messageStream.Write(message);
+
+                return true;
             }
             catch (Exception ex)
             {
                 Disconnect();
                 Console.WriteLine(ex.Message);
                 Console.WriteLine("ConnectionCheck - bad");
-            }
 
-            if (Name == "debug")
-                Console.WriteLine("Exit ConnectionCheck");
+                return false;
+            }
         }
 
 
 
-        private void ReceiveMessageActionResponse(NetworkMessage message)
+        private bool ReceiveMessageActionResponse(NetworkMessage message)
         {
             try
             {
                 MessageReceived?.Invoke(this, (Message)message.Obj);
                 Console.WriteLine("Message received");
+
+                return true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error in Message received");
+
+                return false;
             }
         }
 
@@ -162,6 +182,8 @@ namespace ChatClient.Models
                 messageStream.Write(request);
 
                 ActionEnum requsetResult = messageStream.Read().Action;
+
+                connectionCheckForClientExist = true;
 
                 if (requsetResult == ActionEnum.ok)
                 {
@@ -184,18 +206,57 @@ namespace ChatClient.Models
             return res;
         }
 
-        public IEnumerable<string> GetUsersActionRequest()
+        public void GetConnectionChekInterval()
         {
             NetworkStreamMutex.WaitOne();
-            IEnumerable<string> res = null;
+            try
+            {
+                NetworkMessage request = new NetworkMessage(ActionEnum.get_connection_check_interval);
+                messageStream.Write(request);
+                connnectionCheckForClientTimer.Interval = (int)messageStream.Read().Obj + 2000;
+                connnectionCheckForClientTimer.Start();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            NetworkStreamMutex.ReleaseMutex();
+        }
+
+        public void GetHistoryActionRequest()
+        {
+            try
+            {
+                NetworkMessage request = new NetworkMessage(ActionEnum.get_history);
+                messageStream.Write(request);
+
+                List<Message> history = (List<Message>)messageStream.Read().Obj;
+                foreach (var item in history)
+                    MessageReceived?.Invoke(this, item);
+
+                Console.WriteLine("History received");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Error in History received");
+            }
+        }
+
+        public IEnumerable<Channel> GetChannelsActionRequest()
+        {
+            NetworkStreamMutex.WaitOne();
+            IEnumerable<Channel> res = null;
 
             try
             {
-                NetworkMessage request = new NetworkMessage(ActionEnum.get_users);
+                NetworkMessage request = new NetworkMessage(ActionEnum.get_channels);
                 messageStream.Write(request);
                 NetworkMessage response = messageStream.Read();
-                res = (List<string>)response.Obj;
+                res = (List<Channel>)response.Obj;
                 Console.WriteLine("GetUsers receive");
+
+                connectionCheckForClientExist = true;
             }
             catch (Exception e)
             {
@@ -206,33 +267,89 @@ namespace ChatClient.Models
             return res;
         }
 
-        public bool LoginActionRequest(string name)
+        public ActionEnum LoginActionRequest(string login, string hashPassword = null)
         {
             NetworkStreamMutex.WaitOne();
-            bool res = false;
+            ActionEnum response;
 
             try
             {
-                NetworkMessage request = new NetworkMessage(ActionEnum.login, name);
+                User user = new User() { Login = login, HashPass = hashPassword };
+                NetworkMessage request = new NetworkMessage(ActionEnum.login, user);
                 messageStream.Write(request);
 
-                ActionEnum response = messageStream.Read().Action;
+                response = messageStream.Read().Action;
 
                 if (response == ActionEnum.ok)
                 {
-                    Name = name;
+                    Name = login;
                     ConnectionState = ClientState.LoggedIn;
-                    res = true;
                 }
 
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                response = ActionEnum.bad;
             }
 
             NetworkStreamMutex.ReleaseMutex();
-            return res;
+            return response;
+        }
+
+        public ActionEnum CreateNewRoomActionRequest(string roomName, string hashPassword)
+        {
+            NetworkStreamMutex.WaitOne();
+            ActionEnum response;
+
+            try
+            {
+                Room room = new Room() { UserOwner = Name, HashPass = hashPassword, Name = roomName };
+                NetworkMessage request = new NetworkMessage(ActionEnum.create_room, room);
+                messageStream.Write(request);
+                response = messageStream.Read().Action;
+
+                connectionCheckForClientExist = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                response = ActionEnum.bad;
+            }
+
+            NetworkStreamMutex.ReleaseMutex();
+            return response;
+        }
+
+        public ActionEnum CreateNewUserActionRequest(string login, string hashPassword)
+        {
+            NetworkStreamMutex.WaitOne();
+            ActionEnum response;
+
+            try
+            {
+                User user = new User() { Login = login, HashPass = hashPassword };
+                NetworkMessage request = new NetworkMessage(ActionEnum.create_user, user);
+                messageStream.Write(request);
+
+                response = messageStream.Read().Action;
+
+                if (response == ActionEnum.ok)
+                {
+                    Name = login;
+                    ConnectionState = ClientState.LoggedIn;
+                }
+
+                connectionCheckForClientExist = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                response = ActionEnum.bad;
+            }
+
+            NetworkStreamMutex.ReleaseMutex();
+            return response;
         }
 
         private bool inConnect;

@@ -23,14 +23,14 @@ namespace ChatClient.Views.ChatView
     public partial class ChatsPage : Page
     {
         private static bool userCollectionSigned = false;
-        private HamburgerMenuItemCollection users;
+        private HamburgerMenuItemCollection channels;
         public ChatsPage()
         {
             InitializeComponent();
             if (!userCollectionSigned)
             {
-                users = (DataContext as ChatsViewModel).Users;
-                users.Changed += Users_Changed;
+                channels = (DataContext as ChatsViewModel).Channels;
+                channels.Changed += Users_Changed;
                 userCollectionSigned = true;
             }
         }
@@ -42,8 +42,8 @@ namespace ChatClient.Views.ChatView
 
         private void Users_Changed(object sender, EventArgs e)
         {
-            if (users.Count == 1)
-                HamburgerMenuControl.Content = users.First();
+            if (channels.Count == 1)
+                HamburgerMenuControl.Content = channels.First();
         }
     }
 }

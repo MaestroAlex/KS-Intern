@@ -11,7 +11,11 @@ namespace ChatServer
 {
     class Server
     {
+
+        public int ConnectedIpConnectionCheckTimerInterval => 5000;
+
         TcpListener listener;
+        Dictionary<string, string> roomUserDictionary;
         List<Client> connectedIp;
         Mutex connectedIpChanged;
         System.Timers.Timer connectedIpConnectionCheckTimer;
@@ -22,23 +26,35 @@ namespace ChatServer
             listener.Server.ReceiveTimeout = config.ReceiveTimeoutMs;
             listener.Server.SendTimeout = config.SendTimeoutMs;
 
+            roomUserDictionary = new Dictionary<string, string>();
             connectedIp = new List<Client>();
             connectedIpChanged = new Mutex();
             connectedIpConnectionCheckTimer = new System.Timers.Timer();
             connectedIpConnectionCheckTimer.Elapsed += ConnectedIpConnectionCheck;
-            connectedIpConnectionCheckTimer.Interval = 5000;
+            connectedIpConnectionCheckTimer.Interval = ConnectedIpConnectionCheckTimerInterval;
         }
 
         public async Task Start()
         {
             listener.Start();
-            connectedIpConnectionCheckTimer.Start();
+            //connectedIpConnectionCheckTimer.Start();
             Console.WriteLine("Server is up");
             while (true)
             {
                 TcpClient tcpClient = await listener.AcceptTcpClientAsync();
                 ProcessClient(tcpClient);
             }
+        }
+
+        private async Task ProcessClient(TcpClient tcpClient)
+        {
+            Client client = new Client(tcpClient, this);
+
+            connectedIpChanged.WaitOne();
+            connectedIp.Add(client);
+            connectedIpChanged.ReleaseMutex();
+
+            await Task.Run(() => client.DefineAction());
         }
 
         //TODO заменить везде фурычи на линкью, убрать мьютексы
@@ -53,17 +69,6 @@ namespace ChatServer
             connectedIpChanged.ReleaseMutex();
         }
 
-        private async Task ProcessClient(TcpClient tcpClient)
-        {
-            Client client = new Client(tcpClient, this);
-
-            connectedIpChanged.WaitOne();
-            connectedIp.Add(client);
-            connectedIpChanged.ReleaseMutex();
-
-            await Task.Run(() => client.DefineAction());
-        }
-
 
         public bool UserExist(string name)
         {
@@ -75,34 +80,45 @@ namespace ChatServer
             return res;
         }
 
-        public void UserLoggedInNotify(string name)
+        public void ChannelCreated(Channel channel)
         {
             connectedIpChanged.WaitOne();
 
             foreach (var item in connectedIp)
-                if (!string.IsNullOrWhiteSpace(item.Name) && item.Name != name)
-                    item.ActionQueue.NewUsers.Enqueue(name);
+                if (!string.IsNullOrWhiteSpace(item.Name) && item.Name != channel.Name)
+                    item.ActionQueue.NewChannels.Enqueue(channel);
 
             connectedIpChanged.ReleaseMutex();
         }
 
-        public void UserLoggedOutNotify(string name)
+        public void ChannelDeleted(Channel channel)
         {
             connectedIpChanged.WaitOne();
 
             foreach (var item in connectedIp)
-                if (item.Name != name)
-                    item.ActionQueue.DeletedUsers.Enqueue(name);
+                if (item.Name != channel.Name)
+                    item.ActionQueue.DeletedChannels.Enqueue(channel);
 
             connectedIpChanged.ReleaseMutex();
         }
 
-        public bool SendToclient(Message message)
+        public void SendToOnlineClients(Message message)
+        {
+            connectedIpChanged.WaitOne();
+
+            foreach (var item in connectedIp)
+                if (item.Name != message.From)
+                    item.ActionQueue.Messages.Enqueue(message);
+                    
+            connectedIpChanged.ReleaseMutex();
+        }
+
+        public bool SendToOnliceClient(Message message)
         {
             connectedIpChanged.WaitOne();
 
             connectedIp.Find(client => client.Name == message.To)
-                .ActionQueue
+                ?.ActionQueue
                 .Messages
                 .Enqueue(message);
 

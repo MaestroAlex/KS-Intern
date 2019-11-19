@@ -100,12 +100,16 @@
     <Compile Include="Utility\UIMessage\UIMessageInput.cs" />
     <Compile Include="Utility\UIMessage\UIMessageOutput.cs" />
     <Compile Include="ViewModel\ChatViewModel\ChatsViewModel.cs" />
+    <Compile Include="ViewModel\ChatViewModel\NewRoomViewModel.cs" />
     <Compile Include="ViewModel\ChatViewModel\CurrentChatViewModel.cs" />
     <Compile Include="Views\ChatView\ChatsPage.xaml.cs">
       <DependentUpon>ChatsPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ChatView\CurrentChatView.xaml.cs">
       <DependentUpon>CurrentChatView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ChatView\NewRoomView.xaml.cs">
+      <DependentUpon>NewRoomView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ChatView\NoUsersChatPage.xaml.cs">
       <DependentUpon>NoUsersChatPage.xaml</DependentUpon>
@@ -122,6 +126,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\ChatView\CurrentChatView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\ChatView\NewRoomView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
