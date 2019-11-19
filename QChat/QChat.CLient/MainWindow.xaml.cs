@@ -13,7 +13,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace QChat.CLient
+namespace QChat.CLient.Views
 {
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml

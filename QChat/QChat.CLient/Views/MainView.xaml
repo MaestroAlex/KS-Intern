@@ -1,0 +1,56 @@
+﻿<Page x:Class="QChat.CLient.Views.MainView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:local="clr-namespace:QChat.CLient.Views"
+      xmlns:vm="clr-namespace:QChat.CLient.ViewModels"
+      mc:Ignorable="d" 
+      d:DesignHeight="450" d:DesignWidth="800"
+      DataContext="{Binding MainVM,Source={StaticResource VMLocator}}"
+      Title="ChatView">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition MinWidth="100" Width="200"/>            
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
+            <RowDefinition/>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="20"/>
+        </Grid.RowDefinitions>
+
+        <GridSplitter Grid.Column="1" Width="0"/>
+
+        <TextBox  Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding TextDraft, Source=CurrentChat}"/>
+        
+        <ScrollViewer Grid.Column ="0" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ListBox x:Name="MessageList" ItemsSource="{Binding Messages, Source=CurrentChat}">
+            </ListBox>
+        </ScrollViewer>
+
+        <ScrollViewer Grid.Column ="2" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ListBox x:Name="ChatList" SelectionMode="Single" SelectedItem="{Binding CurrentChat, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>                                
+                            </Grid.RowDefinitions>
+                            
+                            <TextBlock Text="{Binding Name}" Grid.Row="0"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </ScrollViewer>
+
+        <Button Grid.Column="2" Grid.Row="2">
+            
+        </Button>
+    </Grid>
+</Page>

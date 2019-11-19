@@ -6,7 +6,7 @@ D:\Gram\Dev\QChat\QChat.Common\obj\Debug\QChat.Common.dll
 D:\Gram\Dev\QChat\QChat.Common\obj\Debug\QChat.Common.pdb
 D:\Gram\Dev\KS-Intern\QChat\QChat.Common\bin\Debug\QChat.Common.dll
 D:\Gram\Dev\KS-Intern\QChat\QChat.Common\bin\Debug\QChat.Common.pdb
-D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Debug\QChat.Common.csprojAssemblyReference.cache
 D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Debug\QChat.Common.csproj.CoreCompileInputs.cache
 D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Debug\QChat.Common.dll
 D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Debug\QChat.Common.pdb
+D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Debug\QChat.Common.csprojAssemblyReference.cache

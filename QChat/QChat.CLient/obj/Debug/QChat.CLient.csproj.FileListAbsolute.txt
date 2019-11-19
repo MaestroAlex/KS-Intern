@@ -1,5 +1,4 @@
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.csprojAssemblyReference.cache
-D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\MainWindow.g.cs
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\App.g.cs
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient_MarkupCompile.cache
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient_MarkupCompile.lref
@@ -8,7 +7,6 @@ D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\bin\Debug\QChat.CLient.exe
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\bin\Debug\QChat.CLient.pdb
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\bin\Debug\QChat.Common.dll
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\bin\Debug\QChat.Common.pdb
-D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\MainWindow.baml
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.g.resources
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.Properties.Resources.resources
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.csproj.GenerateResource.cache
@@ -16,3 +14,11 @@ D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.csproj.CoreCompi
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.csproj.CopyComplete
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.exe
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\QChat.CLient.pdb
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\AuthorizationView.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\MainWindow.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\AuthorizationView.baml
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\MainWindow.baml
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\App.baml
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\GeneratedInternalTypeHelper.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\MainView.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\MainView.baml

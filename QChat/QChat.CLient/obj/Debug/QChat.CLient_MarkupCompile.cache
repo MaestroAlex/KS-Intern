@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\App.xaml
-11151548125
+31853074105
 
-8-1474160417
+25261881610
 14-1284528241
-MainWindow.xaml;
+Views\AuthorizationView.xaml;Views\MainView.xaml;MainWindow.xaml;
 
 False
 

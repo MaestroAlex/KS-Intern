@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 
 namespace QChat.Common.Net
 {
-    public class RecieverTable
+    public class ContentRecieverTable
     {
         private TextReciever _textReciever;
 
 
-        public RecieverTable()
+        public ContentRecieverTable()
         {
             _textReciever = new TextReciever();
         }

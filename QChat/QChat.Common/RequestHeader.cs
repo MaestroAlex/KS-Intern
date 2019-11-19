@@ -15,6 +15,12 @@ namespace QChat.Common
 
         public static readonly int ByteLength = sizeof(int) + sizeof(RequestIntention);
 
+        public RequestHeader(RequestIntention requestIntention)
+        {
+            Version = 0x0001;
+            Intention = requestIntention;
+        }
+
         public byte[] AsBytes()
         {
             var result = new byte[ByteLength];
@@ -65,7 +71,7 @@ namespace QChat.Common
             await connection.ReadAsync(buff, 0, ByteLength);
 
             return FromBytes(buff, 0);
-        }
+        }        
     }
 
     public enum RequestIntention : byte

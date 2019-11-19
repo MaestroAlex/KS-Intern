@@ -55,9 +55,28 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Model\ConnectionStream.cs" />
+    <Compile Include="Messaging\ChatList.cs" />
+    <Compile Include="Navigation\NavigationFailedException.cs" />
+    <Compile Include="Services\NavigationService.cs" />
+    <Compile Include="StaticProvider.cs" />
+    <Compile Include="ViewModels\AuthorizationVM.cs" />
+    <Compile Include="ViewModels\ChatVM.cs" />
+    <Compile Include="Messaging\Message.cs" />
+    <Compile Include="Messaging\MessagingEventHandlers.cs" />
+    <Compile Include="Messaging\MessageRecievedEventArgs.cs" />
+    <Compile Include="Rooming\Room.cs" />
+    <Compile Include="Services\AuthorizationService.cs" />
     <Compile Include="Services\MessagingService.cs" />
-    <Compile Include="Services\NetWorkingService.cs" />
+    <Compile Include="Services\NetworkingService.cs" />
+    <Compile Include="Services\RoomingService.cs" />
+    <Page Include="Views\AuthorizationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\MainView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -65,6 +84,16 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ViewModels\MainVM.cs" />
+    <Compile Include="ViewModels\IViewModel.cs" />
+    <Compile Include="ViewModels\NavigationVM.cs" />
+    <Compile Include="ViewModels\ViewModelLocator.cs" />
+    <Compile Include="Views\AuthorizationView.xaml.cs">
+      <DependentUpon>AuthorizationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\MainView.xaml.cs">
+      <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -103,5 +132,6 @@
       <Name>QChat.Common</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

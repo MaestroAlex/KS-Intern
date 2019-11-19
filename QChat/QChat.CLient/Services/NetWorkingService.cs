@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Net.Sockets;
 using System.Net;
 using QChat.Common.Net;
-using QChat.CLient;
+using QChat.Common;
 
 namespace QChat.CLient.Services
 {
@@ -14,6 +14,8 @@ namespace QChat.CLient.Services
     {
         private IPAddress _ipAdress;
         private int _port;
+
+        private AuthorizationService _authorizationService;
 
         public Connection Connection { get; private set; } 
 
@@ -45,6 +47,10 @@ namespace QChat.CLient.Services
             }
 
             Connection = new Connection(tcpClient);
+            Connection.ConnectionClosed += _connectionClosedEventHandler;
+
+            if (!_authorizationService.Authorize(Connection)) Connection = null;
+
             return Connection;
         }
         public async Task<Connection> ConnectAsync()
@@ -62,12 +68,17 @@ namespace QChat.CLient.Services
                 return null;
             }
 
-            return new Connection(tcpClient);
+            Connection = new Connection(tcpClient);
+            Connection.ConnectionClosed += _connectionClosedEventHandler;
+
+            if (!await _authorizationService.AuthorizeAsync(Connection)) Connection = null;
+
+            return Connection;
         }
 
         private void HandleClosedConnection(Connection connection, EventArgs eventArgs)
         {
-
+            Connection = null;
         }
     }
 }
