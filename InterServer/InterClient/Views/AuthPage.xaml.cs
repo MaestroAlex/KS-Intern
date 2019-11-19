@@ -29,7 +29,8 @@ namespace InterClient.Views
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            await this.ViewModel.Auth();
+            if(string.IsNullOrEmpty(this.PasswordBox.Password) == false)
+                await this.ViewModel.Auth(this.PasswordBox.Password);
         }
     }
 }

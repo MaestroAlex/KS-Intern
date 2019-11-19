@@ -13,6 +13,7 @@
         <StackPanel HorizontalAlignment="Stretch" VerticalAlignment="Center" MaxWidth="320">
             <TextBlock Text="Login to your account" Margin="20" TextAlignment="Center"/>
             <TextBox Text="{Binding UserLogin, Mode=TwoWay}" Margin="10"/>
+            <PasswordBox Margin="10,0,10,10" Name="PasswordBox"/>
             <Button Content="Login" Click="Button_Click" Margin="10" Height="30"/>
         </StackPanel>
     </Grid>

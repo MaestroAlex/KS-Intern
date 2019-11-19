@@ -74,7 +74,10 @@
     <Compile Include="AppServices\NavigationServiceEx.cs" />
     <Compile Include="AppServices\NavigationTransitionInfo.cs" />
     <Compile Include="AppServices\NetworkService.cs" />
+    <Compile Include="ViewModel\AppMessages.cs" />
     <Compile Include="ViewModel\AuthViewModel.cs" />
+    <Compile Include="ViewModel\ChatHistoryViewModel.cs" />
+    <Compile Include="ViewModel\ChatItemViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ShellViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />

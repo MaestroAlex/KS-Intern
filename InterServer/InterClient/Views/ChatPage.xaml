@@ -20,9 +20,33 @@
         </Grid.RowDefinitions>
 
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <TextBlock Text="{Binding MainText}" FontSize="25" TextWrapping="Wrap"/>
+            <ListView Name="MainList" ItemsSource="{Binding CurrentChatHistory}">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding User}" FontSize="22" FontWeight="Bold"/>
+                            <TextBlock Text="{Binding Message}" FontSize="20"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
         </ScrollViewer>
-        <TextBox Grid.Row="1" FontSize="20" Text="{Binding UserMessage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+        <ListView Grid.Column="1" ItemsSource="{Binding ChatNames}" Margin="0,0,0,0">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Button Content="{Binding Name}" Click="ChatClick" HorizontalAlignment="Stretch" Height="30"/>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <TextBox Grid.Column="1" VerticalAlignment="Bottom" Height="30" Visibility="Collapsed" Text="{Binding CreateChatName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+        <Button Grid.Column="1" VerticalAlignment="Bottom" Height="30" Content="+" Click="CreateChatClick" Visibility="Collapsed"/>
+        <TextBox Grid.Row="1" FontSize="20" Text="{Binding Path = UserMessage , Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                  KeyUp="TextBox_KeyDown" TextWrapping="Wrap"/>
         <Button Grid.Column="1" Grid.Row="1" Content="Send message" Click="Button_Click"/>
     </Grid>

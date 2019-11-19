@@ -11,7 +11,7 @@ namespace InterServer
 	{
 		static void Main(string[] args)
 		{
-			ServerTask("127.0.0.1", 47000).Wait();
+			    ServerTask("127.0.0.1", 47000).Wait();
 			Console.ReadKey();
 		}
 

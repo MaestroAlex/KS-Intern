@@ -39,5 +39,15 @@ namespace InterClient.Views
                 this.Button_Click(null, null);
             }
         }
+
+        private void ChatClick(object sender, RoutedEventArgs e)
+        {
+            this.ViewModel.OnChatChanged((sender as Button).Content.ToString());
+        }
+
+        private void CreateChatClick(object sender, RoutedEventArgs e)
+        {
+            this.ViewModel.CreateChatClicked();
+        }
     }
 }
