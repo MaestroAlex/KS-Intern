@@ -27,26 +27,12 @@ namespace ChatClient.ViewModel.ChatViewModel
             set => Set(ref channels, value);
         }
 
-        public RelayCommand<Task> ChatsLoaded { get; private set; }
-        bool firstViewInit = true;
         public ChatsViewModel(IFrameNavigationService navigation)
         {
             this.navigation = navigation;
             Channels = new HamburgerMenuItemCollection();
-
-            ChatsLoaded = new RelayCommand<Task>(async (task) =>
-            {
-                if (firstViewInit)
-                {
-                    await GetUsers();
-                    CheckForNoUsersPage();
-                    CreateNewRoomButton();
-                    firstViewInit = false;
-                }
-                SetNewUsers();
-                MainModel.ConnectedChannels.CollectionChanged += ConnectedUsers_CollectionChanged;
-                await Task.Run(() => MainModel.Client.GetHistoryActionRequest());
-            });
+            ChatsLoaded = new RelayCommand(ChatsLoadedCommandExecute);
+            ChatsUnloaded = new RelayCommand(ChatsUnloadedCommandExecute);
         }
 
         private void ConnectedUsers_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -57,21 +43,22 @@ namespace ChatClient.ViewModel.ChatViewModel
                 Channels.Add(new HamburgerMenuItem()
                 {
                     Label = newUser,
-                    Tag = new CurrentChatView() { DataContext = new CurrentChatViewModel((Channel)e.NewItems[0]) }
+                    Tag = new CurrentChatView()
+                    { 
+                        DataContext = new CurrentChatViewModel((Channel)e.NewItems[0]) 
+                    }
                 });
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
                 HamburgerMenuItem removedUser = Channels.FirstOrDefault(cur => ((Channel)e.OldItems[0]).Name == cur.Label);
-                //HamburgerMenuItem removedUser = Channels
-                //    .FirstOrDefault(elem => !MainModel.ConnectedChannels.(elem.Label));
                 Channels.Remove(removedUser);
             }
 
-            CheckForNoUsersPage();
+            //CheckForNoUsersPage();
         }
 
-        private void SetNewUsers()
+        private void SetNewViewChannels()
         {
             foreach (var item in MainModel.ConnectedChannels)
             {
@@ -85,17 +72,17 @@ namespace ChatClient.ViewModel.ChatViewModel
             }
         }
 
-        private async Task GetUsers()
+        private async Task GetChannelsFromServer()
         {
             await Task.Run(() => MainModel.GetUsers());
         }
 
         private void CheckForNoUsersPage()
         {
-            //if (MainModel.ConnectedUsers.Count != 0)
-            //    navigation.NavigateTo("ChatsPage");
-            //else
-            //    navigation.NavigateTo("NoUsersPage");
+            if (MainModel.ConnectedChannels.Count != 0)
+                navigation.NavigateTo("ChatsPage");
+            else
+                navigation.NavigateTo("NoUsersPage");
         }
 
         private void CreateNewRoomButton()
@@ -110,5 +97,39 @@ namespace ChatClient.ViewModel.ChatViewModel
             };
             Channels.Add(roomCreation);
         }
+
+        #region Commands
+
+        #region ChatsLoadedCommand
+        public RelayCommand ChatsLoaded { get; private set; }
+
+        private bool channelCollectionSigned = false;
+        public async void ChatsLoadedCommandExecute()
+        {
+            await GetChannelsFromServer();
+            //CheckForNoUsersPage();
+            CreateNewRoomButton();
+            SetNewViewChannels();
+
+            if (!channelCollectionSigned)
+            {
+                MainModel.ConnectedChannels.CollectionChanged += ConnectedUsers_CollectionChanged;
+                channelCollectionSigned = true;
+            }
+
+            await Task.Run(() => MainModel.Client.GetHistoryActionRequest());
+        }
+        #endregion
+
+        #region ChatsUnloadedCommand
+        public RelayCommand ChatsUnloaded { get; private set; }
+
+        public void ChatsUnloadedCommandExecute()
+        {
+            Channels.Clear();
+        }
+        #endregion
+
+        #endregion
     }
 }

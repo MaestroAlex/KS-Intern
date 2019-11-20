@@ -49,7 +49,8 @@
             <PasswordBox.InputBindings>
                 <KeyBinding 
                 Key="Enter"
-                Command="{Binding LoginTryCommand}"/>
+                Command="{Binding LoginTryCommand}"
+                CommandParameter="{Binding ElementName=PasswordTextBox}"/>
             </PasswordBox.InputBindings>
         </PasswordBox>
 
@@ -57,7 +58,7 @@
             Grid.Row="2" 
             Margin="5" 
             Content="Start chating"
-            Command="{Binding Path=LoginTryCommand}"
+            Command="{Binding LoginTryCommand}"
             CommandParameter="{Binding ElementName=PasswordTextBox}"
             Style="{StaticResource MetroFlatButton}"/>
         

@@ -14,6 +14,7 @@
         <RowDefinition Height="*"/>
         <RowDefinition Height="*"/>
         <RowDefinition Height="*"/>
+        <RowDefinition Height="*"/>
     </Grid.RowDefinitions>
 
     <TextBox 
@@ -22,7 +23,14 @@
         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
         FontSize="16"
         Controls:TextBoxHelper.Watermark="Enter room name"
-        Controls:TextBoxHelper.UseFloatingWatermark="True"/>
+        Controls:TextBoxHelper.UseFloatingWatermark="True">
+        <TextBox.InputBindings>
+            <KeyBinding 
+                Key="Enter"
+                Command="{Binding CreateRoomCommand}"
+                CommandParameter="{Binding ElementName=Password}"/>
+        </TextBox.InputBindings>
+    </TextBox>
 
     <PasswordBox 
         Name="Password"
@@ -32,18 +40,13 @@
         Controls:TextBoxHelper.Watermark="Password (left empty for open room)"
         Controls:TextBoxHelper.UseFloatingWatermark="True"
         Visibility="Collapsed">
-        <PasswordBox.InputBindings>
-            <KeyBinding 
-                Key="Enter"
-                Command="{Binding CreateRoomCommand}"/>
-        </PasswordBox.InputBindings>
     </PasswordBox>
     
     <Button 
         Grid.Row="2" 
         Margin="5" 
         Content="Create room"
-        Command="{Binding Path=CreateRoomCommand}"
+        Command="{Binding CreateRoomCommand}"
         CommandParameter="{Binding ElementName=Password}"
         Style="{StaticResource MetroFlatButton}"/>
     

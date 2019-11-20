@@ -80,7 +80,7 @@ namespace ChatServer
             return res;
         }
 
-        public void ChannelCreated(Channel channel)
+        public void ChannelCreatedNotify(Channel channel)
         {
             connectedIpChanged.WaitOne();
 
@@ -91,7 +91,7 @@ namespace ChatServer
             connectedIpChanged.ReleaseMutex();
         }
 
-        public void ChannelDeleted(Channel channel)
+        public void ChannelDeletedNotify(Channel channel)
         {
             connectedIpChanged.WaitOne();
 

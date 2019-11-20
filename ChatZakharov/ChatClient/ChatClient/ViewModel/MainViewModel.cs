@@ -5,6 +5,7 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -99,6 +100,10 @@ namespace ChatClient.ViewModel
             await Task.Run(() => MainModel.Client.LogoutActionRequest());
             ConnectionState = ClientState.LoggedOut;
             await Task.Run(() => MainModel.Client.Connect());
+
+            //Application.Current.Dispatcher
+            //        .BeginInvoke(new Action(()=> navigation.NavigateTo("LoginPage")));
+
             navigation.NavigateTo("LoginPage");
         }
         #endregion

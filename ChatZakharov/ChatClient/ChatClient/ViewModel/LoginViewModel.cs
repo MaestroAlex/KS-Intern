@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -64,7 +65,7 @@ namespace ChatClient.ViewModel
         private bool LoginTryCommandCanExecute(object obj)
         {
             return !string.IsNullOrWhiteSpace(Login)
-                && !string.IsNullOrWhiteSpace((obj as PasswordBox).Password)
+                && !string.IsNullOrWhiteSpace((obj as PasswordBox)?.Password)
                 && MainModel.Client.ConnectionState == ClientState.Connected;
         }
 
@@ -76,12 +77,15 @@ namespace ChatClient.ViewModel
 
             string hashPasswordString = Encoding.UTF8.GetString(hashPassword);
 
+            //ActionEnum LoginResult = ActionEnum.ok;
+            //MainModel.Client.ConnectionState = ClientState.LoggedIn;
+
             ActionEnum LoginResult = await Task.Run(() =>
                 MainModel.Client.LoginActionRequest(Login, hashPasswordString));
 
             if (LoginResult == ActionEnum.wrong_pass)
                 ValidationText = "Wrong password";
-                
+
 
             else if (LoginResult == ActionEnum.bad_login)
             {
@@ -103,7 +107,7 @@ namespace ChatClient.ViewModel
                     ActionEnum createUser = await Task.Run(() => MainModel.Client.CreateNewUserActionRequest(Login, hashPasswordString));
                     if (createUser == ActionEnum.ok)
                     {
-                        ValidationText = "s";
+                        ValidationText = "";
                         navigation.NavigateTo("ChatsPage");
                     }
                 }
@@ -111,18 +115,17 @@ namespace ChatClient.ViewModel
 
             else if (LoginResult == ActionEnum.ok)
             {
-                ValidationText = "s";
+                ValidationText = "";
                 navigation.NavigateTo("ChatsPage");
             }
-                
+
         }
         #endregion
 
         #region LoginTryCommand
         public RelayCommand PasswordChangedCommand { get; private set; }
 
-        private void PasswordChangedCommandExecute() => Application.Current.Dispatcher
-                    .BeginInvoke(new Action(LoginTryCommand.RaiseCanExecuteChanged));
+        private void PasswordChangedCommandExecute() => LoginTryCommand.RaiseCanExecuteChanged();
         #endregion
 
         #endregion

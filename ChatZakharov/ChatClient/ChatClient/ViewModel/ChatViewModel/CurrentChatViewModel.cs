@@ -80,29 +80,24 @@ namespace ChatClient.ViewModel.ChatViewModel
 
         private async void SendMessageCommandExecute(object obj)
         {
-            string currentMesageText = CurrentMessage.Text;
+            Message sentMessage = new Message()
+            {
+                From = UsernameSelf, // если отправляем пользователю, то в чат себя у него, если в команту, то в чат комнаты у участников комнаты
+                ChatDestination = ChannelDestination.Type == ChannelType.user ? UsernameSelf : ChannelDestination.Name,
+                To = ChannelDestination.Name,
+                Text = CurrentMessage.Text,
+                Date = DateTime.Now
+            };
 
-            bool res = await Task.Run(() =>
-                MainModel.Client.SendMessageActionRequest(new Message()
-                {
-                    From = UsernameSelf, // если отправляем пользователю, то в чат себя у него, если в команту, то в чат комнаты у участников комнаты
-                    ChatDestination = ChannelDestination.Type == ChannelType.user ? UsernameSelf : ChannelDestination.Name,
-                    To = ChannelDestination.Name,
-                    Text = currentMesageText
-                }));
+            bool res = await Task.Run(() => MainModel.Client.SendMessageActionRequest(sentMessage));
 
             if (res)
-                SendUIMessage();
+                SendUIMessage(sentMessage);
         }
 
-        private void SendUIMessage()
+        private void SendUIMessage(Message sentMessage)
         {
-            UIMessageOutput Message = new UIMessageOutput(new Message
-            {
-                From = UsernameSelf,
-                To = ChannelDestination.Name,
-                Text = CurrentMessage.Text
-            });
+            UIMessageOutput Message = new UIMessageOutput(sentMessage);
             Message.CreateUIMessage();
             BindNewMessageToGrid(Message);
             ClearCurrentMessage();

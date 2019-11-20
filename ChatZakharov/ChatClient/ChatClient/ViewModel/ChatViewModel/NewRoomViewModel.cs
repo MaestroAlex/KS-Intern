@@ -67,25 +67,12 @@ namespace ChatClient.ViewModel.ChatViewModel
             ActionEnum res = await Task.Run(() =>
                 MainModel.Client.CreateNewRoomActionRequest(Name, hashPasswordString));
 
-            if (res == ActionEnum.ok)
-            {
-                channels.Add(new HamburgerMenuItem()
-                {
-                    Label = Name,
-                    Tag = new CurrentChatView()
-                    {
-                        DataContext = new CurrentChatViewModel(new Channel()
-                        {
-                            Name = this.Name
-                        })
-                    }
-                });
-            }
+            // if res == ok => server sends new room
 
-            else if (res == ActionEnum.room_exist)
+            if (res == ActionEnum.room_exist)
                 ValidationText = "Such room exist";
 
-            else
+            else if (res == ActionEnum.bad)
                 ValidationText = "Something gone wrong, try again later";
         }
 

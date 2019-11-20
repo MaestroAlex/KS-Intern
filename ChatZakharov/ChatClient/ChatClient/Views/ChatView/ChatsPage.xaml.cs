@@ -22,16 +22,16 @@ namespace ChatClient.Views.ChatView
     /// </summary>
     public partial class ChatsPage : Page
     {
-        private static bool userCollectionSigned = false;
+        private static bool channelCollectionSigned = false;
         private HamburgerMenuItemCollection channels;
         public ChatsPage()
         {
             InitializeComponent();
-            if (!userCollectionSigned)
+            if (!channelCollectionSigned)
             {
                 channels = (DataContext as ChatsViewModel).Channels;
                 channels.Changed += Users_Changed;
-                userCollectionSigned = true;
+                channelCollectionSigned = true;
             }
         }
 

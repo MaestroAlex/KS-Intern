@@ -319,7 +319,7 @@ namespace ChatServer
                         roomOwner, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
                         roomName);
 
-                    server.ChannelCreated(new Channel() { Name = roomName, Type = ChannelType.public_open });
+                    server.ChannelCreatedNotify(new Channel() { Name = roomName, Type = ChannelType.public_open });
                 }
                 else if (responseAction == ActionEnum.room_exist)
                 {
@@ -358,7 +358,7 @@ namespace ChatServer
                         login, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
 
                     Name = login;
-                    server.ChannelCreated(new Channel() { Name = login, Type = ChannelType.user });
+                    server.ChannelCreatedNotify(new Channel() { Name = login, Type = ChannelType.user });
                     NetworkMessage response = new NetworkMessage(ActionEnum.ok);
                     messageStream.Write(response);
                 }

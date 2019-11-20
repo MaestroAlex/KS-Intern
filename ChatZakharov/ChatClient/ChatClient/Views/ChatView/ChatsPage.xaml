@@ -15,6 +15,9 @@
         <i:EventTrigger EventName="Loaded">
             <i:InvokeCommandAction Command="{Binding ChatsLoaded}"/>
         </i:EventTrigger>
+        <i:EventTrigger EventName="Unloaded">
+            <i:InvokeCommandAction Command="{Binding ChatsUnloaded}"/>
+        </i:EventTrigger>
     </i:Interaction.Triggers>
     
     <Grid>

@@ -45,37 +45,22 @@ namespace ChatServer
         {
             try
             {
-                int ownerId = -1;
-                using (var cmd = new NpgsqlCommand("SELECT id FROM users WHERE login = @owner", conn))
-                {
-                    cmd.Parameters.AddWithValue("owner", owner);
-                    using (var reader = await cmd.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                            ownerId = reader.GetInt32(0);
-
-                        else
-                            return ActionEnum.bad_login;
-                    }
-                }
-
-                bool roomExist = false;
                 using (var cmd = new NpgsqlCommand("SELECT id FROM rooms WHERE name = @name", conn))
                 {
                     cmd.Parameters.AddWithValue("name", name);
                     using (var reader = await cmd.ExecuteReaderAsync())
                     {
                         if (await reader.ReadAsync())
-                            roomExist = true;
+                            return ActionEnum.room_exist;
                     }
                 }
 
-                if (roomExist)
-                    return ActionEnum.room_exist;
-
-                using (var cmd = new NpgsqlCommand("INSERT INTO rooms (owner_user_id, hash, salt, name) VALUES(@ownerId, @pass, @salt, @name)", conn))
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO rooms (owner_user_id, hash, salt, name)
+                                                    VALUES(
+                                                        (SELECT id FROM users WHERE login = @owner),
+                                                        @pass, @salt, @name)", conn))
                 {
-                    cmd.Parameters.AddWithValue("ownerId", ownerId);
+                    cmd.Parameters.AddWithValue("owner", owner);
                     cmd.Parameters.AddWithValue("pass", hashPass ?? "");
                     cmd.Parameters.AddWithValue("salt", salt ?? "");
                     cmd.Parameters.AddWithValue("name", name);
@@ -248,35 +233,15 @@ namespace ChatServer
         {
             try
             {
-                int fromUserId = -1;
-                int toRoomId = -1;
-
-                using (var cmd = new NpgsqlCommand("SELECT id FROM users WHERE login = @login", conn))
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO roomchats (from_user_id, to_room_id, message, datetime)
+                                                    VALUES(
+                                                        (SELECT id FROM users WHERE login = @fromUser), 
+                                                        (SELECT id FROM rooms WHERE name = @toRoom), @message, @datetime)", conn))
                 {
-                    cmd.Parameters.AddWithValue("login", ((Message)message.Obj).From);
-                    using (var reader = await cmd.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                            fromUserId = reader.GetInt32(0);
-                    }
-                }
-
-                using (var cmd = new NpgsqlCommand("SELECT id FROM rooms WHERE name = @name", conn))
-                {
-                    cmd.Parameters.AddWithValue("name", ((Message)message.Obj).To);
-                    using (var reader = await cmd.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                            toRoomId = reader.GetInt32(0);
-                    }
-                }
-
-                using (var cmd = new NpgsqlCommand("INSERT INTO roomchats (from_user_id, to_room_id, message, datetime) VALUES(@fromUserId, @toRoomId, @message, @datetime)", conn))
-                {
-                    cmd.Parameters.AddWithValue("fromUserId", fromUserId);
-                    cmd.Parameters.AddWithValue("toRoomId", toRoomId);
+                    cmd.Parameters.AddWithValue("fromUser", ((Message)message.Obj).From);
+                    cmd.Parameters.AddWithValue("toRoom", ((Message)message.Obj).To);
                     cmd.Parameters.AddWithValue("message", ((Message)message.Obj).Text);
-                    cmd.Parameters.AddWithValue("datetime", DateTime.Now.ToUniversalTime());
+                    cmd.Parameters.AddWithValue("datetime", ((Message)message.Obj).Date.ToUniversalTime());
                     await cmd.ExecuteNonQueryAsync();
                 }
                 return true;
@@ -292,33 +257,13 @@ namespace ChatServer
         {
             try
             {
-                int fromUserId = -1;
-                int toUserId = -1;
-
-                using (var cmd = new NpgsqlCommand("SELECT id FROM users WHERE login = @login", conn))
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO userchats (from_user_id, to_user_id, message, datetime)
+                                                   VALUES(
+                                                        (SELECT id FROM users WHERE login = @fromUser),
+                                                        (SELECT id FROM users WHERE login = @toUser), @message, @datetime)", conn))
                 {
-                    cmd.Parameters.AddWithValue("login", ((Message)message.Obj).From);
-                    using (var reader = await cmd.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                            fromUserId = reader.GetInt32(0);
-                    }
-                }
-
-                using (var cmd = new NpgsqlCommand("SELECT id FROM users WHERE login = @login", conn))
-                {
-                    cmd.Parameters.AddWithValue("login", ((Message)message.Obj).To);
-                    using (var reader = await cmd.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                            toUserId = reader.GetInt32(0);
-                    }
-                }
-
-                using (var cmd = new NpgsqlCommand("INSERT INTO userchats (from_user_id, to_user_id, message, datetime) VALUES(@fromUserId, @toUserId, @message, @datetime)", conn))
-                {
-                    cmd.Parameters.AddWithValue("fromUserId", fromUserId);
-                    cmd.Parameters.AddWithValue("toUserId", toUserId);
+                    cmd.Parameters.AddWithValue("fromUser", ((Message)message.Obj).From);
+                    cmd.Parameters.AddWithValue("toUser", ((Message)message.Obj).To);
                     cmd.Parameters.AddWithValue("message", ((Message)message.Obj).Text);
                     cmd.Parameters.AddWithValue("datetime", DateTime.Now.ToUniversalTime());
                     await cmd.ExecuteNonQueryAsync();
