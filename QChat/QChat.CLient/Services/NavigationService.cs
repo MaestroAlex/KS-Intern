@@ -19,7 +19,7 @@ namespace QChat.CLient.Services
         private ViewLocator _viewLocator = new ViewLocator();
         private Dictionary<Type, Func<object>> _pagesProperties = new Dictionary<Type, Func<object>>();
 
-        public object StartPage { get; private set; }
+        public object StartPage { get => _pagesProperties[typeof(AuthorizationView)](); }
 
         public NavigationService(NavigationVM navigationVM)
         {
@@ -27,8 +27,6 @@ namespace QChat.CLient.Services
 
             RegisterPage(() => _viewLocator.AuthorizationView);
             RegisterPage(() => _viewLocator.MainView);
-
-            StartPage = _viewLocator.AuthorizationView;
         }
 
 

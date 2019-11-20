@@ -28,6 +28,7 @@ namespace QChat.CLient
             }
 
             instance = (T)result;
+            _objects.Add(type, instance);
             return false;
         }
         public static T GetInstanceOf<T>()
@@ -36,6 +37,7 @@ namespace QChat.CLient
 
             var factoryMethod = _factories[typeof(T)];
             instance = factoryMethod();
+            _objects.Add(typeof(T), instance);
             return (T)instance;
         }
 

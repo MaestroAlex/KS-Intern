@@ -14,10 +14,11 @@ namespace QChat.CLient.ViewModels
         public object CurrentPage
         {
             get { return (object)GetValue(CurrentPageProperty); }
-            set { SetValue(CurrentPageProperty, value); }
+            set { SetValue(CurrentPageProperty, value);
+            }
         }
         public static readonly DependencyProperty CurrentPageProperty =
-            DependencyProperty.Register("CurrentFrame", typeof(object), typeof(NavigationVM), new PropertyMetadata());
+            DependencyProperty.Register("CurrentPage", typeof(object), typeof(NavigationVM), new PropertyMetadata());
 
 
         public NavigationVM()

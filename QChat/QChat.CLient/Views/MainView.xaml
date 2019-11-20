@@ -25,15 +25,15 @@
 
         <GridSplitter Grid.Column="1" Width="0"/>
 
-        <TextBox  Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding TextDraft, Source=CurrentChat}"/>
+        <TextBox  Grid.Row="2" Grid.ColumnSpan="2" Text=""/>
         
         <ScrollViewer Grid.Column ="0" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="MessageList" ItemsSource="{Binding Messages, Source=CurrentChat}">
+            <ListBox x:Name="MessageList" >
             </ListBox>
         </ScrollViewer>
 
         <ScrollViewer Grid.Column ="2" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="ChatList" SelectionMode="Single" SelectedItem="{Binding CurrentChat, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+            <ListBox x:Name="ChatList" SelectionMode="Single">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -42,7 +42,7 @@
                                 <RowDefinition/>                                
                             </Grid.RowDefinitions>
                             
-                            <TextBlock Text="{Binding Name}" Grid.Row="0"/>
+                            <TextBlock  Grid.Row="0"/>
                         </Grid>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
