@@ -23,7 +23,7 @@ namespace QChat.CLient.ViewModels
         public NavigationVM()
         {
             if (!StaticProvider.IsRegistered<NavigationService>())
-                StaticProvider.RegisterInstanceOf(new NavigationService(this));
+                StaticProvider.TryRegisterFactory<NavigationService>(() => new NavigationService(this));
             CurrentPage = StaticProvider.GetInstanceOf<NavigationService>().StartPage;
         }
     }

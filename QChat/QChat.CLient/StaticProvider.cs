@@ -9,16 +9,34 @@ namespace QChat.CLient
     static class StaticProvider
     {
         private static Dictionary<Type, object> _objects = new Dictionary<Type, object>();
+        private static Dictionary<Type, Func<object>> _factories = new Dictionary<Type, Func<object>>();
 
         public static bool TryGetInstanceOf<T>(out T instance)
         {
-            var success = _objects.TryGetValue(typeof(T), out var result);
+            var type = typeof(T);
+
+            if(_objects.TryGetValue(type, out var result))
+            {
+                instance = (T)result;
+                return true;
+            }
+           
+            if(_factories.TryGetValue(type, out var factoryMethod))
+            {
+                instance = (T)factoryMethod();
+                return true;
+            }
+
             instance = (T)result;
-            return success;
+            return false;
         }
         public static T GetInstanceOf<T>()
         {
-            return (T)_objects[typeof(T)];
+            if (_objects.TryGetValue(typeof(T), out var instance)) return (T)instance;
+
+            var factoryMethod = _factories[typeof(T)];
+            instance = factoryMethod();
+            return (T)instance;
         }
 
         public static bool IsRegistered<T>()
@@ -55,6 +73,18 @@ namespace QChat.CLient
 
             if (!_objects.Remove(instanceType))
                 throw new ArgumentException($"Couldn't get instance of {instanceType.FullName}");
+        }
+
+        public static void RegisterFactory<T>(Func<object> factoryMethod)
+        {
+            _factories.Add(typeof(T), factoryMethod);
+        }
+        public static bool TryRegisterFactory<T>(Func<object> factoryMethod)
+        {
+            if (_factories.ContainsKey(typeof(T))) return false;
+
+            _factories.Add(typeof(T), factoryMethod);
+            return true;
         }
     }
 }

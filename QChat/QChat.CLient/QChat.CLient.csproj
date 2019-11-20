@@ -69,6 +69,7 @@
     <Compile Include="Services\MessagingService.cs" />
     <Compile Include="Services\NetworkingService.cs" />
     <Compile Include="Services\RoomingService.cs" />
+    <Compile Include="Views\ViewLocator.cs" />
     <Page Include="Views\AuthorizationView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

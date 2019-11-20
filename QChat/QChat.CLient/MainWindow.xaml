@@ -7,6 +7,6 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800"
         DataContext="{Binding NavigationVM, Source={StaticResource VMLocator}}">
-    <Frame x:Name="MainFrame" Content="{Binding CurrentPage}">        
+    <Frame x:Name="MainFrame" Content="{Binding CurrentPage, UpdateSourceTrigger=PropertyChanged}">        
     </Frame>
 </Window>

@@ -8,8 +8,41 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="AuthorizationView"
       DataContext="{Binding AuthorizationVM, Source={StaticResource VMLocator}}">
-
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1.5*"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="1" Grid.Column="1" 
+                   Text="QChat CLient" FontSize="30"
+                   TextAlignment="Center" VerticalAlignment="Center"/>
+
+        <TextBox Grid.Row="2" Grid.Column="1" Margin="20"
+                 Text="{Binding Login}"/>
         
+        <PasswordBox Grid.Row="3"
+                     Grid.Column="1" 
+                     Margin="20"/>
+
+        <Button Grid.Column="1" 
+                Grid.Row="4" 
+                MinWidth="150" 
+                Width="230"
+                Click="Button_Click">
+            <TextBlock Text="Login" 
+                       FontSize="10"
+                       TextAlignment="Center" 
+                       HorizontalAlignment="Center"/>
+        </Button>
     </Grid>
 </Page>

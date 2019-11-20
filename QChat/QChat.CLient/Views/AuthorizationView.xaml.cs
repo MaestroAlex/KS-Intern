@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using QChat.CLient.ViewModels;
 
 namespace QChat.CLient.Views
 {
@@ -20,9 +21,17 @@ namespace QChat.CLient.Views
     /// </summary>
     public partial class AuthorizationView : Page
     {
+        private AuthorizationVM _authorizationVM;
+
         public AuthorizationView()
         {
             InitializeComponent();
+            _authorizationVM = StaticProvider.GetInstanceOf<AuthorizationVM>();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            _authorizationVM.Authorize();
         }
     }
 }

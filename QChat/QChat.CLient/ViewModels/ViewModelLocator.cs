@@ -10,11 +10,9 @@ namespace QChat.CLient.ViewModels
     {
         public ViewModelLocator()
         {
-            StaticProvider.RegisterInstanceOf(new AuthorizationVM());
-            StaticProvider.RegisterInstanceOf(new MainVM());
-
-            //carefull - bad bound to alocated viewmodels
-            StaticProvider.RegisterInstanceOf(new NavigationVM());
+            StaticProvider.TryRegisterFactory<AuthorizationVM>(() => new AuthorizationVM());
+            StaticProvider.TryRegisterFactory<MainVM>(() => new MainVM());
+            StaticProvider.TryRegisterFactory<NavigationVM>(() => new NavigationVM());
         }
 
         public NavigationVM NavigationVM => StaticProvider.GetInstanceOf<NavigationVM>();

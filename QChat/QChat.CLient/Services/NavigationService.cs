@@ -15,47 +15,34 @@ namespace QChat.CLient.Services
 {
     class NavigationService
     {
-        private Dictionary<Type, object> _pages = new Dictionary<Type, object>();
         private NavigationVM _navigationVM;
-
-        private bool _pagesLocated = false; //отвратнейший костыль
+        private ViewLocator _viewLocator = new ViewLocator();
+        private Dictionary<Type, Func<object>> _pagesProperties = new Dictionary<Type, Func<object>>();
 
         public object StartPage { get; private set; }
 
         public NavigationService(NavigationVM navigationVM)
         {
             _navigationVM = navigationVM;
-            LocatePages(); //BAD BOUND!!!!
-            StartPage = _pages[typeof(AuthorizationView)];
+
+            RegisterPage(() => _viewLocator.AuthorizationView);
+            RegisterPage(() => _viewLocator.MainView);
+
+            StartPage = _viewLocator.AuthorizationView;
         }
 
 
         public void NavigateTo<P>() where P : Page  
         {
-            if (!_pages.TryGetValue(typeof(P), out var page))
+            if (!_pagesProperties.TryGetValue(typeof(P), out var pageProperty))
                 throw new NavigationFailedException();
 
-            _navigationVM.CurrentPage = (P)page;
+            _navigationVM.CurrentPage = (P)pageProperty();
         }
 
-        private void LocatePages()
+        public void RegisterPage<T>(Func<T> property) where T : Page
         {
-            if (_pagesLocated) return;
-
-            //TODO: Separate Registration from creation
-
-            StaticProvider.RegisterInstanceOf(new AuthorizationView());
-            RegisterPage(StaticProvider.GetInstanceOf<AuthorizationView>());
-            StaticProvider.RegisterInstanceOf(new MainView());
-            RegisterPage(StaticProvider.GetInstanceOf<MainView>());
-            StaticProvider.RegisterInstanceOf(new AuthorizationView());
-            RegisterPage(StaticProvider.GetInstanceOf<AuthorizationView>());
-            _pagesLocated = true;
-        }
-
-        private void RegisterPage<T>(T instance) where T : Page
-        {
-            _pages.Add(typeof(T), instance);
+            _pagesProperties.Add(typeof(T), property);
         }
     }
 }

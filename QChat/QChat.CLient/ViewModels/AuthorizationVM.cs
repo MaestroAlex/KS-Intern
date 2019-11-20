@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using QChat.CLient.Services;
+using QChat.CLient.Views;
 
 namespace QChat.CLient.ViewModels
 {
@@ -37,14 +38,20 @@ namespace QChat.CLient.ViewModels
         public AuthorizationVM()
         {
             if (!StaticProvider.IsRegistered<AuthorizationService>())
-                StaticProvider.RegisterInstanceOf(new AuthorizationService(this));
+                StaticProvider.TryRegisterFactory<AuthorizationService>(() => new AuthorizationService(this));
         }
 
-        public async Task<bool> Authorize()
+        public void Authorize()
         {
+            if (_authorizationService == null) _authorizationService = StaticProvider.GetInstanceOf<AuthorizationService>();
+
             _authorizationService.AuthorizationInfoUpdated = false;
-            var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connection;
-            return await _authorizationService.AuthorizeAsync(connection);
+            //var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connection;
+            //var authorizationSuccess = await _authorizationService.AuthorizeAsync(connection);
+            //if (authorizationSuccess)
+            //{
+                StaticProvider.GetInstanceOf<NavigationService>().NavigateTo<MainView>();
+            //}
         }
     }
 }
