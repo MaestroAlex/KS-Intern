@@ -10,30 +10,44 @@
       DataContext="{Binding MainVM,Source={StaticResource VMLocator}}"
       Title="ChatView">
 
+    <Page.Resources>
+        <Style TargetType="Control">
+            <Setter Property="BorderThickness" Value="0 0 0 0"/>
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+    </Page.Resources>
+
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition MinWidth="100" Width="200"/>            
+            <ColumnDefinition Width="3.5*"/>
+            <ColumnDefinition MinWidth="100" Width="*"/>            
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="20"/>
             <RowDefinition/>
             <RowDefinition Height="50"/>
-            <RowDefinition Height="20"/>
         </Grid.RowDefinitions>
 
-        <GridSplitter Grid.Column="1" Width="0"/>
-
-        <TextBox  Grid.Row="2" Grid.ColumnSpan="2" Text=""/>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0 0.5" EndPoint="1 0.5">
+                <GradientStop Color="#D01010" Offset="0"/>
+                <GradientStop Color="DarkBlue" Offset="0.03"/>
+                <GradientStop Color="DarkBlue" Offset="0.75"/>
+                <GradientStop Color="#D01010" Offset="0.80"/>
+            </LinearGradientBrush>
+        </Grid.Background>
         
-        <ScrollViewer Grid.Column ="0" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="MessageList" >
+        <ScrollViewer Grid.Column ="0" Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                      Background="Transparent"
+                      BorderThickness="0 0 0 0">
+            <ListBox x:Name="MessageList" Background="Transparent"
+                     BorderThickness="0 0 0 0">
             </ListBox>
         </ScrollViewer>
 
-        <ScrollViewer Grid.Column ="2" Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="ChatList" SelectionMode="Single">
+        <ScrollViewer Grid.Column ="2" Grid.RowSpan="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ListBox x:Name="ChatList" SelectionMode="Single" BorderThickness="0" Background="Transparent">
+                
+                <!--Chat template-->
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid>
@@ -49,8 +63,49 @@
             </ListBox>
         </ScrollViewer>
 
-        <Button Grid.Column="2" Grid.Row="2">
-            
-        </Button>
+        
+        <!--Nested grid for chatting line-->
+        <Grid Background="Transparent" Grid.Column="0" Grid.Row="1" Margin="0 0 0 5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border BorderThickness="0" CornerRadius="20" Margin="25 5 5 10">
+                <Border.Background>
+                    <SolidColorBrush Color="Blue" Opacity="0.9"/>
+                </Border.Background>
+                <TextBox Background="Transparent"
+                     BorderThickness="0 0 0 0"
+                     TextAlignment="Left"
+                     VerticalAlignment="Center"
+                     FontSize="15"
+                     Margin="15 5 15 5"
+                     Foreground="Aquamarine">
+                </TextBox>
+            </Border>
+
+            <Button Grid.Column="1"
+                    Width="Auto"
+                    Margin="10">
+                <Button.Foreground>
+                    <SolidColorBrush Color="Aquamarine"/>
+                </Button.Foreground>
+
+                    <Button.Template>
+                        <ControlTemplate>
+                            <TextBlock FontSize="20"
+                                   Text="Send"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                       Margin="0 0 0 5"/>
+                            <ControlTemplate.Triggers>
+
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+            </Button>
+        </Grid>
+
     </Grid>
 </Page>

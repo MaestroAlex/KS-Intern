@@ -5,10 +5,25 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:QChat.CLient.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800"
+        Title="QChat Client" Height="450" Width="800"
         DataContext="{Binding NavigationVM, Source={StaticResource VMLocator}}">
-    <Frame x:Name="MainFrame" 
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="25"/>        
+    </WindowChrome.WindowChrome>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Background="Bisque">
+        </StackPanel>
+        
+        <Frame x:Name="MainFrame" 
            Content="{Binding CurrentPage, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
            NavigationUIVisibility="Hidden"
-           />
+           Grid.Row="1"
+           BorderThickness="0"/>
+    </Grid>
 </Window>

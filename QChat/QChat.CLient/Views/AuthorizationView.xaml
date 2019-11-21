@@ -8,6 +8,11 @@
       d:DesignHeight="450" d:DesignWidth="800"
       Title="AuthorizationView"
       DataContext="{Binding AuthorizationVM, Source={StaticResource VMLocator}}">
+
+    <Page.Resources>
+       
+    </Page.Resources>
+    
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -23,26 +28,91 @@
             <RowDefinition/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="1" Grid.Column="1" 
-                   Text="QChat CLient" FontSize="30"
-                   TextAlignment="Center" VerticalAlignment="Center"/>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0 0.5" EndPoint="1 0.5">
+                <GradientStop Color="#D01010" Offset="0"/>
+                <GradientStop Color="DarkBlue"  Offset="0.3"/>
+                <GradientStop Color="DarkBlue"  Offset="0.7"/>
+                <GradientStop Color="#D01010" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
 
-        <TextBox Grid.Row="2" Grid.Column="1" Margin="20"
-                 Text="{Binding Login}"/>
+        <Viewbox Grid.Row="1" Grid.Column="1" Margin="20">
+            <TextBlock Grid.Row="1" Grid.Column="1" 
+                   FontSize="30"
+                   TextAlignment="Center" 
+                   VerticalAlignment="Center">
+                <TextBlock.Text>
+                    QChat Client
+                </TextBlock.Text>
+                <TextBlock.Foreground>
+                    <SolidColorBrush Color="White"/>
+                </TextBlock.Foreground>
+            </TextBlock>
+        </Viewbox>
         
-        <PasswordBox Grid.Row="3"
-                     Grid.Column="1" 
-                     Margin="20"/>
-
+        <Viewbox Grid.Row="2" Grid.Column="1" Margin="20" 
+                 MaxHeight="100" MinWidth="300">
+            <TextBox x:Name="LoginText"
+                 Text="{Binding Login}"
+                 BorderThickness="0 0 0 1"
+                 TextAlignment="Center"
+                 MinWidth="20">
+                <TextBox.Background>
+                    <SolidColorBrush Opacity="0"/>
+                </TextBox.Background>
+                <TextBox.Foreground>
+                    <SolidColorBrush Color="Aquamarine"/>
+                </TextBox.Foreground>
+                <TextBox.BorderBrush>
+                    <SolidColorBrush Color="DarkRed"/>
+                </TextBox.BorderBrush>
+            </TextBox>
+        </Viewbox>
+        <Viewbox Grid.Row="3" Grid.Column="1" Margin="20"
+                 MaxHeight="100" MinWidth="300">
+            <PasswordBox 
+                BorderThickness="0 0 0 1"
+                MinWidth="20">
+              <PasswordBox.Background>
+                 <SolidColorBrush Opacity="0"/>
+              </PasswordBox.Background>
+               <PasswordBox.Foreground>
+                <SolidColorBrush Color="Aquamarine"/>
+                </PasswordBox.Foreground>
+              <PasswordBox.BorderBrush>
+                <SolidColorBrush Color="DarkRed"/>
+             </PasswordBox.BorderBrush>
+            </PasswordBox>
+        </Viewbox>
+        
+        
         <Button Grid.Column="1" 
-                Grid.Row="4" 
-                MinWidth="150" 
-                Width="230"
-                Click="Button_Click">
-            <TextBlock Text="Login" 
-                       FontSize="10"
+                Grid.Row="4"
+                Width="100"
+                Click="Button_Click"
+                Margin="10"
+                BorderThickness="0">            
+
+            <Button.Background>
+                <SolidColorBrush Opacity="0"/>
+            </Button.Background>
+
+            <Button.Template>
+                <ControlTemplate>
+                    <TextBlock x:Name="LoginText"
+                       Text="Login" 
+                       FontSize="25"
                        TextAlignment="Center" 
-                       HorizontalAlignment="Center"/>
+                       HorizontalAlignment="Center"
+                       Foreground="Aquamarine"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="LoginText" Property="TextDecorations" Value="Underline"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
         </Button>
     </Grid>
 </Page>
