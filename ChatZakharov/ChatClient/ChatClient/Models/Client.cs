@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -82,6 +83,8 @@ namespace ChatClient.Models
         {
             switch (networkMessage.Action)
             {
+                case ActionEnum.aes_handshake:
+                    return AESHandshakeActionResponse(networkMessage);
                 case ActionEnum.receive_message:
                     return ReceiveMessageActionResponse(networkMessage);
                 case ActionEnum.channel_created:
@@ -92,6 +95,22 @@ namespace ChatClient.Models
                     return ConnectionCheckActionResponse(networkMessage);
             }
             return false;
+        }
+
+        private bool AESHandshakeActionResponse(NetworkMessage message)
+        {
+            try
+            {
+                messageStream.AESKeys = (AESKeys)message.Obj;
+                messageStream.Write(new NetworkMessage(ActionEnum.ok));
+                return true;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine("AES handshake exception");
+                Console.WriteLine(e.Message);
+                return false;
+            }
         }
 
         private bool ChannelDeletedNotificationActionResponse(NetworkMessage message)
@@ -179,7 +198,7 @@ namespace ChatClient.Models
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.receive_message, message);
-                messageStream.Write(request);
+                messageStream.WriteEncrypted(request);
 
                 ActionEnum requsetResult = messageStream.Read().Action;
 
@@ -274,9 +293,9 @@ namespace ChatClient.Models
 
             try
             {
-                User user = new User() { Login = login, HashPass = hashPassword };
+                User user = new User() { Login = login, HashPass = "123" };
                 NetworkMessage request = new NetworkMessage(ActionEnum.login, user);
-                messageStream.Write(request);
+                messageStream.WriteEncrypted(request);
 
                 response = messageStream.Read().Action;
 
@@ -291,6 +310,7 @@ namespace ChatClient.Models
             {
                 Console.WriteLine(e.Message);
                 response = ActionEnum.bad;
+                LogoutActionRequest();
             }
 
             NetworkStreamMutex.ReleaseMutex();

@@ -74,8 +74,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="TransitPackage">
-      <HintPath>..\TransitPackage\bin\Release\TransitPackage.dll</HintPath>
+    <Reference Include="TransitPackage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\TransitPackage\bin\Debug\TransitPackage.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

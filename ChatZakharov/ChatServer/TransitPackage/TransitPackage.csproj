@@ -46,6 +46,7 @@
     <Compile Include="Message.cs" />
     <Compile Include="NetworkMessageStream.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="AESKeys.cs" />
     <Compile Include="Room.cs" />
     <Compile Include="User.cs" />
   </ItemGroup>

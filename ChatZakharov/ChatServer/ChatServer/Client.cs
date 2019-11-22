@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,32 +38,38 @@ namespace ChatServer
         {
             try
             {
+                {
+                    // сначала обмен aes ключами, потом прослушка
+                    NetworkMessage request = new NetworkMessage(ActionEnum.aes_handshake);
+                    Process(request);
+                }
+
                 while (streamIsOpen)
                 {
                     if (networkStream.DataAvailable)
                     {
-                        NetworkMessage request = messageStream.Read();
+                        NetworkMessage request = messageStream.ReadEncrypted();
                         Process(request);
                     }
                     else if (ActionQueue.Messages.Count != 0)
                     {
-                        NetworkMessage request = new NetworkMessage(ActionEnum.send_message);
-                        Process(request);
+                        NetworkMessage response = new NetworkMessage(ActionEnum.send_message);
+                        Process(response);
                     }
                     else if (ActionQueue.NewChannels.Count != 0)
                     {
-                        NetworkMessage request = new NetworkMessage(ActionEnum.channel_created);
-                        Process(request);
+                        NetworkMessage response = new NetworkMessage(ActionEnum.channel_created);
+                        Process(response);
                     }
                     else if (ActionQueue.DeletedChannels.Count != 0)
                     {
-                        NetworkMessage request = new NetworkMessage(ActionEnum.channel_deleted);
-                        Process(request);
+                        NetworkMessage response = new NetworkMessage(ActionEnum.channel_deleted);
+                        Process(response);
                     }
                     else if (ActionQueue.ConnectionCheckRequired)
                     {
-                        NetworkMessage request = new NetworkMessage(ActionEnum.connection_check);
-                        Process(request);
+                        NetworkMessage response = new NetworkMessage(ActionEnum.connection_check);
+                        Process(response);
                     }
 
                     Thread.Sleep(100);
@@ -82,6 +89,9 @@ namespace ChatServer
             {
                 switch (message.Action)
                 {
+                    case ActionEnum.aes_handshake:
+                        AESHandshakeActionRequest();
+                        break;
                     case ActionEnum.login:
                         LoginActionResponse(message);
                         break;
@@ -125,6 +135,31 @@ namespace ChatServer
                 Console.WriteLine("Something gone wrong in Process !!!");
                 Console.WriteLine(e.Message);
                 LogoutActionResponse();
+            }
+        }
+
+        private void AESHandshakeActionRequest()
+        {
+            try
+            {
+                Aes aes = Aes.Create();
+                AESKeys AESKeys = new AESKeys()
+                {
+                    Key = aes.Key,
+                    IV = aes.IV
+                };
+                NetworkMessage request = new NetworkMessage(ActionEnum.aes_handshake, AESKeys);
+                messageStream.Write(request);
+
+                ActionEnum requestResult = messageStream.Read().Action;
+                if (requestResult == ActionEnum.ok)
+                    messageStream.AESKeys = AESKeys;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("AES handshake exception {0})",
+                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+                Console.WriteLine(e.Message);
             }
         }
 

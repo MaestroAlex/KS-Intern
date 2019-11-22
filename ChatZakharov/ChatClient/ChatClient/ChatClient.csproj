@@ -74,7 +74,7 @@
     </Reference>
     <Reference Include="TransitPackage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\ChatServer\TransitPackage\bin\Release\TransitPackage.dll</HintPath>
+      <HintPath>..\..\ChatServer\TransitPackage\bin\Debug\TransitPackage.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
