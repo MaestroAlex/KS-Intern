@@ -138,7 +138,7 @@ namespace TransitPackage
                     }
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e.Message);
 
@@ -160,6 +160,9 @@ namespace TransitPackage
                     writer.WriteLine($"Encrypted = size {EncryptedMessage.Length}");
                     for (int i = 0; i < EncryptedMessage.Length; i++)
                         writer.Write(EncryptedMessage[i] + " ");
+                    writer.WriteLine("");
+
+                    writer.WriteLine($"Decrypted = size {decryptedDataSize}");
                 }
 
             }
