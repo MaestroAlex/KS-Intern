@@ -13,127 +13,144 @@ namespace TransitPackage
     // TODO add async write read
     public class NetworkMessageStream : IDisposable
     {
-        private AESKeys aesKeys;
-        public AESKeys AESKeys
-        {
-            get => aesKeys;
-            set
-            {
-                aesKeys = value;
-                aes.Key = value.Key;
-                aes.IV = value.IV;
-            }
-        }
+        public Aes Aes { get; private set; }
 
         private NetworkStream stream;
         private BinaryWriter networkWriter;
         private BinaryReader networkReader;
-        private Aes aes;
 
         public NetworkMessageStream(NetworkStream stream)
         {
             this.stream = stream;
             networkWriter = new BinaryWriter(stream);
             networkReader = new BinaryReader(stream);
-            aes = Aes.Create();
-            aesKeys = new AESKeys();
+            Aes = Aes.Create();
         }
 
         public void Write(NetworkMessage message)
         {
             byte[] byteArrayMessage = message.Serialize();
-            byte[] resData = new byte[4 + byteArrayMessage.Length]; // 4 - obj size
-            BitConverter.GetBytes(byteArrayMessage.Length).CopyTo(resData, 0);
-            byteArrayMessage.CopyTo(resData, 4);
+            byte[] resData = new byte[5 + byteArrayMessage.Length]; // 4 - obj size, 1 - encryption flag (true - encrypted)
+            BitConverter.GetBytes(false).CopyTo(resData, 0);
+            BitConverter.GetBytes(byteArrayMessage.Length).CopyTo(resData, 1);
+            byteArrayMessage.CopyTo(resData, 5);
             networkWriter.Write(resData);
-        }
-
-        public NetworkMessage Read()
-        {
-            int dataSize = networkReader.ReadInt32();
-            return NetworkMessage.Deserialize(networkReader.ReadBytes(dataSize));
         }
 
         public void WriteEncrypted(NetworkMessage message)
         {
-            if (AESKeys.Key == null || AESKeys.Key.Length <= 0)
+            if (Aes.Key == null || Aes.Key.Length <= 0)
                 throw new ArgumentNullException("Key");
-            if (AESKeys.IV == null || AESKeys.IV.Length <= 0)
-                throw new ArgumentNullException("IV");
 
-            ICryptoTransform encryptor = aes.CreateEncryptor();
-            using (MemoryStream msEncrypt = new MemoryStream())
+            byte[] IV = GenerateIV();
+
+            using (ICryptoTransform encryptor = Aes.CreateEncryptor(Aes.Key, IV))
             {
-                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                using (MemoryStream msEncrypt = new MemoryStream())
                 {
-                    using (BinaryWriter bwEncrypt = new BinaryWriter(csEncrypt))
+                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
                     {
                         byte[] serializedMessage = message.Serialize();
                         int decryptedMessageSize = serializedMessage.Length;
-                        bwEncrypt.Write(serializedMessage);
 
-                        byte[] encryptedMessage = msEncrypt.ToArray();
-                        byte[] resDataEncrypted = new byte[8 + encryptedMessage.Length]; // 4 - encrypted obj size (for NetworkStream to read) // 4 - decrypted obj size (for BinaryReader to read)
+                        using (BinaryWriter bwEncrypt = new BinaryWriter(csEncrypt))
+                        {
+                            bwEncrypt.Write(serializedMessage);
+                        }
 
-                        BitConverter.GetBytes(encryptedMessage.Length).CopyTo(resDataEncrypted, 0);
-                        BitConverter.GetBytes(decryptedMessageSize).CopyTo(resDataEncrypted, 4);
-                        encryptedMessage.CopyTo(resDataEncrypted, 8);
+                        NetworkMessageEncrypted encryptedMessage =
+                            new NetworkMessageEncrypted(msEncrypt.ToArray(), IV, decryptedMessageSize);
+
+                        byte[] byteArrayEncryptedMessage = encryptedMessage.Serialize();
+                        byte[] resDataEncrypted = new byte[5 + byteArrayEncryptedMessage.Length]; // 4 - obj size, 1 - encryption flag (true - encrypted)
+
+                        BitConverter.GetBytes(true).CopyTo(resDataEncrypted, 0);
+                        BitConverter.GetBytes(byteArrayEncryptedMessage.Length).CopyTo(resDataEncrypted, 1);
+                        byteArrayEncryptedMessage.CopyTo(resDataEncrypted, 5);
                         networkWriter.Write(resDataEncrypted);
 
+                        #region logging
+                        //using (StreamWriter writer = new StreamWriter(File.Open(@"..\..\..\..\crypto_write_log.txt", FileMode.Create)))
+                        //{
+                        //    writer.WriteLine("write log");
 
-                        //logging
-                        using (StreamWriter writer = new StreamWriter(File.Open(@"..\..\..\..\crypto_write_log.txt", FileMode.Create)))
-                        {
-                            writer.WriteLine("write log");
+                        //    writer.WriteLine($"AES Key = size: {Aes.Key.Length}");
+                        //    for (int i = 0; i < Aes.Key.Length; i++)
+                        //        writer.Write(Aes.Key[i] + " ");
+                        //    writer.WriteLine("");
 
-                            writer.WriteLine($"AES Key = size: {aes.Key.Length}");
-                            for (int i = 0; i < aes.Key.Length; i++)
-                                writer.Write(aes.Key[i] + " ");
-                            writer.WriteLine("");
+                        //    writer.WriteLine($"AES IV = size: {IV.Length}");
+                        //    for (int i = 0; i < IV.Length; i++)
+                        //        writer.Write(IV[i] + " ");
+                        //    writer.WriteLine("");
 
-                            writer.WriteLine($"AES IV = size: {aes.IV.Length}");
-                            for (int i = 0; i < aes.IV.Length; i++)
-                                writer.Write(aes.IV[i] + " ");
-                            writer.WriteLine("");
+                        //    writer.WriteLine($"Encrypted = size {encryptedMessage.EncryptedNetworkMessage.Length}");
+                        //    for (int i = 0; i < encryptedMessage.EncryptedNetworkMessage.Length; i++)
+                        //        writer.Write(encryptedMessage.EncryptedNetworkMessage[i] + " ");
+                        //    writer.WriteLine("");
 
-                            writer.WriteLine($"Encrypted = size {encryptedMessage.Length}");
-                            for (int i = 0; i < encryptedMessage.Length; i++)
-                                writer.Write(encryptedMessage[i] + " ");
-                            writer.WriteLine("");
-
-                            writer.WriteLine($"Decrypted = size {serializedMessage.Length}");
-                            for (int i = 0; i < serializedMessage.Length; i++)
-                                writer.Write(serializedMessage[i] + " ");
-                        }
+                        //    writer.WriteLine($"Decrypted = size {serializedMessage.Length}");
+                        //    for (int i = 0; i < serializedMessage.Length; i++)
+                        //        writer.Write(serializedMessage[i] + " ");
+                        //}
+                        #endregion
                     }
                 }
             }
         }
 
-        public NetworkMessage ReadEncrypted()
+        private byte[] GenerateIV()
         {
-            if (AESKeys.Key == null || AESKeys.Key.Length <= 0)
+            Random rand = new Random();
+            byte[] res = new byte[16];
+            for (int i = 0; i < res.Length; i++)
+                res[i] = (byte)rand.Next(0, 255);
+
+            return res;
+        }
+
+        public NetworkMessage Read()
+        {
+            // networkStream не знает будет отправлено зашифрованное сообщение или нет => Read один, в нём определям
+            // зашифрованное оно или нет с помощью флага
+
+            bool isEncrypted = networkReader.ReadBoolean();
+            return isEncrypted ? InternalReadEncrypted() : InternalRead();
+        }
+
+        private NetworkMessage InternalRead()
+        {
+            int dataSize = networkReader.ReadInt32();
+            return NetworkMessage.Deserialize(networkReader.ReadBytes(dataSize));
+        }
+
+        private NetworkMessage InternalReadEncrypted()
+        {
+            if (Aes.Key == null || Aes.Key.Length <= 0)
                 throw new ArgumentNullException("Key");
-            if (AESKeys.IV == null || AESKeys.IV.Length <= 0)
-                throw new ArgumentNullException("IV");
 
             int encryptedDataSize = networkReader.ReadInt32();
-            int decryptedDataSize = networkReader.ReadInt32();
-            byte[] EncryptedMessage = networkReader.ReadBytes(encryptedDataSize);
+            NetworkMessageEncrypted encryptedMessage =
+                NetworkMessageEncrypted.Deserialize(networkReader.ReadBytes(encryptedDataSize));
+
+            if (encryptedMessage.IV == null || encryptedMessage.IV.Length <= 0)
+                throw new ArgumentNullException("IV");
 
             NetworkMessage networkMessage = null;
 
             try
             {
-                ICryptoTransform decryptor = aes.CreateDecryptor();
-                using (MemoryStream msDecrypt = new MemoryStream(EncryptedMessage))
+                using (ICryptoTransform decryptor = Aes.CreateDecryptor(Aes.Key, encryptedMessage.IV))
                 {
-                    using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                    using (MemoryStream msDecrypt = new MemoryStream(encryptedMessage.EncryptedNetworkMessage))
                     {
-                        using (BinaryReader brDecrypt = new BinaryReader(csDecrypt))
+                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                         {
-                            byte[] decr = brDecrypt.ReadBytes(decryptedDataSize);
-                            networkMessage = NetworkMessage.Deserialize(decr);
+                            using (BinaryReader brDecrypt = new BinaryReader(csDecrypt))
+                            {
+                                byte[] decr = brDecrypt.ReadBytes(encryptedMessage.DecryptedSize);
+                                networkMessage = NetworkMessage.Deserialize(decr);
+                            }
                         }
                     }
                 }
@@ -141,29 +158,29 @@ namespace TransitPackage
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                #region logging
+                //using (StreamWriter writer = new StreamWriter(File.Open(@"..\..\..\..\crypto_read_log.txt", FileMode.Create)))
+                //{
+                //    writer.WriteLine("read log");
 
-                //logging
-                using (StreamWriter writer = new StreamWriter(File.Open(@"..\..\..\..\crypto_read_log.txt", FileMode.Create)))
-                {
-                    writer.WriteLine("read log");
+                //    writer.WriteLine($"AES Key = size: {Aes.Key.Length}");
+                //    for (int i = 0; i < Aes.Key.Length; i++)
+                //        writer.Write(Aes.Key[i] + " ");
+                //    writer.WriteLine("");
 
-                    writer.WriteLine($"AES Key = size: {aes.Key.Length}");
-                    for (int i = 0; i < aes.Key.Length; i++)
-                        writer.Write(aes.Key[i] + " ");
-                    writer.WriteLine("");
+                //    writer.WriteLine($"AES IV = size: {encryptedMessage.IV.Length}");
+                //    for (int i = 0; i < encryptedMessage.IV.Length; i++)
+                //        writer.Write(encryptedMessage.IV[i] + " ");
+                //    writer.WriteLine("");
 
-                    writer.WriteLine($"AES IV = size: {aes.IV.Length}");
-                    for (int i = 0; i < aes.IV.Length; i++)
-                        writer.Write(aes.IV[i] + " ");
-                    writer.WriteLine("");
+                //    writer.WriteLine($"Encrypted = size {encryptedMessage.EncryptedNetworkMessage.Length}");
+                //    for (int i = 0; i < encryptedMessage.EncryptedNetworkMessage.Length; i++)
+                //        writer.Write(encryptedMessage.EncryptedNetworkMessage[i] + " ");
+                //    writer.WriteLine("");
 
-                    writer.WriteLine($"Encrypted = size {EncryptedMessage.Length}");
-                    for (int i = 0; i < EncryptedMessage.Length; i++)
-                        writer.Write(EncryptedMessage[i] + " ");
-                    writer.WriteLine("");
-
-                    writer.WriteLine($"Decrypted = size {decryptedDataSize}");
-                }
+                //    writer.WriteLine($"Decrypted = size {encryptedMessage.DecryptedSize}");
+                //}
+                #endregion
 
             }
             return networkMessage;
@@ -171,41 +188,7 @@ namespace TransitPackage
 
         public void Dispose()
         {
-            aes.Dispose();
-        }
-    }
-
-    [Serializable]
-    public class NetworkMessage
-    {
-        public ActionEnum Action { get; set; }
-        public object Obj { get; set; }
-
-        public NetworkMessage(ActionEnum action, object obj = null)
-        {
-            Action = action;
-            Obj = obj;
-        }
-
-        public byte[] Serialize()
-        {
-            BinaryFormatter formatter = new BinaryFormatter();
-            using (MemoryStream streamResult = new MemoryStream())
-            {
-                formatter.Serialize(streamResult, this);
-                return streamResult.ToArray();
-            }
-        }
-
-        public static NetworkMessage Deserialize(byte[] data)
-        {
-            BinaryFormatter formatter = new BinaryFormatter();
-            using (MemoryStream streamResult = new MemoryStream())
-            {
-                streamResult.Write(data, 0, data.Length);
-                streamResult.Seek(0, SeekOrigin.Begin);
-                return (NetworkMessage)formatter.Deserialize(streamResult);
-            }
+            Aes.Dispose();
         }
     }
 }

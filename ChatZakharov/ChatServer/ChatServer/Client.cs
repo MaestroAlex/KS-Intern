@@ -48,7 +48,7 @@ namespace ChatServer
                 {
                     if (networkStream.DataAvailable)
                     {
-                        NetworkMessage request = messageStream.ReadEncrypted();
+                        NetworkMessage request = messageStream.Read();
                         Process(request);
                     }
                     else if (ActionQueue.Messages.Count != 0)
@@ -142,44 +142,19 @@ namespace ChatServer
         {
             try
             {
-                Aes aes = Aes.Create();
-                AESKeys AESKeys = new AESKeys()
-                {
-                    Key = aes.Key,
-                    IV = aes.IV
-                };
-                NetworkMessage request = new NetworkMessage(ActionEnum.aes_handshake, AESKeys);
+                byte[] aesKey = Aes.Create().Key; 
+                NetworkMessage request = new NetworkMessage(ActionEnum.aes_handshake, aesKey);
                 messageStream.Write(request);
 
                 ActionEnum requestResult = messageStream.Read().Action;
                 if (requestResult == ActionEnum.ok)
-                    messageStream.AESKeys = AESKeys;
+                    messageStream.Aes.Key = aesKey;
             }
             catch (Exception e)
             {
                 Console.WriteLine("AES handshake exception {0})",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
-            }
-        }
-
-        private void GetConnectionCheckInterval()
-        {
-            try
-            {
-                NetworkMessage response = new NetworkMessage(ActionEnum.ok,
-                    server.ConnectedIpConnectionCheckTimerInterval);
-                messageStream.Write(response);
-
-                Console.WriteLine("GetConnectionCheckInterval send to {0} ({1})",
-                    Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine("GetConnectionCheckInterval exception - {0}",
-                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
-                Console.WriteLine(e.Message);
-                LogoutActionResponse();
             }
         }
 
@@ -221,7 +196,7 @@ namespace ChatServer
             {
                 List<Message> history = DB.GetAllHistory(Name).Result;
                 NetworkMessage response = new NetworkMessage(ActionEnum.ok, history);
-                messageStream.Write(response);
+                messageStream.WriteEncrypted(response);
 
                 Console.WriteLine("GetHistory send to {0} ({1})",
                     Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
@@ -240,7 +215,7 @@ namespace ChatServer
             {
                 List<Channel> channels = DB.GetChannels(Name).Result;
                 NetworkMessage response = new NetworkMessage(ActionEnum.ok, channels);
-                messageStream.Write(response);
+                messageStream.WriteEncrypted(response);
 
                 Console.WriteLine("GetChannels send to {0} ({1})",
                     Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
@@ -250,6 +225,25 @@ namespace ChatServer
                 Console.WriteLine("GetChannelsActionResponse exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
+            }
+        }
+        private void GetConnectionCheckInterval()
+        {
+            try
+            {
+                NetworkMessage response = new NetworkMessage(ActionEnum.ok,
+                    server.ConnectedIpConnectionCheckTimerInterval);
+                messageStream.Write(response);
+
+                Console.WriteLine("GetConnectionCheckInterval send to {0} ({1})",
+                    Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("GetConnectionCheckInterval exception - {0}",
+                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+                Console.WriteLine(e.Message);
+                LogoutActionResponse();
             }
         }
 
@@ -276,10 +270,9 @@ namespace ChatServer
             {
                 Message cur = ActionQueue.Messages.Dequeue();
                 NetworkMessage message = new NetworkMessage(ActionEnum.receive_message, cur);
-                messageStream.Write(message);
+                messageStream.WriteEncrypted(message);
 
-                Console.WriteLine("Message \"{0}\" send from {1} to {2}",
-                    cur.Text, cur.From, cur.To);
+                Console.WriteLine("Message send from {1} to {2}", cur.From, cur.To);
 
             }
             catch (Exception e)

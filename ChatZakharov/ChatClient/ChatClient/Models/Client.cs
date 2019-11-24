@@ -101,7 +101,7 @@ namespace ChatClient.Models
         {
             try
             {
-                messageStream.AESKeys = (AESKeys)message.Obj;
+                messageStream.Aes.Key = (byte[])message.Obj;
                 messageStream.Write(new NetworkMessage(ActionEnum.ok));
                 return true;
             }
@@ -293,7 +293,7 @@ namespace ChatClient.Models
 
             try
             {
-                User user = new User() { Login = login, HashPass = "123" };
+                User user = new User() { Login = login, HashPass = hashPassword };
                 NetworkMessage request = new NetworkMessage(ActionEnum.login, user);
                 messageStream.WriteEncrypted(request);
 
@@ -326,7 +326,7 @@ namespace ChatClient.Models
             {
                 Room room = new Room() { UserOwner = Name, HashPass = hashPassword, Name = roomName };
                 NetworkMessage request = new NetworkMessage(ActionEnum.create_room, room);
-                messageStream.Write(request);
+                messageStream.WriteEncrypted(request);
                 response = messageStream.Read().Action;
 
                 connectionCheckForClientExist = true;
@@ -350,7 +350,7 @@ namespace ChatClient.Models
             {
                 User user = new User() { Login = login, HashPass = hashPassword };
                 NetworkMessage request = new NetworkMessage(ActionEnum.create_user, user);
-                messageStream.Write(request);
+                messageStream.WriteEncrypted(request);
 
                 response = messageStream.Read().Action;
 
