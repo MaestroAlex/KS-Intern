@@ -69,13 +69,15 @@ namespace ChatClient.ViewModel
 
         private async Task<bool> Connect()
         {
-            bool res = await Task.Run(() => MainModel.Client.Connect());
-            return res;
-        }
-
-        private async Task GetConnectionChekInterval()
-        {
-            await Task.Run(() => MainModel.Client.GetConnectionChekInterval());
+            if (await Task.Run(() => MainModel.Client.Connect()) &&
+                   await Task.Run(() => MainModel.Client.GetConnectionChekInterval()) &&
+                   await Task.Run(() => MainModel.Client.AESHandshakeWithRSAActionRequest()))
+                return true;
+            else
+            {
+                await Task.Run(() => MainModel.Client.LogoutActionRequest());
+                return false;
+            }
         }
 
         private void TitleChange()

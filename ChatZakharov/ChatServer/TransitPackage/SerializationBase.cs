@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace TransitPackage
 {
     [Serializable]
-    public class SerializationBase<T>
+    public abstract class SerializationBase<T>
     {
         public byte[] Serialize()
         {

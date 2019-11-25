@@ -13,14 +13,15 @@ namespace ChatServer
 {
     class Client
     {
-        Server server;
         public TcpClient TcpClient { get; private set; }
+        public DataQueue ActionQueue { get; private set; }
+        public string Name { get; private set; }
+        public bool IsBusy { get; private set; }
+
+        Server server;
         NetworkStream networkStream;
         NetworkMessageStream messageStream;
         bool streamIsOpen;
-
-        public string Name { get; private set; }
-        public DataQueue ActionQueue { get; private set; }
 
         public Client(TcpClient client, Server server)
         {
@@ -38,18 +39,14 @@ namespace ChatServer
         {
             try
             {
-                {
-                    // сначала обмен aes ключами, потом прослушка
-                    NetworkMessage request = new NetworkMessage(ActionEnum.aes_handshake);
-                    Process(request);
-                }
-
                 while (streamIsOpen)
                 {
                     if (networkStream.DataAvailable)
                     {
+                        IsBusy = true;
                         NetworkMessage request = messageStream.Read();
                         Process(request);
+                        IsBusy = false;
                     }
                     else if (ActionQueue.Messages.Count != 0)
                     {
@@ -90,7 +87,7 @@ namespace ChatServer
                 switch (message.Action)
                 {
                     case ActionEnum.aes_handshake:
-                        AESHandshakeActionRequest();
+                        AESHandshakeWithRSAActionResponse();
                         break;
                     case ActionEnum.login:
                         LoginActionResponse(message);
@@ -138,21 +135,34 @@ namespace ChatServer
             }
         }
 
-        private void AESHandshakeActionRequest()
+        private void AESHandshakeWithRSAActionResponse()
         {
             try
             {
-                byte[] aesKey = Aes.Create().Key; 
-                NetworkMessage request = new NetworkMessage(ActionEnum.aes_handshake, aesKey);
-                messageStream.Write(request);
+                RSAParameters clientPublicKey = (RSAParameters)messageStream.Read().Obj;
 
+                byte[] aesKey = Aes.Create().Key;
+                byte[] encryptedAesKey;
+
+                using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
+                {
+                    rsa.PersistKeyInCsp = false;
+                    rsa.ImportParameters(clientPublicKey);
+                    encryptedAesKey = rsa.Encrypt(aesKey, true);
+                }
+
+                messageStream.Write(new NetworkMessage(ActionEnum.ok, encryptedAesKey));
                 ActionEnum requestResult = messageStream.Read().Action;
+
                 if (requestResult == ActionEnum.ok)
                     messageStream.Aes.Key = aesKey;
+
+                Console.WriteLine("AES handshake occurred {0}",
+                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
             }
             catch (Exception e)
             {
-                Console.WriteLine("AES handshake exception {0})",
+                Console.WriteLine("AES handshake exception {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
             }
@@ -254,6 +264,7 @@ namespace ChatServer
                 messageStream.Write(message);
                 messageStream.Read();
                 ActionQueue.ConnectionCheckRequired = false;
+                Console.WriteLine("connection check");
             }
             catch (Exception e)
             {

@@ -36,6 +36,7 @@ namespace ChatClient.Models
         NetworkMessageStream messageStream;
         bool streamIsOpen;
         System.Timers.Timer connnectionCheckForClientTimer;
+        System.Timers.Timer changeAesKeyTimer;
         bool connectionCheckForClientExist;
         Mutex NetworkStreamMutex; // флаг, разрешающий чтение в потоке ожидания обновления данных 
                                   // (иначе он может вмешиваться в работу NetworkStream при реквестах)
@@ -54,6 +55,10 @@ namespace ChatClient.Models
                 else
                     Disconnect();
             };
+
+            changeAesKeyTimer = new System.Timers.Timer();
+            changeAesKeyTimer.Elapsed += (sender, e) => AESHandshakeWithRSAActionRequest();
+            changeAesKeyTimer.Interval = 7200000; // aes keys change every 2 hours
             this.config = config;
         }
 
@@ -83,8 +88,6 @@ namespace ChatClient.Models
         {
             switch (networkMessage.Action)
             {
-                case ActionEnum.aes_handshake:
-                    return AESHandshakeActionResponse(networkMessage);
                 case ActionEnum.receive_message:
                     return ReceiveMessageActionResponse(networkMessage);
                 case ActionEnum.channel_created:
@@ -95,22 +98,6 @@ namespace ChatClient.Models
                     return ConnectionCheckActionResponse(networkMessage);
             }
             return false;
-        }
-
-        private bool AESHandshakeActionResponse(NetworkMessage message)
-        {
-            try
-            {
-                messageStream.Aes.Key = (byte[])message.Obj;
-                messageStream.Write(new NetworkMessage(ActionEnum.ok));
-                return true;
-            }
-            catch(Exception e)
-            {
-                Console.WriteLine("AES handshake exception");
-                Console.WriteLine(e.Message);
-                return false;
-            }
         }
 
         private bool ChannelDeletedNotificationActionResponse(NetworkMessage message)
@@ -166,8 +153,6 @@ namespace ChatClient.Models
                 return false;
             }
         }
-
-
 
         private bool ReceiveMessageActionResponse(NetworkMessage message)
         {
@@ -225,21 +210,27 @@ namespace ChatClient.Models
             return res;
         }
 
-        public void GetConnectionChekInterval()
+        public bool GetConnectionChekInterval()
         {
             NetworkStreamMutex.WaitOne();
+            bool res;
+
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.get_connection_check_interval);
                 messageStream.Write(request);
                 connnectionCheckForClientTimer.Interval = (int)messageStream.Read().Obj + 2000;
                 connnectionCheckForClientTimer.Start();
+                res = true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                res = false;
             }
+
             NetworkStreamMutex.ReleaseMutex();
+            return res;
         }
 
         public void GetHistoryActionRequest()
@@ -280,6 +271,52 @@ namespace ChatClient.Models
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+            }
+
+            NetworkStreamMutex.ReleaseMutex();
+            return res;
+        }
+
+        public bool AESHandshakeWithRSAActionRequest()
+        {
+            NetworkStreamMutex.WaitOne();
+
+            bool res;
+            try
+            {
+                messageStream.Write(new NetworkMessage(ActionEnum.aes_handshake));
+
+                RSAParameters clientPublicKey;
+                RSAParameters clientPrivateKey;
+
+                using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
+                {
+                    rsa.PersistKeyInCsp = false;
+                    clientPublicKey = rsa.ExportParameters(false);
+                    clientPrivateKey = rsa.ExportParameters(true);
+                }
+
+                messageStream.Write(new NetworkMessage(ActionEnum.ok, clientPublicKey));
+
+                byte[] encryptedAesKey = (byte[])messageStream.Read().Obj;
+                byte[] decryptedAesKey;
+
+                using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
+                {
+                    rsa.PersistKeyInCsp = false;
+                    rsa.ImportParameters(clientPrivateKey);
+                    decryptedAesKey = rsa.Decrypt(encryptedAesKey, true);
+                }
+
+                messageStream.Aes.Key = decryptedAesKey;
+                messageStream.Write(new NetworkMessage(ActionEnum.ok));
+                res = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("AES handshake exception");
+                Console.WriteLine(e.Message);
+                res = false;
             }
 
             NetworkStreamMutex.ReleaseMutex();
@@ -406,6 +443,7 @@ namespace ChatClient.Models
                     stream = tcpClient.GetStream();
                     messageStream = new NetworkMessageStream(stream);
                     streamIsOpen = true;
+                    changeAesKeyTimer.Start();
                     StartListening();
                     ConnectionState = ClientState.Connected;
 
@@ -457,6 +495,8 @@ namespace ChatClient.Models
                 tcpClient.Close();
                 tcpClient = null;
                 streamIsOpen = false;
+                changeAesKeyTimer.Stop();
+                connnectionCheckForClientTimer.Stop();
             }
         }
 

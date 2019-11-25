@@ -13,15 +13,6 @@ namespace ChatServer
         public Queue<Channel> NewChannels { get; set; }
         public Queue<Channel> DeletedChannels { get; set; }
         public bool ConnectionCheckRequired { get; set; }
-        public bool IsBusy
-        {
-            get
-            {
-                return Messages.Count != 0
-                    || NewChannels.Count != 0
-                    || DeletedChannels.Count != 0;
-            }
-        }
 
         public DataQueue()
         {

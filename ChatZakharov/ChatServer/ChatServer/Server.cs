@@ -37,7 +37,7 @@ namespace ChatServer
         public async Task Start()
         {
             listener.Start();
-            //connectedIpConnectionCheckTimer.Start();
+            connectedIpConnectionCheckTimer.Start();
             Console.WriteLine("Server is up");
             while (true)
             {
@@ -63,7 +63,7 @@ namespace ChatServer
             connectedIpChanged.WaitOne();
 
             for (int i = connectedIp.Count - 1; i >= 0; i--)
-                if (!connectedIp[i].ActionQueue.IsBusy)
+                if (!connectedIp[i].IsBusy)
                     connectedIp[i].ActionQueue.ConnectionCheckRequired = true;
 
             connectedIpChanged.ReleaseMutex();
