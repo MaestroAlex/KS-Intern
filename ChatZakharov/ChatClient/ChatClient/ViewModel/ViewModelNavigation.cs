@@ -40,7 +40,7 @@ namespace ChatClient.ViewModel
         public void NavigateTo(string pageKey)
         {
             if (string.IsNullOrWhiteSpace(pageKey))
-                return;
+                throw new ArgumentNullException("pageKey");
 
             mainFrame.Source = pages[pageKey];
             Argument = null;
@@ -49,7 +49,7 @@ namespace ChatClient.ViewModel
         public void NavigateTo(string pageKey, object parameter)
         {
             if (string.IsNullOrWhiteSpace(pageKey))
-                return;
+                throw new ArgumentNullException("pageKey");
 
             mainFrame.Source = pages[pageKey];
             Argument = parameter;
@@ -58,7 +58,7 @@ namespace ChatClient.ViewModel
         public void Register(string key, Uri pagePath)
         {
             if (string.IsNullOrWhiteSpace(key))
-                return;
+                throw new ArgumentNullException("key");
 
             if (pages.ContainsKey(key))
                 pages[key] = pagePath;

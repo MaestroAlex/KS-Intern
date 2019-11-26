@@ -101,7 +101,7 @@ namespace ChatClient.ViewModel
         {
             await Task.Run(() => MainModel.Client.LogoutActionRequest());
             ConnectionState = ClientState.LoggedOut;
-            await Task.Run(() => MainModel.Client.Connect());
+            await Connect();
 
             //Application.Current.Dispatcher
             //        .BeginInvoke(new Action(()=> navigation.NavigateTo("LoginPage")));

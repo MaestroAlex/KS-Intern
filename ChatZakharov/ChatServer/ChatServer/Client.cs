@@ -264,7 +264,7 @@ namespace ChatServer
                 messageStream.Write(message);
                 messageStream.Read();
                 ActionQueue.ConnectionCheckRequired = false;
-                Console.WriteLine("connection check");
+               // Console.WriteLine("connection check");
             }
             catch (Exception e)
             {
