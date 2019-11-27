@@ -10,9 +10,8 @@ namespace QChat.Common
     public struct RoomingHeader
     {
         public RoomingIntention Intention;
-        public RoomInfo Info;
 
-        public static readonly int ByteLength = sizeof(RoomingIntention) + RoomInfo.ByteLength;  
+        public static readonly int ByteLength = sizeof(RoomingIntention);  
 
         public byte[] AsBytes()
         {
@@ -22,27 +21,25 @@ namespace QChat.Common
         }
         public void AsBytes(byte[] buffer, int offset)
         {
-            buffer[offset++] = (byte)Intention;
-            Info.AsBytes(buffer, offset);
+            buffer[offset] = (byte)Intention;
         }
 
         public static RoomingHeader FromBytes(byte[] buffer, int offset) => new RoomingHeader
         {
-            Intention = (RoomingIntention)buffer[offset],
-            Info = RoomInfo.FromBytes(buffer, sizeof(RoomingIntention))
+            Intention = (RoomingIntention)buffer[offset]
         };
         
 
         public static RoomingHeader FromConnection<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            connection.Read(bytes, 0, ByteLength);
+            if (connection.Read(bytes, 0, ByteLength) <= 0) throw new Exception();
             return FromBytes(bytes, 0);
         }
         public static async Task<RoomingHeader> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            await connection.ReadAsync(bytes, 0, ByteLength);
+            if (await connection.ReadAsync(bytes, 0, ByteLength) <= 0) throw new Exception();
             return FromBytes(bytes, 0);
         }
     }
@@ -52,6 +49,7 @@ namespace QChat.Common
         Create = 0,
         Join,
         Connect,
-        Remove
+        Remove,
+        Invitation
     }
 }

@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthorizationInfo.cs" />
+    <Compile Include="AuthorizationResponceInfo.cs" />
     <Compile Include="Collections\CapacityArray.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="ContentType.cs" />
@@ -58,10 +59,15 @@
     <Compile Include="Net\TextSender.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecieverInfo.cs" />
+    <Compile Include="RegistrationInfo.cs" />
+    <Compile Include="RegistrationResponceInfo.cs" />
     <Compile Include="RequestHeader.cs" />
     <Compile Include="ResponceHeader.cs" />
+    <Compile Include="RoomConnectionInfo.cs" />
+    <Compile Include="RoomCreationInfo.cs" />
     <Compile Include="RoomInfo.cs" />
     <Compile Include="RoomingHeader.cs" />
+    <Compile Include="RoomInvitationInfo.cs" />
     <Compile Include="SenderInfo.cs" />
     <Compile Include="UserInfo.cs" />
   </ItemGroup>

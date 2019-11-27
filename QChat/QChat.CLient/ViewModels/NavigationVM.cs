@@ -11,10 +11,16 @@ namespace QChat.CLient.ViewModels
 {
     internal class NavigationVM : DependencyObject
     {
+        public event EventHandler PageChanging;
+        public event EventHandler PageChanged;
+
         public object CurrentPage
         {
             get { return (object)GetValue(CurrentPageProperty); }
-            set { SetValue(CurrentPageProperty, value);
+            set {
+                PageChanging?.Invoke(this, null);
+                SetValue(CurrentPageProperty, value);
+                PageChanged?.Invoke(this, null);
             }
         }
         public static readonly DependencyProperty CurrentPageProperty =

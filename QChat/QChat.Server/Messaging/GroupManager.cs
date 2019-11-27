@@ -8,15 +8,15 @@ namespace QChat.Server.Messaging
 {
     class GroupManager
     {
-        private Dictionary<ulong, Group> _groups;
+        private Dictionary<int, Group> _groups;
 
 
         public GroupManager()
         {
-            _groups = new Dictionary<ulong, Group>();
+            _groups = new Dictionary<int, Group>();
         }
 
-        public Group GetGroup(ulong id)
+        public Group GetGroup(int id)
         {
             return _groups[id];
         }

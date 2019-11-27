@@ -15,8 +15,6 @@ namespace QChat.CLient.Services
         private IPAddress _ipAdress;
         private int _port;
 
-        private AuthorizationService _authorizationService;
-
         public Connection Connection { get; private set; } 
 
         private ConnectionClosedEventHandler _connectionClosedEventHandler;
@@ -33,7 +31,7 @@ namespace QChat.CLient.Services
 
         public Connection Connect()
         {
-            if (Connection != null) return Connection;
+            if (Connection == null ? false : Connection.Connected) return Connection;
 
             var tcpClient = new TcpClient();
 
@@ -46,16 +44,14 @@ namespace QChat.CLient.Services
                 return null;
             }
 
-            Connection = new Connection(tcpClient);
+            Connection = new Connection(tcpClient, 0);
             Connection.ConnectionClosed += _connectionClosedEventHandler;
-
-            if (!_authorizationService.Authorize(Connection)) Connection = null;
 
             return Connection;
         }
         public async Task<Connection> ConnectAsync()
         {
-            if (Connection != null) return Connection;
+            if (Connection == null ? false : Connection.Connected) return Connection;
 
             var tcpClient = new TcpClient();
 
@@ -68,13 +64,11 @@ namespace QChat.CLient.Services
                 return null;
             }
 
-            Connection = new Connection(tcpClient);
+            Connection = new Connection(tcpClient, 0);
             Connection.ConnectionClosed += _connectionClosedEventHandler;
 
-            if (!await _authorizationService.AuthorizeAsync(Connection)) Connection = null;
-
             return Connection;
-        }
+        }        
 
         private void HandleClosedConnection(Connection connection, EventArgs eventArgs)
         {

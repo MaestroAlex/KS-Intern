@@ -19,11 +19,13 @@
 
         <StackPanel Background="Bisque">
         </StackPanel>
-        
+
         <Frame x:Name="MainFrame" 
            Content="{Binding CurrentPage, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
            NavigationUIVisibility="Hidden"
            Grid.Row="1"
-           BorderThickness="0"/>
+           BorderThickness="0">
+            
+        </Frame>
     </Grid>
 </Window>

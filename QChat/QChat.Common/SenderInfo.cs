@@ -8,20 +8,19 @@ namespace QChat.Common
 {
     public struct SenderInfo
     {
-        public ulong Id;
+        public UserInfo UserInfo;
 
         public static readonly int ByteLength = sizeof(ulong);
 
-        public byte[] AsBytes() => BitConverter.GetBytes(Id);
+        public byte[] AsBytes() => UserInfo.AsBytes();
         public void AsBytes(byte[] buffer, int offset)
         {
-            var bytes = BitConverter.GetBytes(Id);
-            Array.Copy(bytes, 0, buffer, offset, ByteLength);
+            UserInfo.AsBytes(buffer, offset);
         }
 
         public static SenderInfo FromBytes(byte[] buff, int offset) => new SenderInfo()
         {
-            Id = BitConverter.ToUInt64(buff, offset)
+            UserInfo = UserInfo.FromBytes(buff, offset)
         };
     }
 }

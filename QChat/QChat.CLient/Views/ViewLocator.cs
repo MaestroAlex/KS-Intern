@@ -12,9 +12,11 @@ namespace QChat.CLient.Views
         {
             StaticProvider.TryRegisterFactory<MainView>(() => new MainView());
             StaticProvider.TryRegisterFactory<AuthorizationView>(() => new AuthorizationView());
+            StaticProvider.TryRegisterFactory<RegistrationView>(() => new RegistrationView());
         }
 
         public MainView MainView => StaticProvider.GetInstanceOf<MainView>();
-        public AuthorizationView AuthorizationView => StaticProvider.GetInstanceOf<AuthorizationView>();        
+        public AuthorizationView AuthorizationView => StaticProvider.GetInstanceOf<AuthorizationView>();
+        public RegistrationView RegistrationView => StaticProvider.GetInstanceOf<RegistrationView>();
     }
 }

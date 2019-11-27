@@ -17,14 +17,19 @@ namespace QChat.Server.Sessioning
         private MessagingManager _messenger;
         private RoomManager _roomManager;
 
-        public ulong Id { get; private set; }
-        public Connection Connection { get; private set; }
+        public int UserId { get; private set; }
+        public int Id { get; private set; }
+        public IConnection Connection { get; private set; }
         public bool Active { get => _continue; }
 
-        public Session(Connection connection, IManagerProvider managerProvider)
+        public event SessionClosedEventHandler SessionClosed;
+
+        public Session(IConnection connection, IManagerProvider managerProvider, UserInfo userInfo)
         {
             Id = connection.Id;
             Connection = connection;
+            UserId = userInfo.Id;
+            connection.ConnectionClosed += HandleClosedConnection;
 
             _messenger = managerProvider.Get<MessagingManager>();
             _roomManager = managerProvider.Get<RoomManager>();
@@ -49,18 +54,26 @@ namespace QChat.Server.Sessioning
                     switch (request.Intention)
                     {
                         case RequestIntention.Messaging:
-                            _messenger.HandleMessage(Connection);
+                            _messenger.HandleMessage(this);
                             break;
                         case RequestIntention.Rooming:
-                            _roomManager.HandleRooming(Connection);
+                            _roomManager.HandleRooming(this);
                             break;
                     }
                 }
             }
             catch
             {
-
+                Connection.Dispose();
             }
         }
+
+        private void HandleClosedConnection(IConnection sender, EventArgs args)
+        {
+            _continue = false;
+            SessionClosed?.Invoke(this, null);
+        }
     }
+
+    delegate void SessionClosedEventHandler(Session sender, EventArgs eventArgs);
 }

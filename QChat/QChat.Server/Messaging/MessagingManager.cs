@@ -23,30 +23,41 @@ namespace QChat.Server.Messaging
             
         }
 
-        public MessagingResult HandleMessage(IConnection connection)
+        public MessagingResult HandleMessage(Session session)
         {
             MessageHeader header;
+            var connection = session.Connection;
+
+            connection.LockRead();
 
             try
             {
-                header = MessageHeader.FromConnection(connection);
-            }
-            catch
-            {
-                return new MessagingResult { Success = false };
-            }
+                try
+                {
+                    header = MessageHeader.FromConnection(connection);
+                }
+                catch
+                {
+                    return new MessagingResult { Success = false };
+                }
 
-            switch (header.RecieverInfo.Type)
+                switch (header.RecieverInfo.Type)
+                {
+                    case RecieverType.Room:
+                        return _roomMessenger.Handle(connection, header);
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+            finally
             {
-                case RecieverType.Room:
-                    return _roomMessenger.Handle(connection, header);
-                default:
-                    throw new NotImplementedException();
+                connection.ReleaseRead();
             }
         }
-        public async Task<MessagingResult> HandleMessageAsync(IConnection connection)
+        public async Task<MessagingResult> HandleMessageAsync(Session session)
         {
             MessageHeader header;
+            var connection = session.Connection;
 
             try
             {

@@ -44,14 +44,19 @@ namespace QChat.Server.Messaging
         {
             var sender = DefineSender(message);
 
-            foreach (var user in room.Members)
+            foreach (var userSessions in room.GetMembersSessions())
             {
-                foreach (var session in user.Sessions)
+                foreach (var session in userSessions.Values)
                 {
                     var connection = session.Connection;
 
+                    connection.LockWrite();
+
+                    SendMessageResponce(connection);
                     SendMessageHeader(message.Header, connection);
                     sender.SendContent(connection, message.Content);
+
+                    connection.ReleaseWrite();
                 }
             }
         }
@@ -59,14 +64,19 @@ namespace QChat.Server.Messaging
         {
             var sender = DefineSender(message);
 
-            foreach (var user in room.Members)
+            foreach (var sessions in room.GetMembersSessions())
             {
-                foreach (var session in user.Sessions)
+                foreach (var session in sessions.Values)
                 {
                     var connection = session.Connection;
 
+                    await connection.LockWriteAsync();
+
+                    await SendMessageResponceAsync(connection);
                     await SendMessageHeaderAsync(message.Header, connection);
                     await sender.SendContentAsync(connection, message.Content);
+
+                    connection.ReleaseWrite();
                 }
             }
         }
@@ -96,6 +106,21 @@ namespace QChat.Server.Messaging
             {
                 return null;
             }
+        }
+
+        private void SendMessageResponce(IConnection connection)
+        {
+            connection.Write(
+                new ResponceHeader(ResponceIntention.Messaging).AsBytes(),
+                0,
+                ResponceHeader.ByteLength);
+        }
+        private async Task SendMessageResponceAsync(IConnection connection)
+        {
+            await connection.WriteAsync(
+                new ResponceHeader(ResponceIntention.Messaging).AsBytes(),
+                0,
+                ResponceHeader.ByteLength);
         }
     }
 }

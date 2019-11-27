@@ -14,9 +14,9 @@ namespace QChat.Server.Authorization
     {
         private readonly TcpListener _tcpListner;
         private int _maxConnections;
-        private ConnectionClosedEventHandler _connectionClosedEventHandler;
+        private int _connectionCounter = 0;
 
-        private readonly Dictionary<ulong, IConnection> _connections;
+        private readonly Dictionary<int, IConnection> _connections;
 
 
         public ListnerState State { get; private set; }
@@ -25,9 +25,7 @@ namespace QChat.Server.Authorization
         public ConnectionManager(IPAddress ipAddress, int port)
         {
             _tcpListner = new TcpListener(ipAddress, port);
-            _connections = new Dictionary<ulong, IConnection>();
-
-            _connectionClosedEventHandler = HandleClosedConnection;
+            _connections = new Dictionary<int, IConnection>();
         }
 
         public void Start(int maxConnections)
@@ -38,22 +36,25 @@ namespace QChat.Server.Authorization
         
         public Connection GetConnection()
         {
-            var connection =  new Connection(_tcpListner.AcceptTcpClient());
-            connection.ConnectionClosed += _connectionClosedEventHandler;
+            var connection =  new Connection(_tcpListner.AcceptTcpClient(), ++_connectionCounter);
+            connection.ConnectionClosed += HandleClosedConnection;
             _connections.Add(connection.Id, connection);
             return connection;
         }
         public async Task<Connection> GetConnectionAsync()
         {
-            var connection = new Connection(await _tcpListner.AcceptTcpClientAsync());
-            connection.ConnectionClosed += _connectionClosedEventHandler;
+            var connection = new Connection(await _tcpListner.AcceptTcpClientAsync(), ++_connectionCounter);
+            connection.ConnectionClosed += HandleClosedConnection;
             _connections.Add(connection.Id, connection);
             return connection;
         }
 
         private void HandleClosedConnection(Connection connection, EventArgs eventArgs)
         {
-            
+            lock (_connections)
+            {
+                _connections.Remove(connection.Id);
+            }
         }
         
         public void Stop()

@@ -10,34 +10,39 @@ namespace QChat.Common
     public struct AuthorizationInfo
     {
         public UserInfo UserInfo;
+        public int PasswordHash;
 
-        public static readonly int ByteLength = UserInfo.ByteLength;
+        public static readonly int ByteLength = UserInfo.ByteLength + sizeof(int);
 
-        public static AuthorizationInfo FromBytes(byte[] buffer, int offset)
+        public static AuthorizationInfo FromBytes(byte[] buffer, int offset) => new AuthorizationInfo
         {
-            return new AuthorizationInfo() { UserInfo = UserInfo.FromBytes(buffer, offset) };
-        }
+            UserInfo = UserInfo.FromBytes(buffer, offset),
+            PasswordHash = BitConverter.ToInt32(buffer, offset + UserInfo.ByteLength),
+        };
 
         public static AuthorizationInfo FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            connection.Read(buffer, 0, ByteLength);
+            if (connection.Read(buffer, 0, ByteLength) <= 0) throw new Exception();
             return FromBytes(buffer, 0);
         }
         public static async Task<AuthorizationInfo> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            await connection.ReadAsync(buffer, 0, ByteLength);
+            if (await connection.ReadAsync(buffer, 0, ByteLength) <= 0) throw new Exception();
             return FromBytes(buffer, 0);
         }
 
         public byte[] AsBytes()
         {
-            return UserInfo.AsBytes();
+            var bytes = new byte[ByteLength];
+            AsBytes(bytes, 0);
+            return bytes;
         }
         public void AsBytes(byte[] buffer, int offset)
         {
             UserInfo.AsBytes(buffer, offset);
+            Array.Copy(BitConverter.GetBytes(PasswordHash), 0, buffer, offset + UserInfo.ByteLength, sizeof(int));
         }
     }
 }

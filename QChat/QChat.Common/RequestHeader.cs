@@ -46,14 +46,14 @@ namespace QChat.Common
         public static RequestHeader FromStream<T>(T stream) where T : Stream
         {
             var buff = new byte[ByteLength];
-            stream.Read(buff, 0, ByteLength);
+            if (stream.Read(buff, 0, ByteLength) <= 0) throw new Exception();
 
             return FromBytes(buff, 0);
         }
         public static async Task<RequestHeader> FromStreamAsync<T>(T stream) where T : Stream
         {
             var buff = new byte[ByteLength];
-            await stream.ReadAsync(buff, 0, ByteLength);
+            if (await stream.ReadAsync(buff, 0, ByteLength) <= 0) throw new Exception();
 
             return FromBytes(buff, 0);
         }
@@ -61,14 +61,14 @@ namespace QChat.Common
         public static RequestHeader FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buff = new byte[ByteLength];
-            connection.Read(buff, 0, ByteLength);
+            if (connection.Read(buff, 0, ByteLength) <= 0) throw new Exception();
 
             return FromBytes(buff, 0);
         }
         public static async Task<RequestHeader> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buff = new byte[ByteLength];
-            await connection.ReadAsync(buff, 0, ByteLength);
+            if (await connection.ReadAsync(buff, 0, ByteLength) <=0) throw new Exception();
 
             return FromBytes(buff, 0);
         }        

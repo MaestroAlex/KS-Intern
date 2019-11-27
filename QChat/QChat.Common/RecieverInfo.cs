@@ -9,29 +9,31 @@ namespace QChat.Common
     public struct RecieverInfo
     {
         public RecieverType Type;
-        public ulong Id;
+        public int Id;
 
-        public static readonly int ByteLength = sizeof(RecieverType) + sizeof(ulong);
+        public static readonly int ByteLength = sizeof(RecieverType) + sizeof(int);
 
         public byte[] AsBytes()
         {
             var result = new byte[ByteLength];
             result[0] = (byte)Type;
-            Array.Copy(BitConverter.GetBytes(Id), 0, result, 1, sizeof(ulong));
+            Array.Copy(BitConverter.GetBytes(Id), 0, result, sizeof(RecieverType), sizeof(int));
 
             return result;
         }
         public void AsBytes(byte[] buffer, int offset)
         {
             buffer[offset] = (byte)Type;
-            Array.Copy(BitConverter.GetBytes(Id), 0, buffer, offset + sizeof(RecieverType), sizeof(ulong));
+            Array.Copy(BitConverter.GetBytes(Id), 0, buffer, offset + sizeof(RecieverType), sizeof(int));
         }
 
         public static RecieverInfo FromBytes(byte[] buff, int offset)
         {
-            if (buff.Length - offset < ByteLength) throw new ArgumentException();
-
-            return new RecieverInfo() { Type = (RecieverType)buff[offset], Id = BitConverter.ToUInt64(buff, offset + sizeof(RecieverType))};
+            return new RecieverInfo()
+            {
+                Type = (RecieverType)buff[offset],
+                Id = BitConverter.ToInt32(buff, offset + sizeof(RecieverType))
+            };
         }
     }
     public enum RecieverType : byte

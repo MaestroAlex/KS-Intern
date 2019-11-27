@@ -9,7 +9,7 @@ namespace QChat.Common
 {
     public struct RoomInfo
     {
-        public ulong Id;
+        public int Id;
 
         public static readonly int ByteLength = sizeof(ulong);
 
@@ -20,24 +20,24 @@ namespace QChat.Common
         }
         public void AsBytes(byte[] buffer, int offset)
         {
-            Array.Copy(BitConverter.GetBytes(Id), 0, buffer, offset, sizeof(ulong));
+            Array.Copy(BitConverter.GetBytes(Id), 0, buffer, offset, sizeof(int));
         }
 
         public static RoomInfo FromBytes(byte[] buffer, int offset)
         {
-            return new RoomInfo { Id = BitConverter.ToUInt64(buffer, offset) };
+            return new RoomInfo { Id = BitConverter.ToInt32(buffer, offset) };
         }
         
         public static RoomInfo FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            connection.Read(buffer, 0, ByteLength);
+            if (connection.Read(buffer, 0, ByteLength) <= 0) throw new Exception();
             return FromBytes(buffer, 0);
         }
         public static async Task<RoomInfo> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            await connection.ReadAsync(buffer, 0, ByteLength);
+            if (await connection.ReadAsync(buffer, 0, ByteLength) <= 0) throw new Exception();
             return FromBytes(buffer, 0);
         }        
     }

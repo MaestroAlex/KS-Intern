@@ -10,6 +10,7 @@ using QChat.Common;
 using QChat.Server.Authorization;
 using QChat.Server.Sessioning;
 using QChat.Server.Messaging;
+using System.Diagnostics;
 
 namespace QChat.Server
 {
@@ -49,6 +50,7 @@ namespace QChat.Server
 
             _continue = true;
             var workThread = new Thread(new ThreadStart(Work));
+            Console.WriteLine("Initialized. Starting Work...");
             workThread.Start();
         }
 
@@ -60,6 +62,16 @@ namespace QChat.Server
 
                var authorizationResult = _authorizationManager.TryAuthorize(connection);
 
+                if (authorizationResult.Result == AuthorizationResult.Registration)
+                    continue;
+                if (authorizationResult.Result == AuthorizationResult.Fail)
+                {
+                    connection.Dispose();
+                    Debug.WriteLine("Authorization failed. Disconnecting..");
+                    Debug.WriteLine("Disconected");
+                    continue;
+                }
+
                 _sessionManager.StartSession(connection, authorizationResult.UserInfo);
             }              
         }
@@ -67,7 +79,7 @@ namespace QChat.Server
         private void InitializeManagerProvider(IPAddress ipAddress, int port)
         {
             _managerProvider.Register(new ConnectionManager(ipAddress, port));
-            _managerProvider.Register(new AuthorizationManager(new Authorizator()));
+            _managerProvider.Register(new AuthorizationManager(new Authorizator(), new Registrator()));
             _managerProvider.Register(new UserManager());
             _managerProvider.Register(new GroupManager());
             _managerProvider.Register(new RoomManager());

@@ -22,11 +22,19 @@ namespace QChat.Server.Sessioning
 
         public void StartSession(Connection connection, UserInfo userInfo)
         {
-            var session = new Session(connection, _managerProvider);
+            var session = new Session(connection, _managerProvider, userInfo);
 
             _userManager.RegisterSession(userInfo, session);
 
+            Console.WriteLine("Starting Session");
+            session.SessionClosed += HandleClosedSession;
             session.Start();
+        }
+
+        private void HandleClosedSession(Session sender, EventArgs eventArgs)
+        {
+            _userManager.UnregisterSession(sender);
+            Console.WriteLine($"Session closed {sender.Id}");
         }
     }
 }

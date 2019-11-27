@@ -11,7 +11,7 @@ namespace QChat.Common.Net
         int Read(byte[] buffer, int offset, int length);
         Task<int> ReadAsync(byte[] buffer, int offset, int length);
 
-        void Write(byte[] buffer, int offset, int length);
-        Task WriteAsync(byte[] buffer, int offset, int length);
+        bool Write(byte[] buffer, int offset, int length);
+        Task<bool> WriteAsync(byte[] buffer, int offset, int length);
     }
 }

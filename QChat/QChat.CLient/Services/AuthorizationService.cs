@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using QChat.Common.Net;
 using QChat.Common;
 using QChat.CLient.ViewModels;
@@ -27,32 +28,72 @@ namespace QChat.CLient.Services
 
         public bool Authorize(IConnection connection)
         {
-            UpdateAuthorizationInfo();
+            if (connection == null) return false;
 
             var requestHeader = new RequestHeader(RequestIntention.Authorization);
 
-            connection.Write(requestHeader.AsBytes(), 0, RequestHeader.ByteLength);
-            connection.Write(_authorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength);
+            try
+            {
+                connection.LockWrite();
+                connection.LockRead();
 
-            return true;
+                if (!connection.Write(requestHeader.AsBytes(), 0, RequestHeader.ByteLength)) return false;
+                if (!connection.Write(_authorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength)) return false;
+
+                try
+                {
+                    var authorizationResponceInfo = AuthorizationResponceInfo.FromConnection(connection);
+                    return authorizationResponceInfo.Success;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                connection.ReleaseRead();
+                connection.ReleaseWrite();
+            }
         }
         public async Task<bool> AuthorizeAsync(IConnection connection)
         {
+            if (connection == null) return false;
+
             var requestHeader = new RequestHeader(RequestIntention.Authorization);
 
-            await connection.WriteAsync(requestHeader.AsBytes(), 0, RequestHeader.ByteLength);
-            await connection.WriteAsync(_authorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength);
+            try
+            {
+                var writeLock = connection.LockWriteAsync();
+                var readLock = connection.LockReadAsync();
 
-            return true;
+                await writeLock;
+                await readLock;
+
+                if (!await connection.WriteAsync(requestHeader.AsBytes(), 0, RequestHeader.ByteLength)) return false;
+                if (!await connection.WriteAsync(_authorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength)) return false;
+
+                try
+                {
+                    var authorizationResponceInfo = await AuthorizationResponceInfo.FromConnectionAsync(connection);
+                    return authorizationResponceInfo.Success;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                connection.ReleaseRead();
+                connection.ReleaseWrite();
+            }
         }
 
-        private void UpdateAuthorizationInfo()
+        public void UpdateAuthorizationInfo(UserInfo userInfo, int passwordHash)
         {
-            if (AuthorizationInfoUpdated)
-                return;
-
-
-            _authorizationInfo.UserInfo.Id = (ulong)_authorizationVM.Login.GetHashCode();
+            _authorizationInfo.UserInfo = userInfo;
+            _authorizationInfo.PasswordHash = passwordHash;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using QChat.Common;
 
 namespace QChat.CLient.Messaging
 {
@@ -10,7 +11,7 @@ namespace QChat.CLient.Messaging
     {
         public Common.Message Message;
 
-        public MessageRecievedEventArgs(Common.Message message)
+        public MessageRecievedEventArgs(Message message)
         {
             Message = message;
         }

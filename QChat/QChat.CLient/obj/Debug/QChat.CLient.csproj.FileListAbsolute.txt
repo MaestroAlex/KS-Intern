@@ -22,3 +22,5 @@ D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\App.baml
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\GeneratedInternalTypeHelper.g.cs
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\MainView.g.cs
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\MainView.baml
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RegistrationView.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RegistrationView.baml

@@ -16,6 +16,7 @@ namespace QChat.CLient.Services
         private ContentRecieverTable _recievers;
         private ContentSenderTable _senders;
 
+        private bool _continue;
         private SenderInfo _senderInfo;
 
         public event MessageRecievedEventHandler MessageRecieved;
@@ -27,9 +28,9 @@ namespace QChat.CLient.Services
         }
 
 
-        public bool SendTextMessage(string message, RecieverInfo recieverInfo, IConnection connection)
+        public void SendTextMessage(string message, RecieverInfo recieverInfo)
         {
-            var messageBytes = Encoding.UTF8.GetBytes(message);
+            var messageBytes = Encoding.Unicode.GetBytes(message);
             var content = Content.Wrap(messageBytes);
 
             var messageHeader = new MessageHeader
@@ -40,9 +41,10 @@ namespace QChat.CLient.Services
                 Length = content.Length
             };
 
-            return SendMessage(new Common.Message(messageHeader, content), recieverInfo, connection, _senders.GetSender<TextSender>());
+            var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connection;
+            SendMessage(new Common.Message(messageHeader, content), recieverInfo, connection, _senders.GetSender<TextSender>());
         }
-        public async Task<bool> SendTextMessageAsync(string message, RecieverInfo recieverInfo, IConnection connection)
+        public async Task SendTextMessageAsync(string message, RecieverInfo recieverInfo)
         {
             var messageBytes = Encoding.UTF8.GetBytes(message);
             var content = Content.Wrap(messageBytes);
@@ -55,7 +57,8 @@ namespace QChat.CLient.Services
                 Length = content.Length
             };
 
-            return await SendMessageAsync(new Common.Message(messageHeader, content), recieverInfo, connection, _senders.GetSender<TextSender>());
+            var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connection;
+            await SendMessageAsync(new Common.Message(messageHeader, content), recieverInfo, connection, _senders.GetSender<TextSender>());
         }
 
         private IContentReciever DefineReciever(MessageHeader header)
@@ -98,6 +101,43 @@ namespace QChat.CLient.Services
             }
 
             return true;
+        }        
+
+        public void RecieveMessage<T>(T connection) where T : IConnection
+        {
+            var messageHeader = MessageHeader.FromConnection(connection);
+            Message message;
+
+            switch (messageHeader.ContentType)
+            {
+                case ContentType.Text:
+                    var reciever = DefineReciever(messageHeader);
+                    var content = reciever.GetContent(messageHeader, connection);
+                    message = new Message(messageHeader, content);
+                    break;
+                default:
+                    throw new ArgumentException();
+            }
+
+            MessageRecieved?.Invoke(this, new MessageRecievedEventArgs(message));
+        }
+        public async Task RecieveMessageAsync<T>(T connection) where T : IConnection
+        {
+            var messageHeader = await MessageHeader.FromConnectionAsync(connection);
+            Message message;
+
+            switch (messageHeader.ContentType)
+            {
+                case ContentType.Text:
+                    var reciever = DefineReciever(messageHeader);
+                    var content = await reciever.GetContentAsync(messageHeader, connection);
+                    message = new Message(messageHeader, content);
+                    break;
+                default:
+                    throw new ArgumentException();
+            }
+
+            MessageRecieved?.Invoke(this, new MessageRecievedEventArgs(message));
         }
     }    
 }

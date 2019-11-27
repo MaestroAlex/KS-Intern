@@ -12,7 +12,7 @@
     <Page.Resources>
        
     </Page.Resources>
-    
+
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -56,6 +56,7 @@
             <TextBox x:Name="LoginText"
                  Text="{Binding Login}"
                  BorderThickness="0 0 0 1"
+                 MaxLength="30"
                  TextAlignment="Center"
                  MinWidth="20">
                 <TextBox.Background>
@@ -73,7 +74,11 @@
                  MaxHeight="100" MinWidth="300">
             <PasswordBox 
                 BorderThickness="0 0 0 1"
-                MinWidth="20">
+                MinWidth="20"
+                MaxLength="25"
+                HorizontalAlignment="Center"
+                HorizontalContentAlignment="Center"
+                Name ="PasswordBox">
               <PasswordBox.Background>
                  <SolidColorBrush Opacity="0"/>
               </PasswordBox.Background>
@@ -90,7 +95,7 @@
         <Button Grid.Column="1" 
                 Grid.Row="4"
                 Width="100"
-                Click="Button_Click"
+                Click="LoginButton_Click"
                 Margin="10"
                 BorderThickness="0">            
 
@@ -101,7 +106,7 @@
             <Button.Template>
                 <ControlTemplate>
                     <TextBlock x:Name="LoginText"
-                       Text="Login" 
+                       Text="Log In" 
                        FontSize="25"
                        TextAlignment="Center" 
                        HorizontalAlignment="Center"
@@ -109,6 +114,34 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="LoginText" Property="TextDecorations" Value="Underline"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
+        </Button>
+
+        <Button Grid.Column="1" 
+                Grid.Row="5"
+                Width="100"
+                Click="RegistrationButton_Click"
+                Margin="10"
+                BorderThickness="0">
+
+            <Button.Background>
+                <SolidColorBrush Opacity="0"/>
+            </Button.Background>
+
+            <Button.Template>
+                <ControlTemplate>
+                    <TextBlock x:Name="RegistrationText"
+                       Text="Sign Up" 
+                       FontSize="15"
+                       TextAlignment="Center" 
+                       HorizontalAlignment="Center"
+                       Foreground="Aquamarine"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="RegistrationText" Property="TextDecorations" Value="Underline"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

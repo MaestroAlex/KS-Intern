@@ -47,12 +47,12 @@ namespace QChat.Server.Messaging
             }
         }
 
-        protected void SendMessageHeader(MessageHeader header, Connection connection)
+        protected void SendMessageHeader(MessageHeader header, IConnection connection)
         {
             var bytes = header.AsBytes();
             connection.Write(bytes, 0, MessageHeader.ByteLength);
         }
-        protected async Task SendMessageHeaderAsync(MessageHeader header, Connection connection)
+        protected async Task SendMessageHeaderAsync(MessageHeader header, IConnection connection)
         {
             var bytes = header.AsBytes();
             await connection.WriteAsync(bytes, 0, MessageHeader.ByteLength);

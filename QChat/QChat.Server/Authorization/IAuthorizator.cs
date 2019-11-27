@@ -5,7 +5,7 @@ namespace QChat.Server.Authorization
 {
     interface IAuthorizator
     {
-        AuthorizationResult Authorize(Connection connection);
-        Task<AuthorizationResult> AuthorizeAsync(Connection connection);
+        AuthorizationResultInfo Authorize(IConnection connection);
+        Task<AuthorizationResultInfo> AuthorizeAsync(IConnection connection);
     }
 }

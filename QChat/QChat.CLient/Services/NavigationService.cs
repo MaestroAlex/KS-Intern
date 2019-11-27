@@ -27,6 +27,7 @@ namespace QChat.CLient.Services
 
             RegisterPage(() => _viewLocator.AuthorizationView);
             RegisterPage(() => _viewLocator.MainView);
+            RegisterPage(() => _viewLocator.RegistrationView);
         }
 
 

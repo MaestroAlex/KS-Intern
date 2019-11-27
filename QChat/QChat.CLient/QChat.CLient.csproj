@@ -55,13 +55,16 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Messaging\ChatList.cs" />
+    <Compile Include="Messaging\Chat.cs" />
+    <Compile Include="Messaging\ChatSelectionItem.cs" />
+    <Compile Include="Messaging\ClientMessage.cs" />
     <Compile Include="Navigation\NavigationFailedException.cs" />
+    <Compile Include="Services\ChattingService.cs" />
     <Compile Include="Services\NavigationService.cs" />
+    <Compile Include="Services\RegistrationService.cs" />
+    <Compile Include="Services\SessioningService.cs" />
     <Compile Include="StaticProvider.cs" />
     <Compile Include="ViewModels\AuthorizationVM.cs" />
-    <Compile Include="ViewModels\ChatVM.cs" />
-    <Compile Include="Messaging\Message.cs" />
     <Compile Include="Messaging\MessagingEventHandlers.cs" />
     <Compile Include="Messaging\MessageRecievedEventArgs.cs" />
     <Compile Include="Rooming\Room.cs" />
@@ -69,6 +72,12 @@
     <Compile Include="Services\MessagingService.cs" />
     <Compile Include="Services\NetworkingService.cs" />
     <Compile Include="Services\RoomingService.cs" />
+    <Compile Include="ViewModels\ChatVM.cs" />
+    <Compile Include="ViewModels\MainVM.cs" />
+    <Compile Include="ViewModels\RegistrationVM.cs" />
+    <Compile Include="Views\RegistrationView.xaml.cs">
+      <DependentUpon>RegistrationView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ViewLocator.cs" />
     <Page Include="Views\AuthorizationView.xaml">
       <SubType>Designer</SubType>
@@ -86,8 +95,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="ViewModels\MainVM.cs" />
-    <Compile Include="ViewModels\IViewModel.cs" />
     <Compile Include="ViewModels\NavigationVM.cs" />
     <Compile Include="ViewModels\ViewModelLocator.cs" />
     <Compile Include="Views\AuthorizationView.xaml.cs">
@@ -100,6 +107,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\RegistrationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

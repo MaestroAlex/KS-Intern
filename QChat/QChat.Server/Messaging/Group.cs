@@ -10,8 +10,8 @@ namespace QChat.Server.Messaging
 {
     class Group
     {
-        public ulong Id { get; private set; }
-        public Dictionary<ulong, UserInfo> _members;
+        public int Id { get; private set; }
+        public Dictionary<int, UserInfo> _members;
 
         
     }

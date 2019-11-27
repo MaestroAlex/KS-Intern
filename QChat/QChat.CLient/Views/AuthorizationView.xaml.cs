@@ -29,9 +29,14 @@ namespace QChat.CLient.Views
             _authorizationVM = StaticProvider.GetInstanceOf<AuthorizationVM>();
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            _authorizationVM.Authorize();
+            await _authorizationVM.Authorize(PasswordBox.Password.GetHashCode());
+        }
+
+        private void RegistrationButton_Click(object sender, RoutedEventArgs e)
+        {
+            _authorizationVM.GoToRegistration();
         }
     }
 }

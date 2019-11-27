@@ -23,35 +23,38 @@ namespace QChat.CLient.ViewModels
         public static readonly DependencyProperty LoginProperty =
             DependencyProperty.Register("Login", typeof(string), typeof(AuthorizationVM), new PropertyMetadata(String.Empty));
 
-
-
-        public string Password
+        public void DropPassword()
         {
-            get { return (string)GetValue( PasswordProperty); }
-            set { SetValue( PasswordProperty, value); }
+            StaticProvider.GetInstanceOf<AuthorizationView>().PasswordBox.Clear();
         }
-        public static readonly DependencyProperty  PasswordProperty =
-            DependencyProperty.Register(" Password", typeof(string), typeof(AuthorizationVM), new PropertyMetadata(String.Empty));
-
-
 
         public AuthorizationVM()
         {
-            if (!StaticProvider.IsRegistered<AuthorizationService>())
-                StaticProvider.TryRegisterFactory<AuthorizationService>(() => new AuthorizationService(this));
+            StaticProvider.TryRegisterFactory<AuthorizationService>(() => new AuthorizationService(this));
+            StaticProvider.TryRegisterFactory<NetworkingService>(
+                () => new NetworkingService(
+                    System.Net.IPAddress.Parse("127.0.0.1"), 47000
+                    )
+                );
         }
 
-        public void Authorize()
+        public async Task Authorize(int password)
         {
             if (_authorizationService == null) _authorizationService = StaticProvider.GetInstanceOf<AuthorizationService>();
 
-            _authorizationService.AuthorizationInfoUpdated = false;
-            //var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connection;
-            //var authorizationSuccess = await _authorizationService.AuthorizeAsync(connection);
-            //if (authorizationSuccess)
-            //{
+            _authorizationService.UpdateAuthorizationInfo(new Common.UserInfo { Id = Login.GetHashCode() }, password);
+
+            var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connect();
+            var authorizationSuccess = await _authorizationService.AuthorizeAsync(connection);
+            if (authorizationSuccess)
+            {
                 StaticProvider.GetInstanceOf<NavigationService>().NavigateTo<MainView>();
-            //}
+            }
+        }
+
+        public void GoToRegistration()
+        {
+            StaticProvider.GetInstanceOf<NavigationService>().NavigateTo<RegistrationView>();
         }
     }
 }
