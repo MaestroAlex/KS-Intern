@@ -75,6 +75,7 @@
     <Compile Include="ChatEssence.cs" />
     <Compile Include="ClientEssence.cs" />
     <Compile Include="Common\CommonData.cs" />
+    <Compile Include="Common\Encoder.cs" />
     <Compile Include="DataBaseManager.cs" />
     <Compile Include="MainClient.cs" />
     <Compile Include="MainServer.cs" />

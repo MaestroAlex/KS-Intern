@@ -35,8 +35,8 @@ namespace NetworkLibrary
                     Array.Resize(ref buffer, messageLength);
                     await dataStream.ReadAsync(buffer, 0, messageLength);
                     var result = Encoding.ASCII.GetString(buffer);
-                    Debug.WriteLine("Received from client: " + result);
-                    MessageEvent?.Invoke(result, client);
+                    Console.WriteLine("Received from client: " + result);
+                    MessageEvent?.Invoke(await Common.Encoder.DecodeMessage(result), client);
                 }
                 catch (Exception e)
                 {
@@ -52,6 +52,8 @@ namespace NetworkLibrary
             var cl = client.Socket;
             try
             {
+                message = await Common.Encoder.EncodeMessage(message);
+
                 byte[] buffer = new byte[message.Length + 4];
 
                 var stream = cl.GetStream();

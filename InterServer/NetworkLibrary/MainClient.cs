@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -42,6 +44,8 @@ namespace NetworkLibrary
 
             try
             {
+                message = await Common.Encoder.EncodeMessage(message);
+
                 byte[] buffer = new byte[message.Length + 4];
 
                 var stream = _tcpClient.GetStream();
@@ -78,7 +82,7 @@ namespace NetworkLibrary
                     await dataStream.ReadAsync(buffer, 0, messageLength);
                     var result = Encoding.ASCII.GetString(buffer);
 
-                    MessageEvent?.Invoke(result);
+                    MessageEvent?.Invoke(await Common.Encoder.DecodeMessage(result));
                 }
                 catch (Exception e)
                 {

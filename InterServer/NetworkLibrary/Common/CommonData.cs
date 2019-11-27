@@ -16,5 +16,6 @@ namespace NetworkLibrary.Common
         public static string CreateChatMessage = "$q";
         public static string UpdateStateMessage = "$u";
         public static string GetUsersList = "$s";
+        public static string ChatImage = "$i";
     }
 }

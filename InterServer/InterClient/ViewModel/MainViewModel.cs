@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -42,6 +43,12 @@ namespace InterClient.ViewModel
             this.networkService.MessageEvent += NetworkService_MessageEvent;
 
             Messenger.Default.Register<AppMessage>(this, this.OnChatUpdateMessage);
+        }
+
+        internal async void SendImage(string filePath)
+        {
+            var blob = File.ReadAllBytes(filePath);
+            await this.networkService.SendMessage(this._currentChatName, Convert.ToBase64String(blob));
         }
 
         internal void CreateChatClicked()
@@ -97,8 +104,7 @@ namespace InterClient.ViewModel
 
         private void NetworkService_MessageEvent(string message, string chatName)
         {
-            this._chatMap[chatName].Add(new ChatHistoryViewModel() { Message = message.Substring(message.IndexOf('|') + 1)
-                , User = message.Substring(0, message.IndexOf('|')) });
+            this._chatMap[chatName].Add(new ChatHistoryViewModel(message.Substring(0, message.IndexOf('|')), message.Substring(message.IndexOf('|') + 1)));
         }
 
         private string mainText;

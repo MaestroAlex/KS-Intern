@@ -32,7 +32,7 @@ namespace InterClient.AppServices
 
         private async Task<bool> StartClient()
         {
-            return await _client.ConnectToServer("127.0.0.1", 47000);
+            return await _client.ConnectToServer("25.70.5.77", 47000);
         }
 
         public async Task SetLogin(string login, string pass)
@@ -72,7 +72,7 @@ namespace InterClient.AppServices
                 }
                 else if(message.StartsWith(CommonData.UpdateStateMessage))
                 {
-                    this._client.WriteToServer(CommonData.GetChatLIst);
+                     this._client.WriteToServer(CommonData.GetChatLIst);
                 }
                 else if (message.StartsWith(CommonData.GetUsersList))
                 {
@@ -83,6 +83,11 @@ namespace InterClient.AppServices
                     Messenger.Default.Send(AppMessage.LoginFailed);
                 }
             }
+        }
+
+        internal async Task SendImage(byte[] blob)
+        {
+
         }
 
         internal async Task GetUsersList()

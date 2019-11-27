@@ -49,5 +49,11 @@ namespace InterClient.Views
         {
             this.ViewModel.CreateChatClicked();
         }
+
+        private void TextBox_Drop(object sender, DragEventArgs e)
+        {
+            var path = e.Data.GetData(DataFormats.FileDrop) as string[];
+            this.ViewModel.SendImage(path[0]);
+        }
     }
 }

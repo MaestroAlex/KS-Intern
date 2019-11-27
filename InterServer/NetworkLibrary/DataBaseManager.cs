@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NetworkLibrary
@@ -12,6 +13,7 @@ namespace NetworkLibrary
         private static DataBaseManager instance;
 
         private NpgsqlConnection connection;
+        private Mutex _lockObject = new Mutex();
         private DataBaseManager()
         {
             InitDataBaseConnectionAsync().Wait(2000);
@@ -203,22 +205,35 @@ namespace NetworkLibrary
             List<int> result = new List<int>();
             try
             {
-                int userId = await this.GetUserID(userName);
-                using (var cmd = new NpgsqlCommand("SELECT chat_id FROM users_by_chats WHERE user_id= " + userId
-                    , connection))
+                _lockObject.WaitOne(1000);
+                Task.Run(async () =>
                 {
-                    using (var reader = await cmd.ExecuteReaderAsync())
+                    try
                     {
-                        while (await reader.ReadAsync())
+                        int userId = await this.GetUserID(userName);
+                        using (var cmd = new NpgsqlCommand("SELECT chat_id FROM users_by_chats WHERE user_id= " + userId
+                            , connection))
                         {
-                            result.Add(reader.GetInt32(0));
+                            using (var reader = await cmd.ExecuteReaderAsync())
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    result.Add(reader.GetInt32(0));
+                                }
+                            }
                         }
                     }
-                }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                    }
+                }).Wait();
+                _lockObject.ReleaseMutex();
             }
-            catch (Exception ex)
+            catch(Exception e)
             {
-                Console.WriteLine(ex);
+                Console.WriteLine(e);
+                _lockObject.ReleaseMutex();
             }
             return result.ToArray();
         }

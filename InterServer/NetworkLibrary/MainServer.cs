@@ -106,8 +106,12 @@ namespace NetworkLibrary
                     {
                         var loggedIn = await DataBaseManager.Instance().DoUserRegistration(login[0], login[1]);
                         await DataBaseManager.Instance().AddUserToChat(login[0], _chats.First().Key);
-
+                        if(this._chats.First().Value.Users.Contains(client) == false)
+                        {
+                            this._chats.First().Value.Users.Add(client);
+                        }
                         logged = loggedIn;
+                        usChats = await DataBaseManager.Instance().GetUserChats(login[0]);
                     }
 
                     if(logged)
@@ -136,12 +140,7 @@ namespace NetworkLibrary
             }
             else if(message.StartsWith(CommonData.GetUsersList))
             {
-                string userList = CommonData.GetUsersList;
-                foreach(var cl in _clients)
-                {
-                    userList += cl.UserLogin + CommonData.CommonDataSeparator;
-                }
-                this.WriteToClient(client, userList);
+                SendUsersList(client);
             }
             else if(message.StartsWith(CommonData.CreateChatMessage))
             {
@@ -151,6 +150,7 @@ namespace NetworkLibrary
 
                 var chat = new ChatEssence(args[0]);
                 chat.AddClientToChat(client);
+                await DataBaseManager.Instance().AddUserToChat(client.UserLogin, chatId);
                 foreach(var clientName in args)
                 {
                     try
@@ -162,6 +162,7 @@ namespace NetworkLibrary
                 }
                 this._chats.Add(chatId, chat);
                 WriteToClientsInChat(CommonData.UpdateStateMessage, chat);
+                await SendChatList(client);
             }
             else
             {
@@ -183,6 +184,16 @@ namespace NetworkLibrary
                     WriteToAllClients($"Message from {client.UserLogin}: " + message);
                 }
             }
+        }
+
+        private void SendUsersList(ClientEssence client)
+        {
+            string userList = CommonData.GetUsersList;
+            foreach (var cl in _clients)
+            {
+                userList += cl.UserLogin + CommonData.CommonDataSeparator;
+            }
+            this.WriteToClient(client, userList);
         }
 
         private async Task SendChatList(ClientEssence client)
