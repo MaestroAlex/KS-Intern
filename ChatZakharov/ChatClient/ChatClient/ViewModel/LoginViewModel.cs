@@ -86,6 +86,9 @@ namespace ChatClient.ViewModel
             if (LoginResult == ActionEnum.wrong_pass)
                 ValidationText = "Wrong password";
 
+            else if (LoginResult == ActionEnum.room_exist)
+                ValidationText = "Can't login as room";
+
 
             else if (LoginResult == ActionEnum.bad_login)
             {
@@ -113,6 +116,9 @@ namespace ChatClient.ViewModel
                 }
             }
 
+            else if (LoginResult == ActionEnum.bad)
+                ValidationText = "Something gone wrong, try again later";
+
             else if (LoginResult == ActionEnum.ok)
             {
                 ValidationText = "";
@@ -122,7 +128,7 @@ namespace ChatClient.ViewModel
         }
         #endregion
 
-        #region LoginTryCommand
+        #region PasswordChanged
         public RelayCommand PasswordChangedCommand { get; private set; }
 
         private void PasswordChangedCommandExecute() => LoginTryCommand.RaiseCanExecuteChanged();

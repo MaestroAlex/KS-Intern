@@ -16,11 +16,11 @@ using System.Windows.Shapes;
 namespace ChatClient.Views.ChatView
 {
     /// <summary>
-    /// Логика взаимодействия для NoUsersChatPage.xaml
+    /// Логика взаимодействия для NotEnteredChatView.xaml
     /// </summary>
-    public partial class NoUsersChatPage : Page
+    public partial class NotEnteredChatView : Grid
     {
-        public NoUsersChatPage()
+        public NotEnteredChatView()
         {
             InitializeComponent();
         }

@@ -85,6 +85,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Converters\ChannelTypeToPasswordBoxVisibilityConverter.cs" />
     <Compile Include="Converters\ConnectionStateToBoolConverter.cs" />
     <Compile Include="Converters\ConnectionStateToColorConverter.cs" />
     <Compile Include="Converters\ConnectionStateToIconConverter.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="ViewModel\ChatViewModel\ChatsViewModel.cs" />
     <Compile Include="ViewModel\ChatViewModel\NewRoomViewModel.cs" />
     <Compile Include="ViewModel\ChatViewModel\CurrentChatViewModel.cs" />
+    <Compile Include="ViewModel\ChatViewModel\NotEnteredChatViewModel.cs" />
     <Compile Include="Views\ChatView\ChatsPage.xaml.cs">
       <DependentUpon>ChatsPage.xaml</DependentUpon>
     </Compile>
@@ -111,8 +113,8 @@
     <Compile Include="Views\ChatView\NewRoomView.xaml.cs">
       <DependentUpon>NewRoomView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\ChatView\NoUsersChatPage.xaml.cs">
-      <DependentUpon>NoUsersChatPage.xaml</DependentUpon>
+    <Compile Include="Views\ChatView\NotEnteredChatView.xaml.cs">
+      <DependentUpon>NotEnteredChatView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
@@ -133,7 +135,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\ChatView\NoUsersChatPage.xaml">
+    <Page Include="Views\ChatView\NotEnteredChatView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

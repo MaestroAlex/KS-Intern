@@ -104,8 +104,11 @@ namespace ChatServer
                     case ActionEnum.get_channels:
                         GetChannelsActionResponse();
                         break;
-                    case ActionEnum.get_history:
-                        GetHistoryActionResponse();
+                    case ActionEnum.get_all_history:
+                        GetAllHistoryActionResponse();
+                        break;
+                    case ActionEnum.get_room_history:
+                        GetRoomHistoryActionResponse(message);
                         break;
                     case ActionEnum.create_user:
                         CreateUserActionResponse(message);
@@ -118,6 +121,9 @@ namespace ChatServer
                         break;
                     case ActionEnum.channel_deleted:
                         ChannelDeletedNotificationActionResponse(message);
+                        break;
+                    case ActionEnum.enter_room:
+                        EnterRoomActionResponse(message);
                         break;
                     case ActionEnum.connection_check:
                         ConnectionCheckActionRequest(message);
@@ -200,7 +206,52 @@ namespace ChatServer
             }
         }
 
-        private void GetHistoryActionResponse()
+        private void GetRoomHistoryActionResponse(NetworkMessage message)
+        {
+            try
+            {
+                string roomName = (string)message.Obj;
+
+                List<Message> history = DB.GetChannelHistory(roomName).Result;
+                NetworkMessage response = new NetworkMessage(ActionEnum.ok, history);
+                messageStream.WriteEncrypted(response);
+
+                Console.WriteLine("GetRoomHistory ({2}) send to {0} ({1})",
+                    Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
+                    roomName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("GetChannelsActionResponse exception - {0}",
+                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        private void EnterRoomActionResponse(NetworkMessage message)
+        {
+            try
+            {
+                string roomName = ((Room)message.Obj).Name;
+                string pass = ((Room)message.Obj).HashPass;
+
+                ActionEnum authorizationResult = DB.EnterRoom(Name, roomName, pass).Result;
+                NetworkMessage response = new NetworkMessage(authorizationResult);
+                messageStream.WriteEncrypted(response);
+
+                Console.WriteLine("User ({0}) from {1} entered room ({2})",
+                    Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
+                    roomName);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("EnterRoom exception - {0}",
+                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        private void GetAllHistoryActionResponse()
         {
             try
             {
@@ -283,7 +334,7 @@ namespace ChatServer
                 NetworkMessage message = new NetworkMessage(ActionEnum.receive_message, cur);
                 messageStream.WriteEncrypted(message);
 
-                Console.WriteLine("Message send from {1} to {2}", cur.From, cur.To);
+                Console.WriteLine("Message send from {0} to {1}", cur.From, cur.To);
 
             }
             catch (Exception e)
@@ -340,7 +391,6 @@ namespace ChatServer
                 Console.WriteLine("User {0} try to create room",
                     ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString());
 
-                string roomOwner = ((Room)request.Obj).UserOwner;
                 string roomName = ((Room)request.Obj).Name;
                 string hashPass = ((Room)request.Obj).HashPass;
                 string salt = null;
@@ -350,20 +400,20 @@ namespace ChatServer
                     hashPass += salt;
                 }
 
-                ActionEnum responseAction = DB.CreateRoom(roomOwner, hashPass, salt, roomName).Result;
+                ActionEnum responseAction = DB.CreateRoom(roomName, Name, hashPass, salt).Result;
 
                 if (responseAction == ActionEnum.ok)
                 {
                     Console.WriteLine("User {0} from {1} created room {2} ",
-                        roomOwner, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
+                        Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
                         roomName);
 
-                    server.ChannelCreatedNotify(new Channel() { Name = roomName, Type = ChannelType.public_open });
+                    server.ChannelCreatedNotify(new Channel() { Name = roomName, Type = hashPass == "" ? ChannelType.public_open : ChannelType.public_closed });
                 }
                 else if (responseAction == ActionEnum.room_exist)
                 {
-                    Console.WriteLine("User {0} from {1} haven't created room, the room {2} exist",
-                        roomOwner, ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString(),
+                    Console.WriteLine("User {0} from {1} haven't created room, the channel {2} exist",
+                        Name, ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString(),
                         roomName);
                 }
                 messageStream.Write(new NetworkMessage(responseAction));
@@ -444,9 +494,14 @@ namespace ChatServer
                     Console.WriteLine("User {0} from {1} wrong password ",
                         login, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 }
+                else if (responseActionEnum == ActionEnum.room_exist)
+                {
+                    Console.WriteLine("User {0} from {1} try to login as room",
+                        login, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+                }
                 else if (responseActionEnum == ActionEnum.ok)
                 {
-                    Console.WriteLine("User {0} from {1} Logged in ",
+                    Console.WriteLine("User {0} from {1} Logged in",
                         login, ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString());
 
                     Name = login;
@@ -468,7 +523,7 @@ namespace ChatServer
         {
             try
             {
-                Console.WriteLine("User {0} from {1} Logged out and disconnected ",
+                Console.WriteLine("User {0} from {1} Logged out and disconnected",
                     Name, ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString());
 
                 TcpClient.Close();

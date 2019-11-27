@@ -34,10 +34,8 @@ namespace ChatClient.ViewModel.ChatViewModel
             set => Set(ref validationText, value);
         }
 
-        HamburgerMenuItemCollection channels;
-        public NewRoomViewModel(HamburgerMenuItemCollection channels)
+        public NewRoomViewModel()
         {
-            this.channels = channels;
             CreateRoomCommand = new RelayCommand<object>(CreateRoomCommandExecute, CreateRoomCommandCanExecute);
         }
         #region Commands
@@ -70,7 +68,7 @@ namespace ChatClient.ViewModel.ChatViewModel
             // if res == ok => server sends new room
 
             if (res == ActionEnum.room_exist)
-                ValidationText = "Such room exist";
+                ValidationText = "Such channel exist";
 
             else if (res == ActionEnum.bad)
                 ValidationText = "Something gone wrong, try again later";

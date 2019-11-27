@@ -11,20 +11,13 @@
       DataContext="{Binding Login, Source={StaticResource Locator}}"
       Loaded="Page_Loaded">
 
-    <Grid 
+    <StackPanel 
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
         Width="200">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
-        </Grid.RowDefinitions>
 
         <TextBox
             Name="UsernameTextBox"
-            Grid.Row="0" 
             Margin="5" 
             FontSize="16"
             Text="{Binding Path=Login, 
@@ -36,7 +29,6 @@
 
         <PasswordBox
             Name="PasswordTextBox"
-            Grid.Row="1" 
             Margin="5" 
             FontSize="16"
             Controls:TextBoxHelper.Watermark="Enter password"
@@ -55,7 +47,6 @@
         </PasswordBox>
 
         <Button 
-            Grid.Row="2" 
             Margin="5" 
             Content="Start chating"
             Command="{Binding LoginTryCommand}"
@@ -63,10 +54,9 @@
             Style="{StaticResource MetroFlatButton}"/>
         
         <TextBlock 
-            Grid.Row="3"
             Margin="10"
             Foreground="Red"
             HorizontalAlignment="Center"
             Text="{Binding ValidationText}"/>
-    </Grid>
+    </StackPanel>
 </Page>

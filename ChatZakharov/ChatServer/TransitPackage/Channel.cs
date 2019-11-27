@@ -12,6 +12,7 @@ namespace TransitPackage
     public class Channel
     {
         public string Name { get; set; }
+        public bool IsEntered { get; set; }
         public ChannelType Type { get; set; }
     }
 }

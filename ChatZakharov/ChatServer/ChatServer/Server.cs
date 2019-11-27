@@ -37,7 +37,7 @@ namespace ChatServer
         public async Task Start()
         {
             listener.Start();
-            connectedIpConnectionCheckTimer.Start();
+           // connectedIpConnectionCheckTimer.Start();
             Console.WriteLine("Server is up");
             while (true)
             {

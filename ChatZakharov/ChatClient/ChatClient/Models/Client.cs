@@ -28,6 +28,7 @@ namespace ChatClient.Models
             get => connectionState;
             set => Set(ref connectionState, value);
         }
+
         private Config config;
         public string Name { get; private set; }
         public event EventHandler<Message> MessageReceived;
@@ -220,7 +221,7 @@ namespace ChatClient.Models
                 NetworkMessage request = new NetworkMessage(ActionEnum.get_connection_check_interval);
                 messageStream.Write(request);
                 connnectionCheckForClientTimer.Interval = (int)messageStream.Read().Obj + 2000;
-                connnectionCheckForClientTimer.Start();
+                //connnectionCheckForClientTimer.Start();
                 res = true;
             }
             catch (Exception e)
@@ -233,24 +234,96 @@ namespace ChatClient.Models
             return res;
         }
 
-        public void GetHistoryActionRequest()
+        public void GetRoomHistoryActionRequest(string roomName)
         {
+            NetworkStreamMutex.WaitOne();
+
             try
             {
-                NetworkMessage request = new NetworkMessage(ActionEnum.get_history);
-                messageStream.Write(request);
+                NetworkMessage request = new NetworkMessage(ActionEnum.get_room_history, roomName);
+                messageStream.WriteEncrypted(request);
 
-                List<Message> history = (List<Message>)messageStream.Read().Obj;
-                foreach (var item in history)
-                    MessageReceived?.Invoke(this, item);
+                NetworkMessage response = messageStream.Read();
 
-                Console.WriteLine("History received");
+                if (response.Action == ActionEnum.ok)
+                {
+                    List<Message> history = (List<Message>)response.Obj;
+                    foreach (var item in history)
+                        MessageReceived?.Invoke(this, item);
+
+                    connectionCheckForClientExist = true;
+                    Console.WriteLine("History received");
+                }
+                else
+                    throw new Exception("Something wrong on server side");
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error in History received");
             }
+
+            NetworkStreamMutex.ReleaseMutex();
+        }
+
+
+        public ActionEnum EnterRoomActionRequest(Channel channel, string hashPassword)
+        {
+            NetworkStreamMutex.WaitOne();
+            ActionEnum res;
+            try
+            {
+                Room room = new Room
+                {
+                    Name = channel.Name,
+                    HashPass = hashPassword
+                };
+                NetworkMessage request = new NetworkMessage(ActionEnum.enter_room, room);
+                messageStream.WriteEncrypted(request);
+
+                NetworkMessage response = messageStream.Read();
+                res = response.Action;
+                connectionCheckForClientExist = true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                res = ActionEnum.bad;
+            }
+
+            NetworkStreamMutex.ReleaseMutex();
+            return res;
+        }
+
+        public void GetAllHistoryActionRequest()
+        {
+            NetworkStreamMutex.WaitOne();
+
+            try
+            {
+                NetworkMessage request = new NetworkMessage(ActionEnum.get_all_history);
+                messageStream.Write(request);
+
+                NetworkMessage response = messageStream.Read();
+                if (response.Action == ActionEnum.ok)
+                {
+                    List<Message> history = (List<Message>)response.Obj;
+                    foreach (var item in history)
+                        MessageReceived?.Invoke(this, item);
+
+                    connectionCheckForClientExist = true;
+                    Console.WriteLine("History received");
+                }
+                else
+                    throw new Exception("Something wrong on server side");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                Console.WriteLine("Error in History received");
+            }
+
+            NetworkStreamMutex.ReleaseMutex();
         }
 
         public IEnumerable<Channel> GetChannelsActionRequest()
@@ -361,7 +434,7 @@ namespace ChatClient.Models
 
             try
             {
-                Room room = new Room() { UserOwner = Name, HashPass = hashPassword, Name = roomName };
+                Room room = new Room() { Name = roomName, HashPass = hashPassword };
                 NetworkMessage request = new NetworkMessage(ActionEnum.create_room, room);
                 messageStream.WriteEncrypted(request);
                 response = messageStream.Read().Action;

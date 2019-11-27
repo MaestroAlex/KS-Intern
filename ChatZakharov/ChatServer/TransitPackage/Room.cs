@@ -9,7 +9,6 @@ namespace TransitPackage
     [Serializable]
     public class Room
     {
-        public string UserOwner { get; set; }
         public string Name { get; set; }
         public string HashPass { get; set; }
     }

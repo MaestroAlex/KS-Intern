@@ -43,9 +43,9 @@
                             Text="{Binding Path=ConnectionState,
                             Converter={StaticResource ConnToStr}}"
                             Margin="0,0,5,0"/>
-                        <!--<iconPacks:PackIconMaterial 
+                        <iconPacks:PackIconMaterial 
                             Kind="{Binding ConnectionState, 
-                            Converter={StaticResource ConnToConnIcon}}"/> бага --> 
+                            Converter={StaticResource ConnToConnIcon}}"/>
                     </StackPanel>
                 </Button>
             </StackPanel>

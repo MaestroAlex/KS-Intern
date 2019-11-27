@@ -19,7 +19,7 @@ namespace ChatClient.Views.ChatView
     /// <summary>
     /// Логика взаимодействия для NewRoomButtonContent.xaml
     /// </summary>
-    public partial class NewRoomView : Grid
+    public partial class NewRoomView : StackPanel
     {
         public NewRoomView()
         {

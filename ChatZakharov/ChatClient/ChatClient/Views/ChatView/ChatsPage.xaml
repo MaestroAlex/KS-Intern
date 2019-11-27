@@ -6,6 +6,7 @@
       xmlns:local="clr-namespace:ChatClient.Views.ChatView"
       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
       xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+      xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="ChatsPageView"
@@ -30,10 +31,14 @@
                     <Setter Property="FontSize" Value="16"/>
                 </Style>
 
-                <DataTemplate x:Key="MenuItemTemplate" DataType="{x:Type Controls:HamburgerMenuItem}">
-                    <Grid>
+                <DataTemplate x:Key="MenuItemTemplate" DataType="{x:Type Controls:HamburgerMenuIconItem}">
+                    <StackPanel Orientation="Horizontal">
+                        <iconPacks:PackIconFontAwesome 
+                            Kind="{Binding Icon}"
+                            VerticalAlignment="Center"
+                            Margin="0 0 10 0"/>
                         <TextBlock Text="{Binding Label}"/>
-                    </Grid>
+                    </StackPanel>
                 </DataTemplate>
 
                 <DataTemplate x:Key="ContentItemTemplate" DataType="{x:Type Controls:HamburgerMenuItem}">

@@ -4,6 +4,7 @@ using ChatClient.Views.ChatView;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using MahApps.Metro.Controls;
+using MahApps.Metro.IconPacks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,7 +25,7 @@ namespace ChatClient.ViewModel.ChatViewModel
         public HamburgerMenuItemCollection Channels
         {
             get => channels;
-            set => Set(ref channels, value);
+            private set => Set(ref channels, value);
         }
 
         public ChatsViewModel(IFrameNavigationService navigation)
@@ -35,19 +36,29 @@ namespace ChatClient.ViewModel.ChatViewModel
             ChatsUnloaded = new RelayCommand(ChatsUnloadedCommandExecute);
         }
 
-        private void ConnectedUsers_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void ConnectedChannels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
             {
-                string newUser = MainModel.ConnectedChannels.Last().Name;
-                Channels.Add(new HamburgerMenuItem()
-                {
-                    Label = newUser,
+                Channel newChannel = (Channel)e.NewItems[0];
+
+                HamburgerMenuIconItem item = new HamburgerMenuIconItem() 
+                { 
+                    Label = newChannel.Name,
                     Tag = new CurrentChatView()
-                    { 
-                        DataContext = new CurrentChatViewModel((Channel)e.NewItems[0]) 
+                    {
+                        DataContext = new CurrentChatViewModel(newChannel)
                     }
-                });
+                };
+
+                if (newChannel.Type == ChannelType.user)
+                    item.Icon = "UserSolid";
+                else if (newChannel.Type == ChannelType.public_open)
+                    item.Icon = "UserFriendsSolid";
+                else if (newChannel.Type == ChannelType.public_closed)
+                    item.Icon = "UserLockSolid";
+
+                Channels.Add(item);
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
@@ -62,13 +73,22 @@ namespace ChatClient.ViewModel.ChatViewModel
         {
             foreach (var item in MainModel.ConnectedChannels)
             {
-                HamburgerMenuItem newUser = new HamburgerMenuItem
-                {
-                    Label = item.Name,
-                    Tag = new CurrentChatView() { DataContext = new CurrentChatViewModel(item) }
-                };
-                if (!Channels.Where((cur) => cur.Label == newUser.Label).Any())
-                    Channels.Add(newUser);
+                HamburgerMenuIconItem newChannel = new HamburgerMenuIconItem() { Label = item.Name, };
+
+                if (item.IsEntered)
+                    newChannel.Tag = new CurrentChatView() { DataContext = new CurrentChatViewModel(item) };
+                else
+                    newChannel.Tag = new NotEnteredChatView() { DataContext = new NotEnteredChatViewModel(item) };
+
+                if (item.Type == ChannelType.user)
+                    newChannel.Icon = "UserSolid";
+                else if (item.Type == ChannelType.public_open)
+                    newChannel.Icon = "UserFriendsSolid";
+                else if (item.Type == ChannelType.public_closed)
+                    newChannel.Icon = "UserLockSolid";
+
+                if (!Channels.Where((cur) => cur.Label == newChannel.Label).Any())
+                    Channels.Add(newChannel);
             }
         }
 
@@ -87,12 +107,13 @@ namespace ChatClient.ViewModel.ChatViewModel
 
         private void CreateNewRoomButton()
         {
-            HamburgerMenuItem roomCreation = new HamburgerMenuItem()
+            HamburgerMenuIconItem roomCreation = new HamburgerMenuIconItem()
             {
                 Label = "New room",
+                Icon = "UserPlusSolid",
                 Tag = new NewRoomView()
                 {
-                    DataContext = new NewRoomViewModel(Channels)
+                    DataContext = new NewRoomViewModel()
                 }
             };
             Channels.Add(roomCreation);
@@ -113,11 +134,11 @@ namespace ChatClient.ViewModel.ChatViewModel
 
             if (!channelCollectionSigned)
             {
-                MainModel.ConnectedChannels.CollectionChanged += ConnectedUsers_CollectionChanged;
+                MainModel.ConnectedChannels.CollectionChanged += ConnectedChannels_CollectionChanged;
                 channelCollectionSigned = true;
             }
 
-            await Task.Run(() => MainModel.Client.GetHistoryActionRequest());
+            await Task.Run(() => MainModel.Client.GetAllHistoryActionRequest());
         }
         #endregion
 

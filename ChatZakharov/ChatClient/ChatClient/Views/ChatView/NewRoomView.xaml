@@ -1,4 +1,4 @@
-﻿<Grid x:Class="ChatClient.Views.ChatView.NewRoomView"
+﻿<StackPanel x:Class="ChatClient.Views.ChatView.NewRoomView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -10,15 +10,7 @@
       VerticalAlignment="Center"
       Width="350">
 
-    <Grid.RowDefinitions>
-        <RowDefinition Height="*"/>
-        <RowDefinition Height="*"/>
-        <RowDefinition Height="*"/>
-        <RowDefinition Height="*"/>
-    </Grid.RowDefinitions>
-
     <TextBox 
-        Grid.Row="0"
         Margin="5" 
         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
         FontSize="16"
@@ -34,16 +26,14 @@
 
     <PasswordBox 
         Name="Password"
-        Grid.Row="1"  
         Margin="5" 
         FontSize="16"
         Controls:TextBoxHelper.Watermark="Password (left empty for open room)"
         Controls:TextBoxHelper.UseFloatingWatermark="True"
-        Visibility="Collapsed">
+        Visibility="Visible">
     </PasswordBox>
     
     <Button 
-        Grid.Row="2" 
         Margin="5" 
         Content="Create room"
         Command="{Binding CreateRoomCommand}"
@@ -51,9 +41,8 @@
         Style="{StaticResource MetroFlatButton}"/>
     
     <TextBlock 
-        Grid.Row="3"
         Margin="10"
         Foreground="Red"
         HorizontalAlignment="Center"
         Text="{Binding ValidationText}"/>
-</Grid>
+</StackPanel>
