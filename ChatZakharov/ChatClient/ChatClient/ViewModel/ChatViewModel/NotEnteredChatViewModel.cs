@@ -12,6 +12,7 @@ using TransitPackage;
 using GalaSoft.MvvmLight.Ioc;
 using MahApps.Metro.Controls;
 using ChatClient.Views.ChatView;
+using ChatClient.Utility;
 
 namespace ChatClient.ViewModel.ChatViewModel
 {
@@ -77,8 +78,15 @@ namespace ChatClient.ViewModel.ChatViewModel
 
             else if (res == ActionEnum.ok)
             {
+                channel.IsEntered = true;
+
                 ChatsViewModel chats = SimpleIoc.Default.GetInstance<ChatsViewModel>();
-                HamburgerMenuItem curChat = chats.Channels.Where(channel => channel.Label == this.channel.Name).First();
+
+                HamburgerMenuIconLeaveItem curChat =
+                    chats.Channels.Where(channel => channel.Label == this.channel.Name).First()
+                    as HamburgerMenuIconLeaveItem;
+
+                curChat.LeaveButtonVisibility = System.Windows.Visibility.Visible;
                 curChat.Tag = new CurrentChatView()
                 {
                     DataContext = new CurrentChatViewModel(this.channel)

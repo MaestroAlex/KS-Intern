@@ -41,7 +41,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ActionEnum.cs" />
+    <Compile Include="ActionEnums.cs" />
     <Compile Include="Channel.cs" />
     <Compile Include="Message.cs" />
     <Compile Include="NetworkMessage.cs" />

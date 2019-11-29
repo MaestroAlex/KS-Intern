@@ -15,7 +15,7 @@ namespace ChatServer
         public int ConnectedIpConnectionCheckTimerInterval => 5000;
 
         TcpListener listener;
-        Dictionary<string, string> roomUserDictionary;
+        Dictionary<string, List<Client>> roomUsersDictionary;
         List<Client> connectedIp;
         Mutex connectedIpChanged;
         System.Timers.Timer connectedIpConnectionCheckTimer;
@@ -26,7 +26,7 @@ namespace ChatServer
             listener.Server.ReceiveTimeout = config.ReceiveTimeoutMs;
             listener.Server.SendTimeout = config.SendTimeoutMs;
 
-            roomUserDictionary = new Dictionary<string, string>();
+            roomUsersDictionary = new Dictionary<string, List<Client>>();
             connectedIp = new List<Client>();
             connectedIpChanged = new Mutex();
             connectedIpConnectionCheckTimer = new System.Timers.Timer();
@@ -37,7 +37,7 @@ namespace ChatServer
         public async Task Start()
         {
             listener.Start();
-           // connectedIpConnectionCheckTimer.Start();
+            //connectedIpConnectionCheckTimer.Start();
             Console.WriteLine("Server is up");
             while (true)
             {
@@ -102,14 +102,18 @@ namespace ChatServer
             connectedIpChanged.ReleaseMutex();
         }
 
-        public void SendToOnlineClients(Message message)
+        public void SendToOnlineClientsRoom(Message message)
         {
             connectedIpChanged.WaitOne();
 
-            foreach (var item in connectedIp)
+            List<Client> clientsToSend = roomUsersDictionary
+                .Where(node => node.Key == message.To)
+                .First().Value;
+
+            foreach (var item in clientsToSend)
                 if (item.Name != message.From)
                     item.ActionQueue.Messages.Enqueue(message);
-                    
+
             connectedIpChanged.ReleaseMutex();
         }
 
@@ -146,6 +150,40 @@ namespace ChatServer
             connectedIpChanged.WaitOne();
             connectedIp.Remove(client);
             connectedIpChanged.ReleaseMutex();
+        }
+
+        public void AddedOnlineRoomsUser(Client client, List<Channel> channels)
+        {
+            foreach (var item in channels)
+            {
+                if ((item.Type == ChannelType.public_open ||
+                    item.Type == ChannelType.public_closed) && item.IsEntered == true)
+                {
+                    if (!roomUsersDictionary.ContainsKey(item.Name))
+                        roomUsersDictionary.Add(item.Name, new List<Client>() { client });
+                    else
+                        roomUsersDictionary.Where((node) => node.Key == item.Name).First().Value.Add(client);
+                }
+            }
+        }
+
+        public void AddedOnlineRoomUser(Client client, Channel channel)
+        {
+            if ((channel.Type == ChannelType.public_open ||
+                channel.Type == ChannelType.public_closed) && channel.IsEntered == true)
+            {
+                if (!roomUsersDictionary.ContainsKey(channel.Name))
+                    roomUsersDictionary.Add(channel.Name, new List<Client>() { client });
+                else
+                    roomUsersDictionary.Where(node => node.Key == channel.Name).First().Value.Add(client);
+            }
+        }
+
+        public void RemoveOnlineUserRoom(Client client)
+        {
+            foreach (var room in roomUsersDictionary)
+                if (room.Value.Contains(client))
+                    room.Value.Remove(client);
         }
     }
 }

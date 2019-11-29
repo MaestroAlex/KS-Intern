@@ -5,13 +5,26 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:ChatClient.Views.ChatView"
       xmlns:utility ="clr-namespace:ChatClient.Utility"
+      xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
       xmlns:converters="clr-namespace:ChatClient.Converters"
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
+      xmlns:mvvmLight="http://www.galasoft.ch/mvvmlight"
       HorizontalAlignment="Stretch"
       VerticalAlignment="Stretch"
       DataContextChanged="Grid_DataContextChanged"
-      Loaded="Grid_Loaded">
+      Loaded="Grid_Loaded"
+      AllowDrop="True">
+
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Drop">
+            <mvvmLight:EventToCommand 
+                Command="{Binding DropCommand}" 
+                PassEventArgsToCommand="True" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+   
+    
     <Grid.Resources>
         <converters:WindowWidthToMessageWidthConverter x:Key="WinWidthToWidth" />
         <sys:Int32 x:Key="Int3">3</sys:Int32>

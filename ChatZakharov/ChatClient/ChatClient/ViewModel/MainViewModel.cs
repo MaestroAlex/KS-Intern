@@ -64,7 +64,8 @@ namespace ChatClient.ViewModel
 
             if (ConnectionState == ClientState.Disconnected ||
                 ConnectionState == ClientState.LoggedOut)
-                navigation.NavigateTo("LoginPage");
+                Application.Current.Dispatcher
+                    .BeginInvoke(new Action<string>(navigation.NavigateTo), "LoginPage");
         }
 
         private async Task<bool> Connect()

@@ -1,5 +1,6 @@
 ﻿using ChatClient.Interface;
 using ChatClient.Models;
+using ChatClient.Utility;
 using ChatClient.Views.ChatView;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -12,6 +13,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
 using TransitPackage;
 
@@ -34,6 +36,7 @@ namespace ChatClient.ViewModel.ChatViewModel
             Channels = new HamburgerMenuItemCollection();
             ChatsLoaded = new RelayCommand(ChatsLoadedCommandExecute);
             ChatsUnloaded = new RelayCommand(ChatsUnloadedCommandExecute);
+            LeaveRoomCommand = new RelayCommand<object>(LeaveRoomCommandExecute);
         }
 
         private void ConnectedChannels_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -42,21 +45,17 @@ namespace ChatClient.ViewModel.ChatViewModel
             {
                 Channel newChannel = (Channel)e.NewItems[0];
 
-                HamburgerMenuIconItem item = new HamburgerMenuIconItem() 
-                { 
+                HamburgerMenuIconLeaveItem item = new HamburgerMenuIconLeaveItem()
+                {
                     Label = newChannel.Name,
+                    Icon = DefineIcon(newChannel.Type),
+                    LeaveButtonVisibility = DefineLeaveButtonVisibility(newChannel.Type, newChannel.IsEntered),
+                    LeaveCommand = LeaveRoomCommand,
                     Tag = new CurrentChatView()
                     {
                         DataContext = new CurrentChatViewModel(newChannel)
                     }
                 };
-
-                if (newChannel.Type == ChannelType.user)
-                    item.Icon = "UserSolid";
-                else if (newChannel.Type == ChannelType.public_open)
-                    item.Icon = "UserFriendsSolid";
-                else if (newChannel.Type == ChannelType.public_closed)
-                    item.Icon = "UserLockSolid";
 
                 Channels.Add(item);
             }
@@ -73,19 +72,18 @@ namespace ChatClient.ViewModel.ChatViewModel
         {
             foreach (var item in MainModel.ConnectedChannels)
             {
-                HamburgerMenuIconItem newChannel = new HamburgerMenuIconItem() { Label = item.Name, };
+                HamburgerMenuIconLeaveItem newChannel = new HamburgerMenuIconLeaveItem() 
+                {
+                    Label = item.Name,
+                    Icon = DefineIcon(item.Type),
+                    LeaveButtonVisibility = DefineLeaveButtonVisibility(item.Type, item.IsEntered),
+                    LeaveCommand = LeaveRoomCommand
+                };
 
                 if (item.IsEntered)
                     newChannel.Tag = new CurrentChatView() { DataContext = new CurrentChatViewModel(item) };
                 else
                     newChannel.Tag = new NotEnteredChatView() { DataContext = new NotEnteredChatViewModel(item) };
-
-                if (item.Type == ChannelType.user)
-                    newChannel.Icon = "UserSolid";
-                else if (item.Type == ChannelType.public_open)
-                    newChannel.Icon = "UserFriendsSolid";
-                else if (item.Type == ChannelType.public_closed)
-                    newChannel.Icon = "UserLockSolid";
 
                 if (!Channels.Where((cur) => cur.Label == newChannel.Label).Any())
                     Channels.Add(newChannel);
@@ -94,29 +92,47 @@ namespace ChatClient.ViewModel.ChatViewModel
 
         private async Task GetChannelsFromServer()
         {
-            await Task.Run(() => MainModel.GetUsers());
-        }
-
-        private void CheckForNoUsersPage()
-        {
-            if (MainModel.ConnectedChannels.Count != 0)
-                navigation.NavigateTo("ChatsPage");
-            else
-                navigation.NavigateTo("NoUsersPage");
+            await Task.Run(() => MainModel.GetChannels());
         }
 
         private void CreateNewRoomButton()
         {
-            HamburgerMenuIconItem roomCreation = new HamburgerMenuIconItem()
+            HamburgerMenuIconLeaveItem roomCreation = new HamburgerMenuIconLeaveItem()
             {
                 Label = "New room",
                 Icon = "UserPlusSolid",
+                LeaveButtonVisibility = Visibility.Collapsed,
+                LeaveCommand = LeaveRoomCommand,
                 Tag = new NewRoomView()
                 {
                     DataContext = new NewRoomViewModel()
                 }
             };
             Channels.Add(roomCreation);
+        }
+
+        private string DefineIcon(ChannelType channelType)
+        {
+            switch (channelType)
+            {
+                case ChannelType.user:
+                    return "UserSolid";
+                case ChannelType.public_open:
+                    return "UserFriendsSolid";
+                case ChannelType.public_closed:
+                    return "UserLockSolid";
+            }
+            throw new ArgumentException("not implemented channelType icon");
+        }
+
+        private Visibility DefineLeaveButtonVisibility(ChannelType channelType, bool isEntered)
+        {
+            if (!isEntered || channelType == ChannelType.user)
+                return Visibility.Collapsed;
+            else if (channelType == ChannelType.public_open || channelType == ChannelType.public_closed)
+                return Visibility.Visible;
+
+            throw new ArgumentException("not implemented channelType icon");
         }
 
         #region Commands
@@ -128,7 +144,6 @@ namespace ChatClient.ViewModel.ChatViewModel
         public async void ChatsLoadedCommandExecute()
         {
             await GetChannelsFromServer();
-            //CheckForNoUsersPage();
             CreateNewRoomButton();
             SetNewViewChannels();
 
@@ -148,6 +163,35 @@ namespace ChatClient.ViewModel.ChatViewModel
         public void ChatsUnloadedCommandExecute()
         {
             Channels.Clear();
+        }
+        #endregion
+
+
+        #region LeaveRoomCommand
+        public RelayCommand<object> LeaveRoomCommand { get; private set; }
+
+        public async void LeaveRoomCommandExecute(object room)
+        {
+            Channel curChannel = MainModel.ConnectedChannels
+                .Where(channel => channel.Name == (string)room)
+                .First();
+
+            bool res = await Task.Run(() => MainModel.Client.LeaveRoomActionRequest(room));
+
+            if (res)
+            {
+                curChannel.IsEntered = false;
+
+                HamburgerMenuIconLeaveItem viewChannel =
+                    Channels.Where(viewChannel => viewChannel.Label == curChannel.Name).First()
+                    as HamburgerMenuIconLeaveItem;
+
+                viewChannel.Tag =
+                    new NotEnteredChatView() { DataContext = new NotEnteredChatViewModel(curChannel) };
+
+                viewChannel.LeaveButtonVisibility = 
+                    DefineLeaveButtonVisibility(curChannel.Type, curChannel.IsEntered);
+            }
         }
         #endregion
 

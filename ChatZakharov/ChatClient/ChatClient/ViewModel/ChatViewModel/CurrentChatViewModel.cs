@@ -6,6 +6,7 @@ using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,6 +29,7 @@ namespace ChatClient.ViewModel.ChatViewModel
         {
             NewLineCommand = new RelayCommand<object>(NewLineCommandExecute, NewLineCommandCanExecute);
             SendMessageCommand = new RelayCommand<object>(SendMessageCommandExecute, SendMessageCommandCanExecute);
+            DropCommand = new RelayCommand<DragEventArgs>(DropCommandExecute);
             ChannelDestination = channel;
             UsernameSelf = MainModel.Client.Name;
             MainModel.Client.MessageReceived += Client_MessageReceived;
@@ -85,7 +87,8 @@ namespace ChatClient.ViewModel.ChatViewModel
                 From = UsernameSelf, // если отправляем пользователю, то в чат себя у него, если в команту, то в чат комнаты у участников комнаты
                 ChatDestination = ChannelDestination.Type == ChannelType.user ? UsernameSelf : ChannelDestination.Name,
                 To = ChannelDestination.Name,
-                Text = CurrentMessage.Text,
+                MessageType = MessageType.text,
+                Content = CurrentMessage.Text,
                 Date = DateTime.Now
             };
 
@@ -103,7 +106,7 @@ namespace ChatClient.ViewModel.ChatViewModel
             ClearCurrentMessage();
         }
 
-        private void BindNewMessageToGrid(UIMessage Message)
+        private void BindNewMessageToGrid(UIMessage uiMessage)
         {
             try
             {
@@ -114,7 +117,8 @@ namespace ChatClient.ViewModel.ChatViewModel
                     ConverterParameter = 1.3,
                     UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
                 };
-                Message.NewMessage.SetBinding(TextBlock.MaxWidthProperty, messageWidthBinding);
+
+                uiMessage.Content.SetBinding(FrameworkElement.MaxWidthProperty, messageWidthBinding);
 
                 RowDefinition newMessageRow = new RowDefinition
                 {
@@ -122,8 +126,8 @@ namespace ChatClient.ViewModel.ChatViewModel
                 };
 
                 MessagesHistoryGrid.RowDefinitions.Add(newMessageRow);
-                Grid.SetRow(Message.ResultMessageBorder, MessagesHistoryGrid.RowDefinitions.Count - 1);
-                MessagesHistoryGrid.Children.Add(Message.ResultMessageBorder);
+                Grid.SetRow(uiMessage.ResultMessageBorder, MessagesHistoryGrid.RowDefinitions.Count - 1);
+                MessagesHistoryGrid.Children.Add(uiMessage.ResultMessageBorder);
             }
             catch (Exception e)
             {
@@ -135,6 +139,59 @@ namespace ChatClient.ViewModel.ChatViewModel
         {
             CurrentMessage.Text = "";
             CurrentMessage.CaretIndex = CurrentMessage.Text.Length;
+        }
+        #endregion
+
+        #region DropCommand
+        public RelayCommand<DragEventArgs> DropCommand { get; private set; }
+
+        public async void DropCommandExecute(DragEventArgs e)
+        {
+            IDataObject data = e.Data;
+            string filePath = ((string[])e.Data.GetData("FileDrop")).First();
+            byte[] blob = null;
+            try
+            {
+                blob = File.ReadAllBytes(filePath);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine("drag n drop exception");
+            }
+
+            if (blob != null)
+            {
+                Message sentMessage = new Message()
+                {
+                    From = UsernameSelf, // если отправляем пользователю, то в чат себя у него, если в команту, то в чат комнаты у участников комнаты
+                    ChatDestination = ChannelDestination.Type == ChannelType.user ? UsernameSelf : ChannelDestination.Name,
+                    To = ChannelDestination.Name,
+                    MessageType = DefineType(filePath),
+                    Content = Convert.ToBase64String(blob),
+                    Date = DateTime.Now
+                };
+
+                bool res = await Task.Run(() => MainModel.Client.SendMessageActionRequest(sentMessage));
+
+                if (res)
+                    SendUIMessage(sentMessage);
+            }
+
+        }
+
+        private static string[] imageExtensions = new string[]
+        {
+            ".jpg", ".jpeg", ".jfif", ".jpeg 2000",
+            ".exif", ".tiff", ".gif", ".bmp", ".png"
+        };
+        private MessageType DefineType(string filePath)
+        {
+            string ext = Path.GetExtension(filePath).ToLower();
+            if (imageExtensions.Contains(ext))
+                return MessageType.image;
+            else
+                return MessageType.document;
         }
         #endregion
 

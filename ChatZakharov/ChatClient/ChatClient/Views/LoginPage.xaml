@@ -11,10 +11,11 @@
       DataContext="{Binding Login, Source={StaticResource Locator}}"
       Loaded="Page_Loaded">
 
-    <StackPanel 
+    <StackPanel        
         HorizontalAlignment="Center"
         VerticalAlignment="Center"
-        Width="200">
+        Width="400">
+        <StackPanel Width="200">
 
         <TextBox
             Name="UsernameTextBox"
@@ -52,8 +53,8 @@
             Command="{Binding LoginTryCommand}"
             CommandParameter="{Binding ElementName=PasswordTextBox}"
             Style="{StaticResource MetroFlatButton}"/>
-        
-        <TextBlock 
+    </StackPanel>
+    <TextBlock 
             Margin="10"
             Foreground="Red"
             HorizontalAlignment="Center"

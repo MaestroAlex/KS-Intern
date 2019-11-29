@@ -266,6 +266,33 @@ namespace ChatClient.Models
             NetworkStreamMutex.ReleaseMutex();
         }
 
+        public bool LeaveRoomActionRequest(object room)
+        {
+            NetworkStreamMutex.WaitOne();
+            bool res = false;
+            try
+            {
+                NetworkMessage request = new NetworkMessage(ActionEnum.leave_room, room);
+                messageStream.WriteEncrypted(request);
+
+                NetworkMessage response = messageStream.Read();
+                if (response.Action == ActionEnum.ok)
+                {
+                    connectionCheckForClientExist = true;
+                    res = true;
+                }
+                else
+                    throw new Exception("Something wrong on server side");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                res = false;
+            }
+
+            NetworkStreamMutex.ReleaseMutex();
+            return res;
+        }
 
         public ActionEnum EnterRoomActionRequest(Channel channel, string hashPassword)
         {

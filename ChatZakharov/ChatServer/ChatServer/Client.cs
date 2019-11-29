@@ -125,6 +125,9 @@ namespace ChatServer
                     case ActionEnum.enter_room:
                         EnterRoomActionResponse(message);
                         break;
+                    case ActionEnum.leave_room:
+                        LeaveRoomActionResponse(message);
+                        break;
                     case ActionEnum.connection_check:
                         ConnectionCheckActionRequest(message);
                         break;
@@ -228,6 +231,38 @@ namespace ChatServer
             }
         }
 
+        private void LeaveRoomActionResponse(NetworkMessage message)
+        {
+            try
+            {
+                string roomName = (string)message.Obj;
+
+                ActionEnum res = DB.ExitRoom(Name, roomName).Result;
+
+                NetworkMessage response = new NetworkMessage(res);
+                messageStream.WriteEncrypted(response);
+
+                if (res == ActionEnum.ok)
+                {
+                    Console.WriteLine("User ({0}) from {1} left room ({2})",
+                        Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
+                        roomName);
+                }
+                else
+                {
+                    Console.WriteLine("User ({0}) from {1} not left room ({2}), exception",
+                        Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
+                        roomName);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("EnterRoom exception - {0}",
+                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+                Console.WriteLine(e.Message);
+            }
+        }
+
         private void EnterRoomActionResponse(NetworkMessage message)
         {
             try
@@ -239,9 +274,25 @@ namespace ChatServer
                 NetworkMessage response = new NetworkMessage(authorizationResult);
                 messageStream.WriteEncrypted(response);
 
-                Console.WriteLine("User ({0}) from {1} entered room ({2})",
-                    Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
-                    roomName);
+                if (authorizationResult == ActionEnum.ok) 
+                {
+                    server.AddedOnlineRoomUser(this, new Channel()
+                    {
+                        Name = roomName,
+                        Type = pass == "" ? ChannelType.public_open : ChannelType.public_closed,
+                        IsEntered = true
+                    });
+
+                    Console.WriteLine("User ({0}) from {1} entered room ({2})",
+                        Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
+                        roomName);
+                }
+                else
+                {
+                    Console.WriteLine("User ({0}) from {1} not entered room ({2}), wrong pass",
+                        Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
+                        roomName);
+                }
             }
             catch (Exception e)
             {
@@ -278,6 +329,8 @@ namespace ChatServer
                 NetworkMessage response = new NetworkMessage(ActionEnum.ok, channels);
                 messageStream.WriteEncrypted(response);
 
+                server.AddedOnlineRoomsUser(this, channels);
+
                 Console.WriteLine("GetChannels send to {0} ({1})",
                     Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
             }
@@ -286,6 +339,7 @@ namespace ChatServer
                 Console.WriteLine("GetChannelsActionResponse exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
+                LogoutActionResponse();
             }
         }
         private void GetConnectionCheckInterval()
@@ -296,8 +350,8 @@ namespace ChatServer
                     server.ConnectedIpConnectionCheckTimerInterval);
                 messageStream.Write(response);
 
-                Console.WriteLine("GetConnectionCheckInterval send to {0} ({1})",
-                    Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
+                Console.WriteLine("GetConnectionCheckInterval send to {0}",
+                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
             }
             catch (Exception e)
             {
@@ -350,17 +404,19 @@ namespace ChatServer
             {
                 Console.WriteLine("Message received from {0}", Name);
 
-                bool isMessageToRoom = DB.IsRoom(((Message)message.Obj).To).Result;
+                Message curMessage = (Message)message.Obj;
+
+                bool isMessageToRoom = DB.IsRoom(curMessage.To).Result;
                 bool res = false;
 
-                if (isMessageToRoom && DB.SendToRoom(message).Result)
+                if (isMessageToRoom && DB.SendToRoom(curMessage).Result)
                 {
-                    server.SendToOnlineClients((Message)message.Obj);
+                    server.SendToOnlineClientsRoom(curMessage);
                     res = true;
                 }
-                else if (DB.SendToUser(message).Result)
+                else if (DB.SendToUser(curMessage).Result)
                 {
-                    server.SendToOnliceClient((Message)message.Obj);
+                    server.SendToOnliceClient(curMessage);
                     res = true;
                 }
 
@@ -408,7 +464,14 @@ namespace ChatServer
                         Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
                         roomName);
 
-                    server.ChannelCreatedNotify(new Channel() { Name = roomName, Type = hashPass == "" ? ChannelType.public_open : ChannelType.public_closed });
+                    Channel newChannel = new Channel()
+                    {
+                        Name = roomName,
+                        Type = hashPass == "" ? ChannelType.public_open : ChannelType.public_closed,
+                        
+                    };
+                    server.ChannelCreatedNotify(newChannel);
+                    server.AddedOnlineRoomUser(this, newChannel);
                 }
                 else if (responseAction == ActionEnum.room_exist)
                 {
@@ -528,6 +591,7 @@ namespace ChatServer
 
                 TcpClient.Close();
                 streamIsOpen = false;
+                server.RemoveOnlineUserRoom(this);
                 server.RemoveFromConnectedIp(this);
             }
             catch (Exception e)

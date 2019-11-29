@@ -19,7 +19,7 @@ namespace ChatClient.Models
             Client = new Client(Config.GetConfig());
         }
 
-        public static void GetUsers()
+        public static void GetChannels()
         {
             ConnectedChannels = new ObservableCollection<Channel>(Client.GetChannelsActionRequest());
         }

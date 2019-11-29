@@ -188,12 +188,13 @@ namespace ChatServer
 
             try
             {
-                using (var cmd = new NpgsqlCommand(@"SELECT (SELECT login FROM users WHERE users.id = uch.from_user_id), 
-                                                            u.login,
-                                                            uch.message,
-                                                            uch.datetime
-                                                    FROM users u JOIN userchats uch ON u.id = uch.to_user_id
-                                                    WHERE u.login = @name OR uch.from_user_id = (SELECT id FROM users WHERE login = @name)", conn))
+                using (var cmd = new NpgsqlCommand(@"SELECT (SELECT login FROM users WHERE users.id = uch.from_user_id),
+                                                     	    (SELECT login FROM users WHERE users.id = uch.to_user_id),
+                                                            mt.name, m.content, m.datetime
+                                                     FROM  userchats uch JOIN messages m ON m.id = uch.message_id
+                                                     	                 JOIN message_type mt ON mt.id = m.message_type_id
+                                                     WHERE uch.to_user_id = (SELECT id FROM users WHERE login = @name) OR 
+                                                     	   uch.from_user_id = (SELECT id FROM users WHERE login = @name)", conn))
                 {
                     cmd.Parameters.AddWithValue("name", name);
                     using (var reader = await cmd.ExecuteReaderAsync())
@@ -204,8 +205,9 @@ namespace ChatServer
                             {
                                 From = reader.GetString(0),
                                 To = reader.GetString(1),
-                                Text = reader.GetString(2),
-                                Date = reader.GetDateTime(3)
+                                MessageType = DefineMessageType(reader.GetString(2)),
+                                Content = reader.GetString(3),
+                                Date = reader.GetDateTime(4)
                             };
                             message.ChatDestination = message.From == name ? message.To : message.From;
                             res.Add(message);
@@ -215,11 +217,11 @@ namespace ChatServer
 
                 using (var cmd = new NpgsqlCommand(@"SELECT (SELECT login FROM users WHERE users.id = rch.from_user_id), 
                                                             (SELECT name FROM rooms WHERE rooms.id = rch.to_room_id),
-                                                            rch.message,
-                                                            rch.datetime
-                                                     FROM roomchats rch
+                                                     		mt.name, m.content, m.datetime
+                                                     FROM roomchats rch JOIN messages m ON m.id = rch.message_id 
+                                                     				    JOIN message_type mt ON mt.id = m.message_type_id
                                                      WHERE EXISTS (SELECT id FROM roomuser WHERE room_id = rch.to_room_id 					  						   
-                                                     			  AND user_id = (SELECT id FROM users WHERE login = 'Andrew'))", conn))
+                                                     			  AND user_id = (SELECT id FROM users WHERE login = @name))", conn))
                 {
                     cmd.Parameters.AddWithValue("name", name);
                     using (var reader = await cmd.ExecuteReaderAsync())
@@ -230,8 +232,9 @@ namespace ChatServer
                                 From = reader.GetString(0),
                                 To = reader.GetString(1),
                                 ChatDestination = reader.GetString(1),
-                                Text = reader.GetString(2),
-                                Date = reader.GetDateTime(3)
+                                MessageType = DefineMessageType(reader.GetString(2)),
+                                Content = reader.GetString(3),
+                                Date = reader.GetDateTime(4)
                             });
                     }
                 }
@@ -245,7 +248,7 @@ namespace ChatServer
             return res;
         }
 
-        internal static async Task<List<Message>> GetChannelHistory(string roomName)
+        public static async Task<List<Message>> GetChannelHistory(string roomName)
         {
             List<Message> res = new List<Message>();
 
@@ -253,9 +256,9 @@ namespace ChatServer
             {
                 using (var cmd = new NpgsqlCommand(@"SELECT (SELECT login FROM users WHERE users.id = rch.from_user_id), 
                                                             (SELECT name FROM rooms WHERE rooms.id = rch.to_room_id),
-                                                            rch.message,
-                                                            rch.datetime
-                                                     FROM roomchats rch 
+                                                            mt.name, m.content, m.datetime
+                                                     FROM roomchats rch JOIN messages m ON m.id = rch.message_id 
+                                                                    	   JOIN message_type mt ON mt.id = m.message_type_id
                                                      WHERE rch.to_room_id = (SELECT id FROM rooms WHERE rooms.name = @roomName)", conn))
                 {
                     cmd.Parameters.AddWithValue("roomName", roomName);
@@ -268,8 +271,9 @@ namespace ChatServer
                                 From = reader.GetString(0),
                                 To = reader.GetString(1),
                                 ChatDestination = reader.GetString(1),
-                                Text = reader.GetString(2),
-                                Date = reader.GetDateTime(3)
+                                MessageType = DefineMessageType(reader.GetString(2)),
+                                Content = reader.GetString(3),
+                                Date = reader.GetDateTime(4)
                             });
                     }
                 }
@@ -283,7 +287,7 @@ namespace ChatServer
             return res;
         }
 
-        internal static async Task<ActionEnum> EnterRoom(string user, string roomName, string roomPass)
+        public static async Task<ActionEnum> EnterRoom(string user, string roomName, string roomPass)
         {
             try
             {
@@ -333,6 +337,27 @@ namespace ChatServer
             }
         }
 
+        public static async Task<ActionEnum> ExitRoom(string user, string roomName)
+        {
+            try
+            {
+                using (var cmd = new NpgsqlCommand(@"DELETE FROM roomuser
+                                                    WHERE roomuser.user_id = (SELECT id FROM users WHERE users.login = @user)
+                                                    	AND roomuser.room_id = (SELECT id FROM rooms WHERE rooms.name = @roomName)", conn))
+                {
+                    cmd.Parameters.AddWithValue("user", user);
+                    cmd.Parameters.AddWithValue("roomName", roomName);
+                    await cmd.ExecuteNonQueryAsync();
+                    return ActionEnum.ok;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return ActionEnum.bad;
+            }
+        }
+
         public static async Task<bool> IsRoom(string name)
         {
             try
@@ -355,19 +380,20 @@ namespace ChatServer
             }
         }
 
-        public static async Task<bool> SendToRoom(NetworkMessage message)
+        public static async Task<bool> SendToRoom(Message message)
         {
             try
             {
-                using (var cmd = new NpgsqlCommand(@"INSERT INTO roomchats (from_user_id, to_room_id, message, datetime)
+                int messageId = await WriteInternalMessage(message);
+
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO roomchats (from_user_id, to_room_id, message_id)
                                                     VALUES(
                                                         (SELECT id FROM users WHERE login = @fromUser), 
-                                                        (SELECT id FROM rooms WHERE name = @toRoom), @message, @datetime)", conn))
+                                                        (SELECT id FROM rooms WHERE name = @toRoom), @messageId)", conn))
                 {
-                    cmd.Parameters.AddWithValue("fromUser", ((Message)message.Obj).From);
-                    cmd.Parameters.AddWithValue("toRoom", ((Message)message.Obj).To);
-                    cmd.Parameters.AddWithValue("message", ((Message)message.Obj).Text);
-                    cmd.Parameters.AddWithValue("datetime", ((Message)message.Obj).Date.ToUniversalTime());
+                    cmd.Parameters.AddWithValue("fromUser", message.From);
+                    cmd.Parameters.AddWithValue("toRoom", message.To);
+                    cmd.Parameters.AddWithValue("messageId", messageId);
                     await cmd.ExecuteNonQueryAsync();
                 }
                 return true;
@@ -379,19 +405,20 @@ namespace ChatServer
             }
         }
 
-        public static async Task<bool> SendToUser(NetworkMessage message)
+        public static async Task<bool> SendToUser(Message message)
         {
             try
             {
-                using (var cmd = new NpgsqlCommand(@"INSERT INTO userchats (from_user_id, to_user_id, message, datetime)
-                                                   VALUES(
-                                                        (SELECT id FROM users WHERE login = @fromUser),
-                                                        (SELECT id FROM users WHERE login = @toUser), @message, @datetime)", conn))
+                int messageId = await WriteInternalMessage(message);
+
+                using (var cmd = new NpgsqlCommand(@"INSERT INTO userchats (from_user_id, to_user_id, message_id)
+                                                    VALUES(
+                                                        (SELECT id FROM users WHERE login = @fromUser), 
+                                                        (SELECT id FROM users WHERE login = @toUser), @messageId)", conn))
                 {
-                    cmd.Parameters.AddWithValue("fromUser", ((Message)message.Obj).From);
-                    cmd.Parameters.AddWithValue("toUser", ((Message)message.Obj).To);
-                    cmd.Parameters.AddWithValue("message", ((Message)message.Obj).Text);
-                    cmd.Parameters.AddWithValue("datetime", DateTime.Now.ToUniversalTime());
+                    cmd.Parameters.AddWithValue("fromUser", message.From);
+                    cmd.Parameters.AddWithValue("toUser", message.To);
+                    cmd.Parameters.AddWithValue("messageId", messageId);
                     await cmd.ExecuteNonQueryAsync();
                 }
                 return true;
@@ -400,6 +427,39 @@ namespace ChatServer
             {
                 Console.WriteLine(e.Message);
                 throw e;
+            }
+        }
+
+        private static async Task<int> WriteInternalMessage(Message message)
+        {
+            using (var cmd = new NpgsqlCommand(@"INSERT INTO messages (message_type_id, content, datetime)
+                                                    VALUES (@message_type, @message, @datetime)
+                                                    RETURNING id", conn))
+            {
+                cmd.Parameters.AddWithValue("message_type", (int)message.MessageType);
+                cmd.Parameters.AddWithValue("message", message.Content);
+                cmd.Parameters.AddWithValue("datetime", message.Date.ToUniversalTime());
+                using (var reader = await cmd.ExecuteReaderAsync())
+                {
+                    await reader.ReadAsync();
+                    return reader.GetInt32(0);
+                }
+
+            }
+        }
+
+        private static MessageType DefineMessageType(string rawType)
+        {
+            switch (rawType)
+            {
+                case "text":
+                    return MessageType.text;
+                case "image":
+                    return MessageType.image;
+                case "document":
+                    return MessageType.document;
+                default:
+                    return MessageType.text;
             }
         }
     }

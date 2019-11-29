@@ -97,6 +97,8 @@
     <Compile Include="Models\Config.cs" />
     <Compile Include="Models\MainModel.cs" />
     <Compile Include="Utility\AutoScrollBehavior.cs" />
+    <Compile Include="Utility\ByteImageConverter.cs" />
+    <Compile Include="Utility\HamburgerMenuIconLeaveItem.cs" />
     <Compile Include="Utility\UIMessage\UIMessage.cs" />
     <Compile Include="Utility\UIMessage\UIMessageInput.cs" />
     <Compile Include="Utility\UIMessage\UIMessageOutput.cs" />
