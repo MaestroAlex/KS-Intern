@@ -35,7 +35,7 @@ namespace ChatServer
                 ((IPEndPoint)client.Client.RemoteEndPoint).Address.ToString());
         }
 
-        public void DefineAction()
+        public async Task DefineAction()
         {
             try
             {
@@ -44,95 +44,103 @@ namespace ChatServer
                     if (networkStream.DataAvailable)
                     {
                         IsBusy = true;
-                        NetworkMessage request = messageStream.Read();
-                        Process(request);
+                        NetworkMessage request = await messageStream.ReadAsync();
+                        await Process(request);
                         IsBusy = false;
                     }
                     else if (ActionQueue.Messages.Count != 0)
                     {
+                        IsBusy = true;
                         NetworkMessage response = new NetworkMessage(ActionEnum.send_message);
-                        Process(response);
+                        await Process(response);
+                        IsBusy = false;
                     }
                     else if (ActionQueue.NewChannels.Count != 0)
                     {
+                        IsBusy = true;
                         NetworkMessage response = new NetworkMessage(ActionEnum.channel_created);
-                        Process(response);
+                        await Process(response);
+                        IsBusy = false;
                     }
                     else if (ActionQueue.DeletedChannels.Count != 0)
                     {
+                        IsBusy = true;
                         NetworkMessage response = new NetworkMessage(ActionEnum.channel_deleted);
-                        Process(response);
+                        await Process(response);
+                        IsBusy = false;
                     }
                     else if (ActionQueue.ConnectionCheckRequired)
                     {
+                        IsBusy = true;
                         NetworkMessage response = new NetworkMessage(ActionEnum.connection_check);
-                        Process(response);
+                        await Process(response);
+                        IsBusy = false;
                     }
 
-                    Thread.Sleep(100);
+                    await Task.Delay(100);
                 }
             }
             catch (Exception e)
             {
                 Console.WriteLine("Something gone wrong in DefineAction !!!");
                 Console.WriteLine(e.Message);
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void Process(NetworkMessage message)
+        private async Task Process(NetworkMessage message)
         {
             try
             {
                 switch (message.Action)
                 {
                     case ActionEnum.aes_handshake:
-                        AESHandshakeWithRSAActionResponse();
+                        await AESHandshakeWithRSAActionResponse();
                         break;
                     case ActionEnum.login:
-                        LoginActionResponse(message);
+                        await LoginActionResponse(message);
                         break;
                     case ActionEnum.logout:
-                        LogoutActionResponse();
+                        await LogoutActionResponse();
                         break;
                     case ActionEnum.send_message:
-                        SendMessageActionResponse(message);
+                        await SendMessageActionResponse(message);
                         break;
                     case ActionEnum.receive_message:
-                        ReceiveMessageActionResponse(message);
+                        await ReceiveMessageActionResponse(message);
                         break;
                     case ActionEnum.get_channels:
-                        GetChannelsActionResponse();
+                        await GetChannelsActionResponse();
                         break;
                     case ActionEnum.get_all_history:
-                        GetAllHistoryActionResponse();
+                        await GetAllHistoryActionResponse();
                         break;
                     case ActionEnum.get_room_history:
-                        GetRoomHistoryActionResponse(message);
+                        await GetRoomHistoryActionResponse(message);
                         break;
                     case ActionEnum.create_user:
-                        CreateUserActionResponse(message);
+                        await CreateUserActionResponse(message);
                         break;
                     case ActionEnum.create_room:
-                        CreateRoomActionResponse(message);
+                        await CreateRoomActionResponse(message);
                         break;
                     case ActionEnum.channel_created:
-                        ChannelCreatedNotificationActionResponse(message);
+                        await ChannelCreatedNotificationActionResponse(message);
                         break;
                     case ActionEnum.channel_deleted:
-                        ChannelDeletedNotificationActionResponse(message);
+                        await ChannelDeletedNotificationActionResponse(message);
                         break;
                     case ActionEnum.enter_room:
-                        EnterRoomActionResponse(message);
+                        await EnterRoomActionResponse(message);
                         break;
                     case ActionEnum.leave_room:
-                        LeaveRoomActionResponse(message);
+                        await LeaveRoomActionResponse(message);
                         break;
                     case ActionEnum.connection_check:
-                        ConnectionCheckActionRequest(message);
+                        await ConnectionCheckActionRequest(message);
                         break;
                     case ActionEnum.get_connection_check_interval:
-                        GetConnectionCheckInterval();
+                        await GetConnectionCheckInterval();
                         break;
                 }
             }
@@ -140,15 +148,15 @@ namespace ChatServer
             {
                 Console.WriteLine("Something gone wrong in Process !!!");
                 Console.WriteLine(e.Message);
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void AESHandshakeWithRSAActionResponse()
+        private async Task AESHandshakeWithRSAActionResponse()
         {
             try
             {
-                RSAParameters clientPublicKey = (RSAParameters)messageStream.Read().Obj;
+                RSAParameters clientPublicKey = (RSAParameters)(await messageStream.ReadAsync()).Obj;
 
                 byte[] aesKey = Aes.Create().Key;
                 byte[] encryptedAesKey;
@@ -160,8 +168,8 @@ namespace ChatServer
                     encryptedAesKey = rsa.Encrypt(aesKey, true);
                 }
 
-                messageStream.Write(new NetworkMessage(ActionEnum.ok, encryptedAesKey));
-                ActionEnum requestResult = messageStream.Read().Action;
+                await messageStream.WriteAsync(new NetworkMessage(ActionEnum.ok, encryptedAesKey));
+                ActionEnum requestResult = (await messageStream.ReadAsync()).Action;
 
                 if (requestResult == ActionEnum.ok)
                     messageStream.Aes.Key = aesKey;
@@ -177,39 +185,39 @@ namespace ChatServer
             }
         }
 
-        private void ChannelDeletedNotificationActionResponse(NetworkMessage request)
+        private async Task ChannelDeletedNotificationActionResponse(NetworkMessage request)
         {
             try
             {
                 request.Obj = ActionQueue.DeletedChannels.Dequeue();
-                messageStream.Write(request);
+                await messageStream.WriteAsync(request);
             }
             catch (Exception e)
             {
                 Console.WriteLine("ChannelDeletedNotification exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void ChannelCreatedNotificationActionResponse(NetworkMessage request)
+        private async Task ChannelCreatedNotificationActionResponse(NetworkMessage request)
         {
             try
             {
                 request.Obj = ActionQueue.NewChannels.Dequeue();
-                messageStream.Write(request);
+                await messageStream.WriteAsync(request);
             }
             catch (Exception e)
             {
                 Console.WriteLine("ChannelCreatedNotification exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void GetRoomHistoryActionResponse(NetworkMessage message)
+        private async Task GetRoomHistoryActionResponse(NetworkMessage message)
         {
             try
             {
@@ -217,7 +225,7 @@ namespace ChatServer
 
                 List<Message> history = DB.GetChannelHistory(roomName).Result;
                 NetworkMessage response = new NetworkMessage(ActionEnum.ok, history);
-                messageStream.WriteEncrypted(response);
+                await messageStream.WriteEncryptedAsync(response);
 
                 Console.WriteLine("GetRoomHistory ({2}) send to {0} ({1})",
                     Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
@@ -228,10 +236,11 @@ namespace ChatServer
                 Console.WriteLine("GetChannelsActionResponse exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
+                await LogoutActionResponse();
             }
         }
 
-        private void LeaveRoomActionResponse(NetworkMessage message)
+        private async Task LeaveRoomActionResponse(NetworkMessage message)
         {
             try
             {
@@ -240,7 +249,8 @@ namespace ChatServer
                 ActionEnum res = DB.ExitRoom(Name, roomName).Result;
 
                 NetworkMessage response = new NetworkMessage(res);
-                messageStream.WriteEncrypted(response);
+                await messageStream.WriteEncryptedAsync(response);
+                server.RemoveOnlineRoomUser(this, roomName);
 
                 if (res == ActionEnum.ok)
                 {
@@ -250,7 +260,7 @@ namespace ChatServer
                 }
                 else
                 {
-                    Console.WriteLine("User ({0}) from {1} not left room ({2}), exception",
+                    Console.WriteLine("User ({0}) from {1} left room ({2}), with exception",
                         Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
                         roomName);
                 }
@@ -260,10 +270,11 @@ namespace ChatServer
                 Console.WriteLine("EnterRoom exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
+                await LogoutActionResponse();
             }
         }
 
-        private void EnterRoomActionResponse(NetworkMessage message)
+        private async Task EnterRoomActionResponse(NetworkMessage message)
         {
             try
             {
@@ -272,16 +283,11 @@ namespace ChatServer
 
                 ActionEnum authorizationResult = DB.EnterRoom(Name, roomName, pass).Result;
                 NetworkMessage response = new NetworkMessage(authorizationResult);
-                messageStream.WriteEncrypted(response);
+                await messageStream.WriteEncryptedAsync(response);
 
                 if (authorizationResult == ActionEnum.ok) 
                 {
-                    server.AddedOnlineRoomUser(this, new Channel()
-                    {
-                        Name = roomName,
-                        Type = pass == "" ? ChannelType.public_open : ChannelType.public_closed,
-                        IsEntered = true
-                    });
+                    server.AddedOnlineRoomUser(this, roomName);
 
                     Console.WriteLine("User ({0}) from {1} entered room ({2})",
                         Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(),
@@ -299,16 +305,17 @@ namespace ChatServer
                 Console.WriteLine("EnterRoom exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
+                await LogoutActionResponse();
             }
         }
 
-        private void GetAllHistoryActionResponse()
+        private async Task GetAllHistoryActionResponse()
         {
             try
             {
                 List<Message> history = DB.GetAllHistory(Name).Result;
                 NetworkMessage response = new NetworkMessage(ActionEnum.ok, history);
-                messageStream.WriteEncrypted(response);
+                await messageStream.WriteEncryptedAsync(response);
 
                 Console.WriteLine("GetHistory send to {0} ({1})",
                     Name, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
@@ -318,16 +325,17 @@ namespace ChatServer
                 Console.WriteLine("GetChannelsActionResponse exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
+                await LogoutActionResponse();
             }
         }
 
-        private void GetChannelsActionResponse()
+        private async Task GetChannelsActionResponse()
         {
             try
             {
                 List<Channel> channels = DB.GetChannels(Name).Result;
                 NetworkMessage response = new NetworkMessage(ActionEnum.ok, channels);
-                messageStream.WriteEncrypted(response);
+                await messageStream.WriteEncryptedAsync(response);
 
                 server.AddedOnlineRoomsUser(this, channels);
 
@@ -339,16 +347,16 @@ namespace ChatServer
                 Console.WriteLine("GetChannelsActionResponse exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
-        private void GetConnectionCheckInterval()
+        private async Task GetConnectionCheckInterval()
         {
             try
             {
                 NetworkMessage response = new NetworkMessage(ActionEnum.ok,
                     server.ConnectedIpConnectionCheckTimerInterval);
-                messageStream.Write(response);
+                await messageStream.WriteAsync(response);
 
                 Console.WriteLine("GetConnectionCheckInterval send to {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
@@ -358,16 +366,16 @@ namespace ChatServer
                 Console.WriteLine("GetConnectionCheckInterval exception - {0}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
                 Console.WriteLine(e.Message);
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void ConnectionCheckActionRequest(NetworkMessage message)
+        private async Task ConnectionCheckActionRequest(NetworkMessage message)
         {
             try
             {
-                messageStream.Write(message);
-                messageStream.Read();
+                await messageStream.WriteAsync(message);
+                await messageStream.ReadAsync();
                 ActionQueue.ConnectionCheckRequired = false;
                // Console.WriteLine("connection check");
             }
@@ -376,17 +384,17 @@ namespace ChatServer
                 Console.WriteLine("ConnectionCheck exception - {0}({1})",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(), Name);
                 Console.WriteLine(e.Message);
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void SendMessageActionResponse(NetworkMessage request)
+        private async Task SendMessageActionResponse(NetworkMessage request)
         {
             try
             {
                 Message cur = ActionQueue.Messages.Dequeue();
                 NetworkMessage message = new NetworkMessage(ActionEnum.receive_message, cur);
-                messageStream.WriteEncrypted(message);
+                await messageStream.WriteEncryptedAsync(message);
 
                 Console.WriteLine("Message send from {0} to {1}", cur.From, cur.To);
 
@@ -395,10 +403,11 @@ namespace ChatServer
             {
                 Console.WriteLine("Send message exception - {0} ({1}",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(), e.Message);
+                await LogoutActionResponse();
             }
         }
 
-        private void ReceiveMessageActionResponse(NetworkMessage message)
+        private async Task ReceiveMessageActionResponse(NetworkMessage message)
         {
             try
             {
@@ -406,15 +415,15 @@ namespace ChatServer
 
                 Message curMessage = (Message)message.Obj;
 
-                bool isMessageToRoom = DB.IsRoom(curMessage.To).Result;
+                bool isMessageToRoom = await DB.IsRoom(curMessage.To);
                 bool res = false;
 
-                if (isMessageToRoom && DB.SendToRoom(curMessage).Result)
+                if (isMessageToRoom && await DB.SendToRoom(curMessage))
                 {
                     server.SendToOnlineClientsRoom(curMessage);
                     res = true;
                 }
-                else if (DB.SendToUser(curMessage).Result)
+                else if (await DB.SendToUser(curMessage))
                 {
                     server.SendToOnliceClient(curMessage);
                     res = true;
@@ -424,12 +433,12 @@ namespace ChatServer
                 if (res)
                 {
                     NetworkMessage response = new NetworkMessage(ActionEnum.ok);
-                    messageStream.Write(response);
+                    await messageStream.WriteAsync(response);
                 }
                 else
                 {
                     NetworkMessage response = new NetworkMessage(ActionEnum.bad);
-                    messageStream.Write(response);
+                    await messageStream.WriteAsync(response);
                 }
 
             }
@@ -437,10 +446,11 @@ namespace ChatServer
             {
                 Console.WriteLine("Receive message exception - {0} ({1})",
                     ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(), e.Message);
+                await LogoutActionResponse();
             }
         }
 
-        private void CreateRoomActionResponse(NetworkMessage request)
+        private async Task CreateRoomActionResponse(NetworkMessage request)
         {
             try
             {
@@ -456,7 +466,7 @@ namespace ChatServer
                     hashPass += salt;
                 }
 
-                ActionEnum responseAction = DB.CreateRoom(roomName, Name, hashPass, salt).Result;
+                ActionEnum responseAction = await DB.CreateRoom(roomName, Name, hashPass, salt);
 
                 if (responseAction == ActionEnum.ok)
                 {
@@ -467,11 +477,10 @@ namespace ChatServer
                     Channel newChannel = new Channel()
                     {
                         Name = roomName,
-                        Type = hashPass == "" ? ChannelType.public_open : ChannelType.public_closed,
-                        
+                        Type = string.IsNullOrWhiteSpace(hashPass) ? ChannelType.public_open : ChannelType.public_closed,
                     };
-                    server.ChannelCreatedNotify(newChannel);
-                    server.AddedOnlineRoomUser(this, newChannel);
+                    server.ChannelCreatedNotify(newChannel, Name);
+                    server.AddedOnlineRoomUser(this, roomName);
                 }
                 else if (responseAction == ActionEnum.room_exist)
                 {
@@ -479,7 +488,7 @@ namespace ChatServer
                         Name, ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString(),
                         roomName);
                 }
-                messageStream.Write(new NetworkMessage(responseAction));
+                await messageStream.WriteAsync(new NetworkMessage(responseAction));
             }
             catch (Exception e)
             {
@@ -487,11 +496,11 @@ namespace ChatServer
                 Console.WriteLine("Room creation exception - {0} ({1})",
                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(), e.Message);
 
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void CreateUserActionResponse(NetworkMessage request)
+        private async Task CreateUserActionResponse(NetworkMessage request)
         {
             try
             {
@@ -503,16 +512,16 @@ namespace ChatServer
                 string salt = CreateSalt();
                 hashPass += salt;
 
-                bool res = DB.CreateUser(login, hashPass, salt).Result;
+                bool res = await DB.CreateUser(login, hashPass, salt);
                 if (res)
                 {
                     Console.WriteLine("User {0} from {1} created ",
                         login, ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString());
 
                     Name = login;
-                    server.ChannelCreatedNotify(new Channel() { Name = login, Type = ChannelType.user });
+                    server.ChannelCreatedNotify(new Channel() { Name = login, Type = ChannelType.user }, Name);
                     NetworkMessage response = new NetworkMessage(ActionEnum.ok);
-                    messageStream.Write(response);
+                    await messageStream.WriteAsync(response);
                 }
                 else
                 {
@@ -520,7 +529,7 @@ namespace ChatServer
                         login, ((IPEndPoint)TcpClient.Client.RemoteEndPoint).Address.ToString());
 
                     NetworkMessage response = new NetworkMessage(ActionEnum.bad);
-                    messageStream.Write(response);
+                    await messageStream.WriteAsync(response);
                 }
             }
             catch (Exception e)
@@ -529,11 +538,11 @@ namespace ChatServer
                 Console.WriteLine("User creation exception - {0} ({1})",
                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(), e.Message);
 
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void LoginActionResponse(NetworkMessage message)
+        private async Task LoginActionResponse(NetworkMessage message)
         {
             try
             {
@@ -545,7 +554,7 @@ namespace ChatServer
 
                 // bool userAlreadyOnline = !server.UserExist(login);
 
-                ActionEnum responseActionEnum = DB.UserLogin(login, hashPass).Result;
+                ActionEnum responseActionEnum = await DB.UserLogin(login, hashPass);
 
                 if (responseActionEnum == ActionEnum.bad_login)
                 {
@@ -570,7 +579,7 @@ namespace ChatServer
                     Name = login;
                 }
 
-                messageStream.Write(new NetworkMessage(responseActionEnum));
+                await messageStream.WriteAsync(new NetworkMessage(responseActionEnum));
             }
             catch (Exception e)
             {
@@ -578,11 +587,11 @@ namespace ChatServer
                 Console.WriteLine("Login exception - {0} ({1})",
                    ((IPEndPoint)TcpClient.Client?.RemoteEndPoint).Address.ToString(), e.Message);
 
-                LogoutActionResponse();
+                await LogoutActionResponse();
             }
         }
 
-        private void LogoutActionResponse()
+        private async Task LogoutActionResponse()
         {
             try
             {
@@ -591,7 +600,7 @@ namespace ChatServer
 
                 TcpClient.Close();
                 streamIsOpen = false;
-                server.RemoveOnlineUserRoom(this);
+                server.RemoveOnlineRoomsUser(this);
                 server.RemoveFromConnectedIp(this);
             }
             catch (Exception e)

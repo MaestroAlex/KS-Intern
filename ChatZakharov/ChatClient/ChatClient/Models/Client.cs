@@ -39,14 +39,14 @@ namespace ChatClient.Models
         System.Timers.Timer connnectionCheckForClientTimer;
         System.Timers.Timer changeAesKeyTimer;
         bool connectionCheckForClientExist;
-        Mutex NetworkStreamMutex; // флаг, разрешающий чтение в потоке ожидания обновления данных 
+        SemaphoreSlim NetworkStreamSemaphore; // флаг, разрешающий чтение в потоке ожидания обновления данных 
                                   // (иначе он может вмешиваться в работу NetworkStream при реквестах)
 
         public Client(Config config)
         {
             Name = null;
             ConnectionState = ClientState.Disconnected;
-            NetworkStreamMutex = new Mutex();
+            NetworkStreamSemaphore = new SemaphoreSlim(01);
 
             connnectionCheckForClientTimer = new System.Timers.Timer(); // .Interval sets in GetConnectionChekInterval()
             connnectionCheckForClientTimer.Elapsed += (sender, e) =>
@@ -68,24 +68,24 @@ namespace ChatClient.Models
             Task.Run(() => FromServerReceiveTask());
         }
 
-        private void FromServerReceiveTask()
+        private async Task FromServerReceiveTask()
         {
             while (streamIsOpen)
             {
-                NetworkStreamMutex.WaitOne();
+                await NetworkStreamSemaphore.WaitAsync();
                 if (streamIsOpen && stream.DataAvailable)
                 {
-                    NetworkMessage networkMessage = messageStream.Read();
-                    if (Process(networkMessage))
+                    NetworkMessage networkMessage = await messageStream.ReadAsync();
+                    if (await Process(networkMessage))
                         connectionCheckForClientExist = true;
 
                 }
-                NetworkStreamMutex.ReleaseMutex();
-                Thread.Sleep(100);
+                NetworkStreamSemaphore.Release();
+                await Task.Delay(100);
             }
         }
 
-        private bool Process(NetworkMessage networkMessage)
+        private async Task<bool> Process(NetworkMessage networkMessage)
         {
             switch (networkMessage.Action)
             {
@@ -96,7 +96,7 @@ namespace ChatClient.Models
                 case ActionEnum.channel_deleted:
                     return ChannelDeletedNotificationActionResponse(networkMessage);
                 case ActionEnum.connection_check:
-                    return ConnectionCheckActionResponse(networkMessage);
+                    return await ConnectionCheckActionResponse(networkMessage);
             }
             return false;
         }
@@ -137,11 +137,11 @@ namespace ChatClient.Models
             }
         }
 
-        private bool ConnectionCheckActionResponse(NetworkMessage message)
+        private async Task<bool> ConnectionCheckActionResponse(NetworkMessage message)
         {
             try
             {
-                messageStream.Write(message);
+                await messageStream.WriteAsync(message);
 
                 return true;
             }
@@ -173,20 +173,17 @@ namespace ChatClient.Models
             }
         }
 
-        public bool SendMessageActionRequest(Message message)
+        public async Task<bool> SendMessageActionRequest(Message message)
         {
-            NetworkStreamMutex.WaitOne();
-
-            //if (Name == "debug")
-            //    Console.WriteLine("Enter SendMessage");
+            await NetworkStreamSemaphore.WaitAsync();
 
             bool res = false;
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.receive_message, message);
-                messageStream.WriteEncrypted(request);
+                await messageStream.WriteEncryptedAsync(request);
 
-                ActionEnum requsetResult = messageStream.Read().Action;
+                ActionEnum requsetResult = (await messageStream.ReadAsync()).Action;
 
                 connectionCheckForClientExist = true;
 
@@ -203,47 +200,49 @@ namespace ChatClient.Models
                 Disconnect();
                 res = false;
             }
-
-            //if (Name == "debug")
-            //    Console.WriteLine("Exit SendMessage");
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
             return res;
         }
 
-        public bool GetConnectionChekInterval()
+        public async Task<bool> GetConnectionChekInterval()
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
             bool res;
 
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.get_connection_check_interval);
-                messageStream.Write(request);
-                connnectionCheckForClientTimer.Interval = (int)messageStream.Read().Obj + 2000;
-                //connnectionCheckForClientTimer.Start();
+                await messageStream.WriteAsync(request);
+                connnectionCheckForClientTimer.Interval = (int)(await messageStream.ReadAsync()).Obj + 2000;
+                connnectionCheckForClientTimer.Start();
                 res = true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Disconnect();
                 res = false;
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
             return res;
         }
 
-        public void GetRoomHistoryActionRequest(string roomName)
+        public async Task GetRoomHistoryActionRequest(string roomName)
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
 
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.get_room_history, roomName);
-                messageStream.WriteEncrypted(request);
+                await messageStream.WriteEncryptedAsync(request);
 
-                NetworkMessage response = messageStream.Read();
+                NetworkMessage response = await messageStream.ReadAsync();
 
                 if (response.Action == ActionEnum.ok)
                 {
@@ -261,21 +260,25 @@ namespace ChatClient.Models
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error in History received");
+                Disconnect();
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
         }
 
-        public bool LeaveRoomActionRequest(object room)
+        public async Task<bool> LeaveRoomActionRequest(object room)
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
+
             bool res = false;
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.leave_room, room);
-                messageStream.WriteEncrypted(request);
+                await messageStream.WriteEncryptedAsync(request);
 
-                NetworkMessage response = messageStream.Read();
+                NetworkMessage response = await messageStream.ReadAsync();
                 if (response.Action == ActionEnum.ok)
                 {
                     connectionCheckForClientExist = true;
@@ -287,16 +290,19 @@ namespace ChatClient.Models
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Disconnect();
                 res = false;
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
             return res;
         }
 
-        public ActionEnum EnterRoomActionRequest(Channel channel, string hashPassword)
+        public async Task<ActionEnum> EnterRoomActionRequest(Channel channel, string hashPassword)
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
             ActionEnum res;
             try
             {
@@ -306,9 +312,9 @@ namespace ChatClient.Models
                     HashPass = hashPassword
                 };
                 NetworkMessage request = new NetworkMessage(ActionEnum.enter_room, room);
-                messageStream.WriteEncrypted(request);
+                await messageStream.WriteEncryptedAsync(request);
 
-                NetworkMessage response = messageStream.Read();
+                NetworkMessage response = await messageStream.ReadAsync();
                 res = response.Action;
                 connectionCheckForClientExist = true;
             }
@@ -316,22 +322,25 @@ namespace ChatClient.Models
             {
                 Console.WriteLine(e.Message);
                 res = ActionEnum.bad;
+                Disconnect();
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
             return res;
         }
 
-        public void GetAllHistoryActionRequest()
+        public async Task GetAllHistoryActionRequest()
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
 
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.get_all_history);
-                messageStream.Write(request);
+                await messageStream.WriteAsync(request);
 
-                NetworkMessage response = messageStream.Read();
+                NetworkMessage response = await messageStream.ReadAsync();
                 if (response.Action == ActionEnum.ok)
                 {
                     List<Message> history = (List<Message>)response.Obj;
@@ -348,21 +357,25 @@ namespace ChatClient.Models
             {
                 Console.WriteLine(e.Message);
                 Console.WriteLine("Error in History received");
+                Disconnect();
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
         }
 
-        public IEnumerable<Channel> GetChannelsActionRequest()
+        public async Task<IEnumerable<Channel>> GetChannelsActionRequest()
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
             IEnumerable<Channel> res = null;
 
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.get_channels);
-                messageStream.Write(request);
-                NetworkMessage response = messageStream.Read();
+                await messageStream.WriteAsync(request);
+
+                NetworkMessage response = await messageStream.ReadAsync();
                 res = (List<Channel>)response.Obj;
                 Console.WriteLine("GetUsers receive");
 
@@ -371,20 +384,23 @@ namespace ChatClient.Models
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Disconnect();
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
             return res;
         }
 
-        public bool AESHandshakeWithRSAActionRequest()
+        public async Task<bool> AESHandshakeWithRSAActionRequest()
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
 
             bool res;
             try
             {
-                messageStream.Write(new NetworkMessage(ActionEnum.aes_handshake));
+                await messageStream.WriteAsync(new NetworkMessage(ActionEnum.aes_handshake));
 
                 RSAParameters clientPublicKey;
                 RSAParameters clientPrivateKey;
@@ -396,9 +412,9 @@ namespace ChatClient.Models
                     clientPrivateKey = rsa.ExportParameters(true);
                 }
 
-                messageStream.Write(new NetworkMessage(ActionEnum.ok, clientPublicKey));
+                await messageStream.WriteAsync(new NetworkMessage(ActionEnum.ok, clientPublicKey));
 
-                byte[] encryptedAesKey = (byte[])messageStream.Read().Obj;
+                byte[] encryptedAesKey = (byte[])(await messageStream.ReadAsync()).Obj;
                 byte[] decryptedAesKey;
 
                 using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048))
@@ -409,32 +425,35 @@ namespace ChatClient.Models
                 }
 
                 messageStream.Aes.Key = decryptedAesKey;
-                messageStream.Write(new NetworkMessage(ActionEnum.ok));
+                await messageStream.WriteAsync(new NetworkMessage(ActionEnum.ok));
                 res = true;
             }
             catch (Exception e)
             {
                 Console.WriteLine("AES handshake exception");
                 Console.WriteLine(e.Message);
+                Disconnect();
                 res = false;
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
             return res;
         }
 
-        public ActionEnum LoginActionRequest(string login, string hashPassword = null)
+        public async Task<ActionEnum> LoginActionRequest(string login, string hashPassword = null)
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
             ActionEnum response;
 
             try
             {
                 User user = new User() { Login = login, HashPass = hashPassword };
                 NetworkMessage request = new NetworkMessage(ActionEnum.login, user);
-                messageStream.WriteEncrypted(request);
+                await messageStream.WriteEncryptedAsync(request);
 
-                response = messageStream.Read().Action;
+                response = (await messageStream.ReadAsync()).Action;
 
                 if (response == ActionEnum.ok)
                 {
@@ -446,50 +465,53 @@ namespace ChatClient.Models
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Disconnect();
                 response = ActionEnum.bad;
-                LogoutActionRequest();
             }
-
-            NetworkStreamMutex.ReleaseMutex();
+            finally
+            {
+                NetworkStreamSemaphore.Release();
+            }
             return response;
         }
 
-        public ActionEnum CreateNewRoomActionRequest(string roomName, string hashPassword)
+        public async Task<ActionEnum> CreateNewRoomActionRequest(string roomName, string hashPassword)
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
             ActionEnum response;
 
             try
             {
                 Room room = new Room() { Name = roomName, HashPass = hashPassword };
                 NetworkMessage request = new NetworkMessage(ActionEnum.create_room, room);
-                messageStream.WriteEncrypted(request);
-                response = messageStream.Read().Action;
+                await messageStream.WriteEncryptedAsync(request);
+                response = (await messageStream.ReadAsync()).Action;
 
                 connectionCheckForClientExist = true;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Disconnect();
                 response = ActionEnum.bad;
             }
 
-            NetworkStreamMutex.ReleaseMutex();
+            NetworkStreamSemaphore.Release();
             return response;
         }
 
-        public ActionEnum CreateNewUserActionRequest(string login, string hashPassword)
+        public async Task<ActionEnum> CreateNewUserActionRequest(string login, string hashPassword)
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
             ActionEnum response;
 
             try
             {
                 User user = new User() { Login = login, HashPass = hashPassword };
                 NetworkMessage request = new NetworkMessage(ActionEnum.create_user, user);
-                messageStream.WriteEncrypted(request);
+                await messageStream.WriteEncryptedAsync(request);
 
-                response = messageStream.Read().Action;
+                response = (await messageStream.ReadAsync()).Action;
 
                 if (response == ActionEnum.ok)
                 {
@@ -502,24 +524,25 @@ namespace ChatClient.Models
             catch (Exception e)
             {
                 Console.WriteLine(e.Message);
+                Disconnect();
                 response = ActionEnum.bad;
             }
 
-            NetworkStreamMutex.ReleaseMutex();
+            NetworkStreamSemaphore.Release();
             return response;
         }
 
         private bool inConnect;
         private bool exitConnect;
-        public bool Connect()
+        public async Task<bool> Connect()
         {
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
             bool res = false;
 
             if (!inConnect)
                 res = TryToConnect();
 
-            NetworkStreamMutex.ReleaseMutex();
+            NetworkStreamSemaphore.Release();
             return res;
         }
         private bool TryToConnect()
@@ -538,8 +561,8 @@ namespace ChatClient.Models
                 }
                 if (connect)
                 {
-                    tcpClient.ReceiveTimeout = config.ReceiveTimeoutMs;
-                    tcpClient.SendTimeout = config.SendTimeoutMs;
+                    tcpClient.ReceiveTimeout = config.ConnectionTimeoutMs;
+                    tcpClient.SendTimeout = config.ConnectionTimeoutMs;
                     stream = tcpClient.GetStream();
                     messageStream = new NetworkMessageStream(stream);
                     streamIsOpen = true;
@@ -600,15 +623,15 @@ namespace ChatClient.Models
             }
         }
 
-        public void LogoutActionRequest()
+        public async Task LogoutActionRequest()
         {
             exitConnect = true;
-            NetworkStreamMutex.WaitOne();
+            await NetworkStreamSemaphore.WaitAsync();
 
             try
             {
                 NetworkMessage request = new NetworkMessage(ActionEnum.logout);
-                messageStream.Write(request);
+                await messageStream.WriteAsync(request);
                 Disconnect();
                 ConnectionState = ClientState.LoggedOut;
             }
@@ -618,14 +641,13 @@ namespace ChatClient.Models
             }
 
             exitConnect = false;
-            NetworkStreamMutex.ReleaseMutex();
+            NetworkStreamSemaphore.Release();
         }
 
         public void Dispose()
         {
             LogoutActionRequest();
-            NetworkStreamMutex.WaitOne();
-            NetworkStreamMutex.Dispose();
+            NetworkStreamSemaphore.Dispose();
         }
     }
 }

@@ -22,28 +22,15 @@ namespace ChatClient.Views.ChatView
     /// </summary>
     public partial class ChatsPage : Page
     {
-        private static bool channelCollectionSigned = false;
-        private HamburgerMenuItemCollection channels;
         public ChatsPage()
         {
             InitializeComponent();
-            if (!channelCollectionSigned)
-            {
-                channels = (DataContext as ChatsViewModel).Channels;
-                channels.Changed += Users_Changed;
-                channelCollectionSigned = true;
-            }
+            (DataContext as ChatsViewModel).ViewChannelsControl = HamburgerMenuControl;
         }
 
         private void HamburgerMenu_ItemClick(object sender, ItemClickEventArgs e)
         {
             HamburgerMenuControl.Content = e.ClickedItem;
-        }
-
-        private void Users_Changed(object sender, EventArgs e)
-        {
-            if (channels.Count == 1)
-                HamburgerMenuControl.Content = channels.First();
         }
     }
 }

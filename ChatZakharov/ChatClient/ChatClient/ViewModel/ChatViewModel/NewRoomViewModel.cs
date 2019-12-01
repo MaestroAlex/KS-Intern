@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using TransitPackage;
+using GalaSoft.MvvmLight.Ioc;
 
 namespace ChatClient.ViewModel.ChatViewModel
 {
@@ -62,12 +63,21 @@ namespace ChatClient.ViewModel.ChatViewModel
                 hashPasswordString = Encoding.UTF8.GetString(hashPassword);
             }
 
-            ActionEnum res = await Task.Run(() =>
-                MainModel.Client.CreateNewRoomActionRequest(Name, hashPasswordString));
+            ActionEnum res = await MainModel.Client.CreateNewRoomActionRequest(Name, hashPasswordString);
 
-            // if res == ok => server sends new room
+            if (res == ActionEnum.ok)
+            {
+                Channel newChannel = new Channel()
+                {
+                    Name = this.Name,
+                    IsEntered = true,
+                    Type = string.IsNullOrWhiteSpace(hashPasswordString) ? ChannelType.public_open : ChannelType.public_closed
+                };
 
-            if (res == ActionEnum.room_exist)
+                MainModel.ConnectedChannels.Add(newChannel);
+            }
+
+            else if (res == ActionEnum.room_exist)
                 ValidationText = "Such channel exist";
 
             else if (res == ActionEnum.bad)

@@ -68,7 +68,7 @@ namespace ChatClient.ViewModel.ChatViewModel
                 hashPasswordString = Encoding.UTF8.GetString(hashPassword);
             }
 
-            ActionEnum res = await Task.Run(() => MainModel.Client.EnterRoomActionRequest(channel, hashPasswordString));
+            ActionEnum res = await MainModel.Client.EnterRoomActionRequest(channel, hashPasswordString);
 
             if (res == ActionEnum.wrong_pass)
                 ValidationText = "Wrong password";
@@ -83,7 +83,7 @@ namespace ChatClient.ViewModel.ChatViewModel
                 ChatsViewModel chats = SimpleIoc.Default.GetInstance<ChatsViewModel>();
 
                 HamburgerMenuIconLeaveItem curChat =
-                    chats.Channels.Where(channel => channel.Label == this.channel.Name).First()
+                    chats.ViewChannels.Where(channel => channel.Label == this.channel.Name).First()
                     as HamburgerMenuIconLeaveItem;
 
                 curChat.LeaveButtonVisibility = System.Windows.Visibility.Visible;
@@ -91,7 +91,7 @@ namespace ChatClient.ViewModel.ChatViewModel
                 {
                     DataContext = new CurrentChatViewModel(this.channel)
                 };
-                await Task.Run(() => MainModel.Client.GetRoomHistoryActionRequest(this.channel.Name));
+                await MainModel.Client.GetRoomHistoryActionRequest(this.channel.Name);
             }
         }
         #endregion

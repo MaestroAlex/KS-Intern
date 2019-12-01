@@ -19,9 +19,9 @@ namespace ChatClient.Models
             Client = new Client(Config.GetConfig());
         }
 
-        public static void GetChannels()
+        public static async Task GetChannels()
         {
-            ConnectedChannels = new ObservableCollection<Channel>(Client.GetChannelsActionRequest());
+            ConnectedChannels = new ObservableCollection<Channel>(await Client.GetChannelsActionRequest());
         }
     }
 }

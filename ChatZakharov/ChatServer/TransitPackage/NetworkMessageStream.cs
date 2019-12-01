@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 
 namespace TransitPackage
 {
-    // TODO add async write read
     public class NetworkMessageStream : IDisposable
     {
         public Aes Aes { get; private set; }
@@ -27,17 +26,17 @@ namespace TransitPackage
             Aes = Aes.Create();
         }
 
-        public void Write(NetworkMessage message)
+        public async Task WriteAsync(NetworkMessage message)
         {
             byte[] byteArrayMessage = message.Serialize();
             byte[] resData = new byte[5 + byteArrayMessage.Length]; // 4 - obj size, 1 - encryption flag (true - encrypted)
             BitConverter.GetBytes(false).CopyTo(resData, 0);
             BitConverter.GetBytes(byteArrayMessage.Length).CopyTo(resData, 1);
             byteArrayMessage.CopyTo(resData, 5);
-            networkWriter.Write(resData);
+            await stream.WriteAsync(resData, 0, resData.Length);
         }
 
-        public void WriteEncrypted(NetworkMessage message)
+        public async Task WriteEncryptedAsync(NetworkMessage message)
         {
             if (Aes.Key == null || Aes.Key.Length <= 0)
                 throw new ArgumentNullException("Key");
@@ -53,10 +52,8 @@ namespace TransitPackage
                         byte[] serializedMessage = message.Serialize();
                         int decryptedMessageSize = serializedMessage.Length;
 
-                        using (BinaryWriter bwEncrypt = new BinaryWriter(csEncrypt))
-                        {
-                            bwEncrypt.Write(serializedMessage);
-                        }
+                        await csEncrypt.WriteAsync(serializedMessage, 0, serializedMessage.Length);
+                        csEncrypt.FlushFinalBlock();
 
                         NetworkMessageEncrypted encryptedMessage =
                             new NetworkMessageEncrypted(msEncrypt.ToArray(), IV, decryptedMessageSize);
@@ -67,7 +64,7 @@ namespace TransitPackage
                         BitConverter.GetBytes(true).CopyTo(resDataEncrypted, 0);
                         BitConverter.GetBytes(byteArrayEncryptedMessage.Length).CopyTo(resDataEncrypted, 1);
                         byteArrayEncryptedMessage.CopyTo(resDataEncrypted, 5);
-                        networkWriter.Write(resDataEncrypted);
+                        await stream.WriteAsync(resDataEncrypted, 0, resDataEncrypted.Length);
 
                         #region logging
                         //using (StreamWriter writer = new StreamWriter(File.Open(@"..\..\..\..\crypto_write_log.txt", FileMode.Create)))
@@ -109,29 +106,39 @@ namespace TransitPackage
             return res;
         }
 
-        public NetworkMessage Read()
+        public async Task<NetworkMessage> ReadAsync()
         {
             // networkStream не знает будет отправлено зашифрованное сообщение или нет => Read один, в нём определям
             // зашифрованное оно или нет с помощью флага
-
-            bool isEncrypted = networkReader.ReadBoolean();
-            return isEncrypted ? InternalReadEncrypted() : InternalRead();
+            byte[] buffer = new byte[1];
+            await stream.ReadAsync(buffer, 0, buffer.Length);
+            bool isEncrypted = BitConverter.ToBoolean(buffer, 0);
+            return isEncrypted ? await InternalReadEncrypted() : await InternalRead();
         }
 
-        private NetworkMessage InternalRead()
+        private async Task<NetworkMessage> InternalRead()
         {
-            int dataSize = networkReader.ReadInt32();
-            return NetworkMessage.Deserialize(networkReader.ReadBytes(dataSize));
+            byte[] dataSizeRaw = new byte[4];
+            await stream.ReadAsync(dataSizeRaw, 0, dataSizeRaw.Length);
+            int dataSize = BitConverter.ToInt32(dataSizeRaw, 0);
+
+            byte[] readData = await InternalReadStreamAsync(dataSize);
+
+            return NetworkMessage.Deserialize(readData);
+            //return NetworkMessage.Deserialize(networkReader.ReadBytes(dataSize));
         }
 
-        private NetworkMessage InternalReadEncrypted()
+        private async Task<NetworkMessage> InternalReadEncrypted()
         {
             if (Aes.Key == null || Aes.Key.Length <= 0)
                 throw new ArgumentNullException("Key");
 
-            int encryptedDataSize = networkReader.ReadInt32();
+            byte[] dataSizeRaw = new byte[4];
+            await stream.ReadAsync(dataSizeRaw, 0, dataSizeRaw.Length);
+            int encryptedDataSize = BitConverter.ToInt32(dataSizeRaw, 0);
+
             NetworkMessageEncrypted encryptedMessage =
-                NetworkMessageEncrypted.Deserialize(networkReader.ReadBytes(encryptedDataSize));
+                NetworkMessageEncrypted.Deserialize(await InternalReadStreamAsync(encryptedDataSize));
 
             if (encryptedMessage.IV == null || encryptedMessage.IV.Length <= 0)
                 throw new ArgumentNullException("IV");
@@ -146,10 +153,21 @@ namespace TransitPackage
                     {
                         using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
                         {
-                            using (BinaryReader brDecrypt = new BinaryReader(csDecrypt))
+                            byte[] buffer = new byte[4096];
+                            int curRead = 0;
+                            int bytesToRead = encryptedMessage.DecryptedSize;
+                            using (MemoryStream ms = new MemoryStream())
                             {
-                                byte[] decr = brDecrypt.ReadBytes(encryptedMessage.DecryptedSize);
-                                networkMessage = NetworkMessage.Deserialize(decr);
+                                while (bytesToRead > ms.Length)
+                                {
+                                    if (bytesToRead - ms.Length < buffer.Length)
+                                        curRead = await csDecrypt.ReadAsync(buffer, 0, (int)(bytesToRead - ms.Length));
+                                    else
+                                        curRead = await csDecrypt.ReadAsync(buffer, 0, buffer.Length);
+
+                                    ms.Write(buffer, 0, curRead); //write chunk to [wherever]
+                                }
+                                networkMessage = NetworkMessage.Deserialize(ms.ToArray());
                             }
                         }
                     }
@@ -184,6 +202,25 @@ namespace TransitPackage
 
             }
             return networkMessage;
+        }
+
+        private async Task<byte[]> InternalReadStreamAsync(int bytesToRead)
+        {
+            byte[] buffer = new byte[4096];
+            int curRead = 0;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                while (bytesToRead > ms.Length)
+                {
+                    if (bytesToRead - ms.Length < buffer.Length)
+                        curRead = await stream.ReadAsync(buffer, 0, (int)(bytesToRead - ms.Length));
+                    else
+                        curRead = await stream.ReadAsync(buffer, 0, buffer.Length);
+
+                    ms.Write(buffer, 0, curRead); //write chunk to [wherever]
+                }
+                return ms.ToArray();
+            }
         }
 
         public void Dispose()

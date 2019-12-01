@@ -23,17 +23,19 @@ namespace ChatClient.ViewModel.ChatViewModel
     {
         private IFrameNavigationService navigation;
 
-        private HamburgerMenuItemCollection channels;
-        public HamburgerMenuItemCollection Channels
+        public HamburgerMenu ViewChannelsControl { get; set; }
+
+        private HamburgerMenuItemCollection viewChannels;
+        public HamburgerMenuItemCollection ViewChannels
         {
-            get => channels;
-            private set => Set(ref channels, value);
+            get => viewChannels;
+            private set => Set(ref viewChannels, value);
         }
 
         public ChatsViewModel(IFrameNavigationService navigation)
         {
             this.navigation = navigation;
-            Channels = new HamburgerMenuItemCollection();
+            ViewChannels = new HamburgerMenuItemCollection();
             ChatsLoaded = new RelayCommand(ChatsLoadedCommandExecute);
             ChatsUnloaded = new RelayCommand(ChatsUnloadedCommandExecute);
             LeaveRoomCommand = new RelayCommand<object>(LeaveRoomCommandExecute);
@@ -45,24 +47,31 @@ namespace ChatClient.ViewModel.ChatViewModel
             {
                 Channel newChannel = (Channel)e.NewItems[0];
 
-                HamburgerMenuIconLeaveItem item = new HamburgerMenuIconLeaveItem()
+                HamburgerMenuIconLeaveItem newViewChannel = new HamburgerMenuIconLeaveItem()
                 {
                     Label = newChannel.Name,
                     Icon = DefineIcon(newChannel.Type),
                     LeaveButtonVisibility = DefineLeaveButtonVisibility(newChannel.Type, newChannel.IsEntered),
                     LeaveCommand = LeaveRoomCommand,
-                    Tag = new CurrentChatView()
-                    {
-                        DataContext = new CurrentChatViewModel(newChannel)
-                    }
                 };
 
-                Channels.Add(item);
+                if (newChannel.Type == ChannelType.user || newChannel.IsEntered)
+                    newViewChannel.Tag = new CurrentChatView() { DataContext = new CurrentChatViewModel(newChannel) };
+                else
+                    newViewChannel.Tag = new NotEnteredChatView() { DataContext = new NotEnteredChatViewModel(newChannel) };
+
+                ViewChannels.Add(newViewChannel);
+
+                if (newChannel.IsEntered)
+                {
+                    ViewChannelsControl.SelectedIndex = ViewChannels.IndexOf(newViewChannel);
+                    ViewChannelsControl.Content = ViewChannels.Last();
+                }
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
-                HamburgerMenuItem removedUser = Channels.FirstOrDefault(cur => ((Channel)e.OldItems[0]).Name == cur.Label);
-                Channels.Remove(removedUser);
+                HamburgerMenuItem removedChannel = ViewChannels.FirstOrDefault(cur => ((Channel)e.OldItems[0]).Name == cur.Label);
+                ViewChannels.Remove(removedChannel);
             }
 
             //CheckForNoUsersPage();
@@ -70,23 +79,23 @@ namespace ChatClient.ViewModel.ChatViewModel
 
         private void SetNewViewChannels()
         {
-            foreach (var item in MainModel.ConnectedChannels)
+            foreach (var channel in MainModel.ConnectedChannels)
             {
-                HamburgerMenuIconLeaveItem newChannel = new HamburgerMenuIconLeaveItem() 
+                HamburgerMenuIconLeaveItem newViewChannel = new HamburgerMenuIconLeaveItem()
                 {
-                    Label = item.Name,
-                    Icon = DefineIcon(item.Type),
-                    LeaveButtonVisibility = DefineLeaveButtonVisibility(item.Type, item.IsEntered),
+                    Label = channel.Name,
+                    Icon = DefineIcon(channel.Type),
+                    LeaveButtonVisibility = DefineLeaveButtonVisibility(channel.Type, channel.IsEntered),
                     LeaveCommand = LeaveRoomCommand
                 };
 
-                if (item.IsEntered)
-                    newChannel.Tag = new CurrentChatView() { DataContext = new CurrentChatViewModel(item) };
+                if (channel.Type == ChannelType.user || channel.IsEntered)
+                    newViewChannel.Tag = new CurrentChatView() { DataContext = new CurrentChatViewModel(channel) };
                 else
-                    newChannel.Tag = new NotEnteredChatView() { DataContext = new NotEnteredChatViewModel(item) };
+                    newViewChannel.Tag = new NotEnteredChatView() { DataContext = new NotEnteredChatViewModel(channel) };
 
-                if (!Channels.Where((cur) => cur.Label == newChannel.Label).Any())
-                    Channels.Add(newChannel);
+                // if (!Channels.Where((cur) => cur.Label == newChannel.Label).Any())
+                ViewChannels.Add(newViewChannel);
             }
         }
 
@@ -108,7 +117,7 @@ namespace ChatClient.ViewModel.ChatViewModel
                     DataContext = new NewRoomViewModel()
                 }
             };
-            Channels.Add(roomCreation);
+            ViewChannels.Add(roomCreation);
         }
 
         private string DefineIcon(ChannelType channelType)
@@ -144,14 +153,16 @@ namespace ChatClient.ViewModel.ChatViewModel
         public async void ChatsLoadedCommandExecute()
         {
             await GetChannelsFromServer();
-            CreateNewRoomButton();
-            SetNewViewChannels();
 
             if (!channelCollectionSigned)
             {
+                CreateNewRoomButton();
                 MainModel.ConnectedChannels.CollectionChanged += ConnectedChannels_CollectionChanged;
                 channelCollectionSigned = true;
             }
+            SetNewViewChannels();
+
+            ViewChannelsControl.Content = ViewChannels.First();
 
             await Task.Run(() => MainModel.Client.GetAllHistoryActionRequest());
         }
@@ -162,7 +173,8 @@ namespace ChatClient.ViewModel.ChatViewModel
 
         public void ChatsUnloadedCommandExecute()
         {
-            Channels.Clear();
+            for (int i = MainModel.ConnectedChannels.Count - 1; i >= 0; i--)
+                MainModel.ConnectedChannels.RemoveAt(i);
         }
         #endregion
 
@@ -176,20 +188,20 @@ namespace ChatClient.ViewModel.ChatViewModel
                 .Where(channel => channel.Name == (string)room)
                 .First();
 
-            bool res = await Task.Run(() => MainModel.Client.LeaveRoomActionRequest(room));
+            bool res = await MainModel.Client.LeaveRoomActionRequest(room);
 
             if (res)
             {
                 curChannel.IsEntered = false;
 
                 HamburgerMenuIconLeaveItem viewChannel =
-                    Channels.Where(viewChannel => viewChannel.Label == curChannel.Name).First()
+                    ViewChannels.Where(viewChannel => viewChannel.Label == curChannel.Name).First()
                     as HamburgerMenuIconLeaveItem;
 
                 viewChannel.Tag =
                     new NotEnteredChatView() { DataContext = new NotEnteredChatViewModel(curChannel) };
 
-                viewChannel.LeaveButtonVisibility = 
+                viewChannel.LeaveButtonVisibility =
                     DefineLeaveButtonVisibility(curChannel.Type, curChannel.IsEntered);
             }
         }

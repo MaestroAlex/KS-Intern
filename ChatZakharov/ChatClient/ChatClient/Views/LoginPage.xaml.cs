@@ -25,7 +25,6 @@ namespace ChatClient.Views
         public LoginPage()
         {
             InitializeComponent();
-
         }
         private void Page_Loaded(object sender, RoutedEventArgs e) => UsernameTextBox.Focus();
     }

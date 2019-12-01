@@ -92,7 +92,7 @@ namespace ChatClient.ViewModel.ChatViewModel
                 Date = DateTime.Now
             };
 
-            bool res = await Task.Run(() => MainModel.Client.SendMessageActionRequest(sentMessage));
+            bool res = await MainModel.Client.SendMessageActionRequest(sentMessage);
 
             if (res)
                 SendUIMessage(sentMessage);
@@ -172,7 +172,7 @@ namespace ChatClient.ViewModel.ChatViewModel
                     Date = DateTime.Now
                 };
 
-                bool res = await Task.Run(() => MainModel.Client.SendMessageActionRequest(sentMessage));
+                bool res = await MainModel.Client.SendMessageActionRequest(sentMessage);
 
                 if (res)
                     SendUIMessage(sentMessage);

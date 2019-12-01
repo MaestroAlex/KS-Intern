@@ -80,8 +80,7 @@ namespace ChatClient.ViewModel
             //ActionEnum LoginResult = ActionEnum.ok;
             //MainModel.Client.ConnectionState = ClientState.LoggedIn;
 
-            ActionEnum LoginResult = await Task.Run(() =>
-                MainModel.Client.LoginActionRequest(Login, hashPasswordString));
+            ActionEnum LoginResult = await MainModel.Client.LoginActionRequest(Login, hashPasswordString);
 
             if (LoginResult == ActionEnum.wrong_pass)
                 ValidationText = "Wrong password";
@@ -107,7 +106,7 @@ namespace ChatClient.ViewModel
 
                 if (confirmCreateUser == MessageDialogResult.Affirmative)
                 {
-                    ActionEnum createUser = await Task.Run(() => MainModel.Client.CreateNewUserActionRequest(Login, hashPasswordString));
+                    ActionEnum createUser = await MainModel.Client.CreateNewUserActionRequest(Login, hashPasswordString);
                     if (createUser == ActionEnum.ok)
                     {
                         ValidationText = "";

@@ -23,7 +23,7 @@ namespace ChatClient.ViewModel
             set => Set(ref title, value);
         }
 
-        private ClientState connectionState = ClientState.LoggedOut;
+        private ClientState connectionState = MainModel.Client.ConnectionState;
         public ClientState ConnectionState
         {
             get => connectionState;
@@ -71,12 +71,12 @@ namespace ChatClient.ViewModel
         private async Task<bool> Connect()
         {
             if (await Task.Run(() => MainModel.Client.Connect()) &&
-                   await Task.Run(() => MainModel.Client.GetConnectionChekInterval()) &&
-                   await Task.Run(() => MainModel.Client.AESHandshakeWithRSAActionRequest()))
+                   await MainModel.Client.GetConnectionChekInterval() &&
+                   await Task.Run(() => MainModel.Client.AESHandshakeWithRSAActionRequest())) // rsa key creation is a long process 
                 return true;
             else
             {
-                await Task.Run(() => MainModel.Client.LogoutActionRequest());
+                await MainModel.Client.LogoutActionRequest();
                 return false;
             }
         }
@@ -100,7 +100,7 @@ namespace ChatClient.ViewModel
 
         private async void ReLoginCommandExecute(object obj)
         {
-            await Task.Run(() => MainModel.Client.LogoutActionRequest());
+            await MainModel.Client.LogoutActionRequest();
             ConnectionState = ClientState.LoggedOut;
             await Connect();
 
@@ -122,11 +122,6 @@ namespace ChatClient.ViewModel
         private async void ReconnectCommandExecute(object obj)
         {
             await Connect();
-            //if (await Connect() && MainModel.Client.Name != null)
-            //{
-            //    await Task.Run(() =>
-            //    MainModel.Client.LoginActionRequest(MainModel.Client.Name));
-            //}
         }
         #endregion
 

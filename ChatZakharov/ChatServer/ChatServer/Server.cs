@@ -12,7 +12,7 @@ namespace ChatServer
     class Server
     {
 
-        public int ConnectedIpConnectionCheckTimerInterval => 5000;
+        public int ConnectedIpConnectionCheckTimerInterval { get; private set; }
 
         TcpListener listener;
         Dictionary<string, List<Client>> roomUsersDictionary;
@@ -23,9 +23,23 @@ namespace ChatServer
         public Server(Config config)
         {
             listener = new TcpListener(config.Ip, config.Port);
-            listener.Server.ReceiveTimeout = config.ReceiveTimeoutMs;
-            listener.Server.SendTimeout = config.SendTimeoutMs;
-
+            listener.Server.ReceiveTimeout = config.ConnectionTimeoutMs;
+            listener.Server.SendTimeout = config.ConnectionTimeoutMs;
+            DB.Initialize(config.ConnectionString);
+            if (config.FirstRun)
+            {
+                if (DB.CreateDB().Result)
+                {
+                    config.SetConnectionString();
+                    Console.WriteLine("Database successfully created");
+                }
+                else
+                {
+                    Console.WriteLine("Exception in database creation");
+                    return;
+                }
+            }
+            ConnectedIpConnectionCheckTimerInterval = Config.GetConfig().ConnectionTimeoutMs + 2000;
             roomUsersDictionary = new Dictionary<string, List<Client>>();
             connectedIp = new List<Client>();
             connectedIpChanged = new Mutex();
@@ -37,7 +51,7 @@ namespace ChatServer
         public async Task Start()
         {
             listener.Start();
-            //connectedIpConnectionCheckTimer.Start();
+            connectedIpConnectionCheckTimer.Start();
             Console.WriteLine("Server is up");
             while (true)
             {
@@ -80,12 +94,14 @@ namespace ChatServer
             return res;
         }
 
-        public void ChannelCreatedNotify(Channel channel)
+        public void ChannelCreatedNotify(Channel channel, string channelCreator)
         {
             connectedIpChanged.WaitOne();
 
             foreach (var item in connectedIp)
-                if (!string.IsNullOrWhiteSpace(item.Name) && item.Name != channel.Name)
+                if (!string.IsNullOrWhiteSpace(item.Name) &&
+                    item.Name != channel.Name &&
+                    item.Name != channelCreator)
                     item.ActionQueue.NewChannels.Enqueue(channel);
 
             connectedIpChanged.ReleaseMutex();
@@ -132,19 +148,6 @@ namespace ChatServer
             //todo как реализовать отчет о доставке сообщения
         }
 
-        public List<string> GetUserList(string forUser)
-        {
-            connectedIpChanged.WaitOne();
-
-            List<string> res = connectedIp
-                    .Select(elem => elem.Name)
-                    .Where(name => !string.IsNullOrWhiteSpace(name) && name != forUser)
-                    .ToList();
-
-            connectedIpChanged.ReleaseMutex();
-            return res;
-        }
-
         public void RemoveFromConnectedIp(Client client)
         {
             connectedIpChanged.WaitOne();
@@ -167,23 +170,26 @@ namespace ChatServer
             }
         }
 
-        public void AddedOnlineRoomUser(Client client, Channel channel)
+        public void AddedOnlineRoomUser(Client client, string channelName)
         {
-            if ((channel.Type == ChannelType.public_open ||
-                channel.Type == ChannelType.public_closed) && channel.IsEntered == true)
-            {
-                if (!roomUsersDictionary.ContainsKey(channel.Name))
-                    roomUsersDictionary.Add(channel.Name, new List<Client>() { client });
-                else
-                    roomUsersDictionary.Where(node => node.Key == channel.Name).First().Value.Add(client);
-            }
+            if (!roomUsersDictionary.ContainsKey(channelName))
+                roomUsersDictionary.Add(channelName, new List<Client>() { client });
+            else
+                roomUsersDictionary.Where(node => node.Key == channelName).First().Value.Add(client);
         }
 
-        public void RemoveOnlineUserRoom(Client client)
+        public void RemoveOnlineRoomsUser(Client client)
         {
             foreach (var room in roomUsersDictionary)
                 if (room.Value.Contains(client))
                     room.Value.Remove(client);
         }
+
+        public void RemoveOnlineRoomUser(Client client, string roomName)
+        {
+            roomUsersDictionary
+                .Where(node => node.Key == roomName)
+                .First().Value.Remove(client);
+        } 
     }
 }

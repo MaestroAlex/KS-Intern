@@ -12,6 +12,7 @@ namespace ChatServer
         {
             Server server = new Server(Config.GetConfig());
             Task.Run(() => server.Start()).Wait();
+            Console.ReadLine();
         }
     }
 }

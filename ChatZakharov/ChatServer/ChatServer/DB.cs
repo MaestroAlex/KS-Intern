@@ -13,12 +13,114 @@ namespace ChatServer
     {
         private static NpgsqlConnection conn;
         private DB() { }
-        static DB()
+
+        public static async Task<bool> CreateDB()
+        {
+            try
+            {
+                using (var cmd = new NpgsqlCommand("UPDATE pg_database SET datallowconn = 'false' WHERE datname = 'SimpleChat';", conn))
+                {
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (var cmd = new NpgsqlCommand(@"SELECT pg_terminate_backend(pg_stat_activity.pid)
+                                                     FROM pg_stat_activity
+                                                     WHERE pg_stat_activity.datname = 'SimpleChat' AND pid<> pg_backend_pid();", conn))
+                {
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (var cmd = new NpgsqlCommand("DROP DATABASE IF EXISTS \"SimpleChat\"", conn))
+                {
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (var cmd = new NpgsqlCommand("CREATE DATABASE \"SimpleChat\"", conn))
+                {
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (var cmd = new NpgsqlCommand("SELECT datname FROM pg_catalog.pg_database WHERE lower(datname) = lower('SimpleChat');", conn))
+                {
+                    using (var reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync())
+                            throw new Exception("Can't create database");
+                    }
+                }
+
+                string newConnectionString = Config.GetConfig().ConnectionString + "Database=SimpleChat;";
+                conn.Close();
+                conn.ConnectionString = newConnectionString;
+                conn.Open();
+
+                using (var cmd = new NpgsqlCommand(@"CREATE TABLE public.rooms(
+                                                            id SERIAL PRIMARY KEY,
+                                                            name character varying(100),
+                                                            hash character varying(100),
+                                                            salt character varying(100)
+                                                     );
+                                                      
+                                                     CREATE TABLE public.users(
+                                                            id SERIAL PRIMARY KEY,
+                                                            login character varying(100),
+                                                      	    hash character varying(100),
+                                                      	    salt character varying(100)
+                                                     );
+                                                      
+                                                    CREATE TABLE public.roomuser(
+                                                            id SERIAL PRIMARY KEY,
+                                                            user_id integer REFERENCES users(id),
+                                                            room_id integer REFERENCES rooms(id)
+                                                    );
+                                                    
+                                                    CREATE TABLE public.message_type(
+                                                            id SERIAL PRIMARY KEY,
+                                                            name character varying(100) NOT NULL
+                                                    );
+                                                    CREATE TABLE public.messages(
+                                                            id SERIAL PRIMARY KEY,
+                                                            message_type_id integer REFERENCES message_type(id),
+                                                            content text,
+                                                            datetime timestamp without time zone
+                                                    );
+                                                    
+                                                    CREATE TABLE public.userchats(
+                                                            id SERIAL PRIMARY KEY,
+                                                            from_user_id integer REFERENCES users(id),
+                                                            to_user_id integer REFERENCES users(id),
+                                                            message_id integer REFERENCES messages(id)
+                                                    );
+                                                    
+                                                    CREATE TABLE public.roomchats(
+                                                            id SERIAL PRIMARY KEY,
+                                                            from_user_id integer REFERENCES users(id),
+                                                            to_room_id integer REFERENCES rooms(id),
+                                                            message_id integer REFERENCES messages(id)
+                                                    );
+                                                    
+                                                    INSERT INTO message_type(name)
+                                                    VALUES('text'),('image'),('document');", conn))
+                {
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return false;
+            }
+        }
+
+        public static void Initialize(string connectionString)
         {
             conn = new NpgsqlConnection();
-            conn.ConnectionString = "Server=127.0.0.1;Port=5432;Database=Chat;User Id=postgres;Password=jaffa11001;";
+            conn.ConnectionString = connectionString;
             conn.Open();
         }
+        
         public void Dispose() => conn.Close();
 
         public static async Task<bool> CreateUser(string login, string hashPass, string salt)

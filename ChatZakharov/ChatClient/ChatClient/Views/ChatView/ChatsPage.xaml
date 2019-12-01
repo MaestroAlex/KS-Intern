@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:ChatClient.Views.ChatView"
+      xmlns:utility="clr-namespace:ChatClient.Utility"
       xmlns:Controls="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
       xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
       xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
@@ -31,7 +32,7 @@
                     <Setter Property="FontSize" Value="16"/>
                 </Style>
 
-                <DataTemplate x:Key="MenuItemTemplate" DataType="{x:Type Controls:HamburgerMenuIconItem}">
+                <DataTemplate x:Key="MenuItemTemplate" DataType="{x:Type utility:HamburgerMenuIconLeaveItem}">
                     <StackPanel Orientation="Horizontal">
                         <iconPacks:PackIconFontAwesome 
                             Kind="{Binding Icon}"
@@ -41,7 +42,7 @@
                     </StackPanel>
                 </DataTemplate>
 
-                <DataTemplate x:Key="ContentItemTemplate" DataType="{x:Type Controls:HamburgerMenuItem}">
+                <DataTemplate x:Key="ContentItemTemplate" DataType="{x:Type utility:HamburgerMenuIconLeaveItem}">
                     <Grid x:Name="TheContentGrid"
                          Margin="1,0,0,0">
                         <Grid.RowDefinitions>
@@ -102,7 +103,7 @@
             PaneBackground="{StaticResource AccentColorBrush4}"
             IsPaneOpen="True"
             ItemClick="HamburgerMenu_ItemClick"
-            ItemsSource="{Binding Channels}"
+            ItemsSource="{Binding ViewChannels}"
             ItemContainerStyle="{StaticResource HamburgerContainerStyle}"
             ItemTemplate="{StaticResource MenuItemTemplate}"
             ContentTemplate="{StaticResource ContentItemTemplate}"
