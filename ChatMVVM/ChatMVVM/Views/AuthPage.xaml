@@ -1,19 +1,19 @@
-﻿<Window
-    x:Class="ChatMVVM.Views.AuthWindow"
+﻿<Page
+    x:Class="ChatMVVM.Views.AuthPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="clr-namespace:ChatMVVM.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:ChatMVVM.ViewModels"
-    Title="AuthWindow"
-    Width="425.318"
-    Height="297.457"
+    Title="AuthPage"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
     mc:Ignorable="d">
 
-    <Window.DataContext>
+    <Page.DataContext>
         <vm:AuthViewModel />
-    </Window.DataContext>
+    </Page.DataContext>
 
     <StackPanel
         Margin="100,0"
@@ -23,7 +23,6 @@
             <Label>
                 User name:
             </Label>
-
             <TextBox
                 x:Name="NickName"
                 Width="120"
@@ -39,4 +38,4 @@
             Command="{Binding LogIn}"
             Content="Sign in" />
     </StackPanel>
-</Window>
+</Page>

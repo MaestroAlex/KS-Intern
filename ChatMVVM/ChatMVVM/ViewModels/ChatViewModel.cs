@@ -1,40 +1,39 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using ChatMVVM.Annotations;
-using ChatMVVM.Models;
 using ChatMVVM.ViewModels.Commands;
+using ChatHandler;
+using System.Collections.ObjectModel;
+using System.Windows.Controls;
+using System.Windows.Threading;
+using System.Windows.Data;
+using System.Collections.Generic;
 
 namespace ChatMVVM.ViewModels
 {
     class ChatViewModel : INotifyPropertyChanged
     {
+        public ObservableCollection<ChatItemViewModel> _ChatNames { get; } = new ObservableCollection<ChatItemViewModel>();
+        private Dictionary<string, string> _ChatHistories = new Dictionary<string, string>();
+        public ICommand SendMsgPressed => new DelegateCommand(SendMessageButton, (obj) => !string.IsNullOrEmpty(_Message));
+        public ICommand ChatRoomPressed => new DelegateCommand(ChatRoomButton);
+        private Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
+        private string _CurrentChatRoom;
+        private const string _GeneralChatRoom = "General";
+
+        private ClientChatHandler _ChatHandler = ClientChatHandler.Instance();
+
         public event PropertyChangedEventHandler PropertyChanged;
-        Socket clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-        NetworkStream serverStream = default(NetworkStream);
-        string readData = null;
-        string _History = "";
 
-        public void OnPropertyChanged([CallerMemberName]string prop = "")
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
-        }
-
-        public ICommand SendMsg => new DelegateCommand(SendMessage, (obj) => !string.IsNullOrEmpty(_Message));
+        private string _History = "";
 
         private string _Message;
 
-        public string UserName
-        {
-            get => AuthViewModel._User.Name;
-
-        }
-
+        public string UserName => _ChatHandler.UserName;
 
         public string Message
         {
@@ -50,56 +49,102 @@ namespace ChatMVVM.ViewModels
             }
         }
 
-        public string History
+        public string CurrentChatHistory
         {
             get
             {
-                return _History;
+                return _ChatHistories[_CurrentChatRoom];
             }
             set
             {
-                _History = value;
-                OnPropertyChanged(nameof(History));
+                _ChatHistories[_CurrentChatRoom] = value;
+                OnPropertyChanged(nameof(CurrentChatHistory));
             }
         }
 
         public ChatViewModel()
         {
-            Task.Factory.StartNew(ReceiveMessage);
+            CreateNewChatRoom(_GeneralChatRoom);
+            Task.Run(StartChatListening);
+
         }
 
-        public void SendMessage(object obj)
+        public void OnPropertyChanged([CallerMemberName]string prop = "")
         {
-            AuthViewModel._User.Socket.Send(Encoding.Unicode.GetBytes(Message + "$"));
-            History += DateTime.Now.ToShortTimeString() + " " + AuthViewModel._User.Name + " : " + Message + '\n';
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
+        }
+
+        public void ChatRoomButton(object obj)
+        {
+            _CurrentChatRoom = (obj as Button).Content.ToString();
+        }
+
+        public async void SendMessageButton(object obj)
+        {
+            if (Message.StartsWith("!new") && _CurrentChatRoom == _GeneralChatRoom)
+            {
+                Message = Message.Replace("!new", MsgKeys.NewChat);
+            }
+            else if (_CurrentChatRoom != _GeneralChatRoom)
+            {
+                Message = MsgKeys.ToUser + _CurrentChatRoom + "$" + Message;
+            }
+            else
+            {
+                CurrentChatHistory += DateTime.Now.ToShortTimeString() + "| " + _ChatHandler.UserName + " : " + Message + "\n";
+            }
+
+            await _ChatHandler.SendMessage(Message, "");
             Message = "";
         }
 
+        private bool IsContainsMsgKeys(string message)
+        {
 
-        private void ReceiveMessage()
+            return false;
+        }
+
+        private void CreateNewChatRoom(string chatName)
+        {
+            string chatHistory = "";
+            _ChatHistories.Add(chatName, chatHistory);
+            _ChatNames.Add(new ChatItemViewModel(chatName));
+            _CurrentChatRoom = chatName;
+        }
+
+        private void ParseReceivedMessage(string message)
+        {
+            if (message.Contains(MsgKeys.NewChat))
+            {
+                // message = message.Replace(MsgKeys.NewChat, "");
+                message = message.Replace(" ", "");
+                message = message.Substring(message.IndexOf("$") + MsgKeys.NewChat.Length);
+                //message = message.Substring(message.IndexOf("n$"));
+
+                _dispatcher.Invoke(new Action(() =>
+               {
+                   CreateNewChatRoom(message);
+               }));
+
+                return;
+            }
+
+            CurrentChatHistory += "->" + DateTime.Now.ToShortTimeString() + "| " + message + "\n";
+        }
+
+        private async Task StartChatListening()
         {
             while (true)
             {
                 try
                 {
-                    if (AuthViewModel._User.Socket.Connected)
+                    if (_ChatHandler.socket.Connected)
                     {
-                        var bytes = AuthViewModel._User.Socket.Available;
-                        byte[] buffer = new byte[256];
-                        string data = null;
-                        AuthViewModel._User.Socket.Receive(buffer);
-
-                        data = Encoding.Unicode.GetString(buffer);
-                        data = data.Substring(0, data.LastIndexOf("$"));
-                        data += '\n';
-                        History += "->"+DateTime.Now.ToShortTimeString() + " | " + data;
-                        //var message = DateTime.Now.ToString() + " | " + clientName + " : " + data;
-                        //Console.WriteLine(DateTime.Now.ToString() + " | " + clientName + " : " + data);
-                        // Program.Broadcast(message, clientName, true);
-                    }
-                    else
-                    {
-                        AuthViewModel._User.Socket.Close();
+                        var data = _ChatHandler.ReceiveMessage();
+                        if (!string.IsNullOrEmpty(data))
+                        {
+                            ParseReceivedMessage(data);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -108,7 +153,5 @@ namespace ChatMVVM.ViewModels
                 }
             }
         }
-
-
     }
 }
