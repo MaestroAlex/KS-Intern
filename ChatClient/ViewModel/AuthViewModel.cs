@@ -12,6 +12,9 @@ namespace ChatClient.ViewModel
     {
         private readonly NetworkService networkService;
         private readonly NavigationServiceEx navigationService;
+        private bool visibleLogin;
+        public bool VisibleLogin { get { return visibleLogin; } set { Set(ref visibleLogin, value); } }
+        
         public AuthViewModel(NetworkService networkService, NavigationServiceEx navigationService)
         {
             this.networkService = networkService;
@@ -21,6 +24,7 @@ namespace ChatClient.ViewModel
 
         private void SignedIn()
         {
+            VisibleLogin = true;
             navigationService.Navigate<MainViewModel>();
         }
 

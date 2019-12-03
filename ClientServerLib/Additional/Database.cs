@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using Npgsql;
 using ClientServerLib.Common;
 using ClientServerLib.Additional;
+using System.Threading;
 
 namespace ClientServerLib.Additional
 {
     class Database
     {
         static NpgsqlConnection connection;
+        static Mutex mutex = new Mutex();
 
         public static async Task<bool> OpenConnection()
         {
@@ -85,13 +87,19 @@ namespace ClientServerLib.Additional
                 return false;
             try
             {
-                NpgsqlCommand command = new NpgsqlCommand($"INSERT INTO message (user_id, room_id, message) " +
-                    $"VALUES ({fromClient.Id}, (SELECT id FROM room WHERE name = '{chatRoomName}'), '{message}');", connection);
-                using (NpgsqlDataReader dataReader = await command.ExecuteReaderAsync()) { }
+                mutex.WaitOne(1500);
+                Task.Run(async () =>
+                {
+                    NpgsqlCommand command = new NpgsqlCommand($"INSERT INTO message (user_id, room_id, message) " +
+                            $"VALUES ({fromClient.Id}, (SELECT id FROM room WHERE name = '{chatRoomName}'), '{message}');", connection);
+                    using (NpgsqlDataReader dataReader = await command.ExecuteReaderAsync()) { }
+                }).Wait();
+                mutex.ReleaseMutex();
                 return true;
             }
             catch
             {
+                mutex.ReleaseMutex();
                 return false;
             }
         }
@@ -149,7 +157,7 @@ namespace ClientServerLib.Additional
                 {
                     while (dataReader.Read())
                     {
-                        messagesFromRoom += (string)dataReader[0] + ChatSyntax.UserMessageDiv + (string)dataReader[1] + "\n";
+                        messagesFromRoom += (string)dataReader[0] + ChatSyntax.MessageDiv + (string)dataReader[1] + "\n";
                     }
                 }
                 return messagesFromRoom;

@@ -15,8 +15,8 @@
             <TextBox Name="tbLogin" Text="{Binding Login, Mode=TwoWay}" Width="350px" Height="25px" Background="#FFF3F3F3" Margin="0,6,0,0" BorderBrush="Black" FontSize="10pt" TextAlignment="Center" VerticalContentAlignment="Center"/>
             <Label Content="Пароль:" FontSize="14pt" HorizontalContentAlignment="Center" />
             <TextBox Name="tbPass" Text="{Binding Password, Mode=TwoWay}" Width="350px" Height="25px" Background="#FFF3F3F3" Margin="0,6,0,15" BorderBrush="Black" FontSize="10pt" TextAlignment="Center" VerticalContentAlignment="Center"/>
-            <Button Name="btnSignIn" Content="Войти" FontSize="12pt" Width="180px" Height="34px" Click="BtnSignIn_Click" Margin="0,0,0,5"/>
-            <Button Name="btnRegister" Content="Регистрация" FontSize="12pt" Width="180px" Height="34px" Click="BtnRegister_Click"/>
+            <Button Name="btnSignIn" Content="Войти" FontSize="11pt" Width="230px" Height="34px" Click="BtnSignIn_Click" Margin="0,0,0,5"/>
+            <Button Name="btnRegister" Content="Регистрация" FontSize="11pt" Width="230px" Height="34px" Click="BtnRegister_Click"/>
         </StackPanel>
     </Grid>
 </Page>

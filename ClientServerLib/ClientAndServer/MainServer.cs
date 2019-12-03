@@ -142,11 +142,15 @@ namespace ClientServerLib.ClientAndServer
         {
             if (message.Length == 0)
                 return;
-            onServerInform?.Invoke($"{fromClient.UserLogin}: {message}");
             string decryptedMessage = await Crypto.Decrypt(message);
             if (ProcessMessageCommand(decryptedMessage, fromClient).Result)
                 return;
-            onServerInform?.Invoke($"{fromClient.UserLogin}: {decryptedMessage}");
+
+            if (!decryptedMessage.StartsWith(ChatSyntax.ImageDiv))
+            {
+                onServerInform?.Invoke($"{fromClient.UserLogin}: {decryptedMessage}");
+                onServerInform?.Invoke($"{fromClient.UserLogin}: {message}");
+            }
 
             NotifyClients(decryptedMessage, fromClient);
             if (!await Database.AddMessage(decryptedMessage, fromClient, fromClient.ActiveChatRoom.Name))
@@ -177,7 +181,7 @@ namespace ClientServerLib.ClientAndServer
             if (!message.StartsWith("/"))
             {
                 string fromClientName = fromClient == null ? "" : fromClient.UserLogin;
-                message = String.Format("{0}{1}{2}{1}{3}", fromClientName, ChatSyntax.UserMessageDiv, message, room.Name);
+                message = String.Format("{0}{1}{2}{1}{3}", fromClientName, ChatSyntax.MessageDiv, message, room.Name);
             }
 
             string encryptedMessage = await Crypto.Encrypt(message);
@@ -199,52 +203,49 @@ namespace ClientServerLib.ClientAndServer
             bool processed = false;
             if (message[0] == '/')
             {
-                if (message.StartsWith("/"))
+                //Проверяем идет ли после начала команды пробел
+                string command = message.Split(' ')[0];
+                string[] command_arguments = new string[0];
+                if (message.Length > command.Length)
+                    command_arguments = message.Substring(command.Length + 1).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                //login
+                if (command == ChatSyntax.LoginCmd)
                 {
-                    //Проверяем идет ли после начала команды пробел
-                    string command = message.Split(' ')[0];
-                    string[] command_arguments = new string[0];
-                    if (message.Length > command.Length)
-                        command_arguments = message.Substring(command.Length + 1).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                    //login
-                    if (command == ChatSyntax.LoginCmd)
-                    {
-                        Login(client, command_arguments);
-                    }
-                    //room
-                    else if (command == ChatSyntax.CreateRoomCmd)
-                    {
-                        CreateRoom(client, command_arguments[0]);
-                    }
-                    //help
-                    else if (command == ChatSyntax.HelpCmd)
-                    {
-                        NotifyClient(ChatSyntax.HelpString, client);
-                    }
-                    //list
-                    else if (command == ChatSyntax.UserListCmd)
-                    {
-                        NotifyClient(GetAllUsersInChatRoom(client.ActiveChatRoom), client);
-                    }
-                    //reg
-                    else if (command == ChatSyntax.RegCmd)
-                    {
-                        Register(client, command_arguments);
-                    }
-                    //enterroom
-                    else if (command == ChatSyntax.EnterRoomCmd)
-                    {
-                        EnterRoom(client, command_arguments[0]);
-                    }
-                    //invite
-                    else if (command == ChatSyntax.InviteToRoomCmd)
-                    {
-                        InviteToRoom(client, command_arguments);
-                    }
-
-                    processed = true;
+                    Login(client, command_arguments);
                 }
+                //room
+                else if (command == ChatSyntax.CreateRoomCmd)
+                {
+                    CreateRoom(client, command_arguments[0]);
+                }
+                //help
+                else if (command == ChatSyntax.HelpCmd)
+                {
+                    NotifyClient(ChatSyntax.HelpString, client);
+                }
+                //list
+                else if (command == ChatSyntax.UserListCmd)
+                {
+                    NotifyClient(GetAllUsersInChatRoom(client.ActiveChatRoom), client);
+                }
+                //reg
+                else if (command == ChatSyntax.RegCmd)
+                {
+                    Register(client, command_arguments);
+                }
+                //enterroom
+                else if (command == ChatSyntax.EnterRoomCmd)
+                {
+                    EnterRoom(client, command_arguments[0]);
+                }
+                //invite
+                else if (command == ChatSyntax.InviteToRoomCmd)
+                {
+                    InviteToRoom(client, command_arguments);
+                }
+
+                processed = true;
             }
             return processed;
         }

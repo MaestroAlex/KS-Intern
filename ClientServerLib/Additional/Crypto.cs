@@ -39,7 +39,7 @@ namespace ClientServerLib.Additional
                         {
                             swEncrypt.Write(message);
                         }
-                        encrypted = Convert.ToBase64String(aes.IV) + ChatSyntax.UserMessageDiv + Convert.ToBase64String(msEncrypt.ToArray());
+                        encrypted = Convert.ToBase64String(aes.IV) + ChatSyntax.MessageDiv + Convert.ToBase64String(msEncrypt.ToArray());
                     }
                 }
             }
@@ -54,7 +54,7 @@ namespace ClientServerLib.Additional
             string decrypted;
             using (Aes aesAlg = Aes.Create())
             {
-                string[] KeyMessage = ecnryptedMessage.Split(new string[] { ChatSyntax.UserMessageDiv }, StringSplitOptions.None);
+                string[] KeyMessage = ecnryptedMessage.Split(new string[] { ChatSyntax.MessageDiv }, StringSplitOptions.None);
                 if (KeyMessage.Length != 2)
                 {
                     throw new Exception("Can't split message into key and message!");

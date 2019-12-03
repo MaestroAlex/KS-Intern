@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ClientServerLib.ClientAndServer;
 using ClientServerLib.Additional;
 using ClientServerLib.Common;
+using System.IO;
 
 namespace ChatClient.Services
 {
@@ -13,25 +14,21 @@ namespace ChatClient.Services
     {
         public delegate void RoomHandler(string message);
         public delegate void MessageHandler(string userName, string message, string chatroomname);
-        //public delegate void NewRoomCreatedHandler(string message);
         public delegate void SignedInHandler();
         public event RoomHandler onNewRoomCreated;
         public event RoomHandler onChangedRoom;
         public event MessageHandler onMessageReceived;
         public event SignedInHandler onSignedIn;
-        //public List<ChatRoom> rooms = new List<ChatRoom>();
-        //public List<ChatRoom> Rooms { get { return rooms; } }
 
         MainClient client;
         public NetworkService()
         {
             client = new MainClient();
-            //client.onMessageReceived += (message) => onMessageReceived(message);
             client.onMessageReceived += HandleMessageFromServer;
             StartWork();
         }
 
-        private void HandleMessageFromServer(string message)
+        private async void HandleMessageFromServer(string message)
         {
             if (message.StartsWith(ChatSyntax.CreateRoomCmd))
             {
@@ -56,17 +53,24 @@ namespace ChatClient.Services
                 message = message.Substring(message.IndexOf('\n') + 1);
                 foreach(string msg in message.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    string[] SenderMessage = msg.Split(new string[] { ChatSyntax.UserMessageDiv }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] SenderMessage = msg.Split(new string[] { ChatSyntax.MessageDiv }, StringSplitOptions.RemoveEmptyEntries);
                     onMessageReceived(SenderMessage[0], SenderMessage[1], roomName);
                 }
             }
             else
             {
-                string[] SenderMessageRoom = message.Split(new string[] { ChatSyntax.UserMessageDiv }, StringSplitOptions.None);
+                string[] SenderMessageRoom = message.Split(new string[] { ChatSyntax.MessageDiv }, StringSplitOptions.None);
                 if (SenderMessageRoom.Length != 3)
                     return;
                 onMessageReceived(SenderMessageRoom[0], SenderMessageRoom[1], SenderMessageRoom[2]);
             }
+        }
+
+        public async Task SendFile(string file)
+        {
+            byte[] fileBytes = File.ReadAllBytes(file);
+            string readFile = Convert.ToBase64String(fileBytes);
+            await client.SendToServer(ChatSyntax.ImageDiv + readFile);
         }
 
         private async Task StartWork()

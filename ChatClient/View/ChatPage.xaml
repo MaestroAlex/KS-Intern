@@ -4,10 +4,18 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:local="clr-namespace:ChatClient.View"
+      xmlns:Converter="clr-namespace:ChatClient.Converter"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
       Title="Чат"
       DataContext="{Binding MainViewModel, Source={StaticResource Locator}}">
+
+    <Page.Resources>
+        <Converter:UserLoginConverter x:Key="UserLogin"/>
+        <Converter:TextMarginConverter x:Key="TextMargin"/>
+        <Converter:ImageVisibilityConverter x:Key="ImageVisibility"/>
+        <Converter:MinimizeImageController x:Key="MinimizeImage"/>
+    </Page.Resources>
 
     <Grid>
         <Grid.Background>
@@ -24,19 +32,26 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
-        
-            <ListView ItemsSource="{Binding MessageHistory}" Margin="7,7,7,2" Background="#FEFEFE">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel>
-                            <TextBlock Text="{Binding UserName}" FontWeight="Bold" FontSize="13pt" Margin="0,4,0,1" Visibility="{Binding Visible}"/>
-                            <TextBlock Text="{Binding Message}" FontSize="12pt" Margin="0,0,0,2"/>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
 
-            <StackPanel Grid.Column="2"/>
+        <ListView ItemsSource="{Binding MessageHistory}" Margin="7,7,7,2" 
+                  HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" 
+                  Background="#FFFBFCFC" BorderBrush="Transparent" Drop="ListView_Drop" AllowDrop="True">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="{Binding UserName, StringFormat={}{0}:}" FontWeight="Bold" FontSize="13pt" Margin="0,2,0,1" Visibility="{Binding UserName, Converter={StaticResource UserLogin}}"/>
+                        <TextBlock Text="{Binding Message}" FontSize="12pt" TextWrapping="Wrap" Margin="{Binding UserName, Converter={StaticResource TextMargin}}" Visibility="{Binding Message, Converter={StaticResource UserLogin}}"/>
+                        <Image MinWidth="100px" MinHeight="100px" Source="{Binding Image}" 
+                               Visibility="{Binding Image, Converter={StaticResource ImageVisibility}}" 
+                               MaxWidth="{Binding ElementName=cbMinimize, Path=IsChecked, Converter={StaticResource MinimizeImage}}"
+                               MaxHeight="{Binding ElementName=cbMinimize, Path=IsChecked, Converter={StaticResource MinimizeImage}}"
+                               HorizontalAlignment="Left" Margin="{Binding Message, Converter={StaticResource TextMargin}}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <StackPanel Grid.Column="2"/>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="588*"/>
@@ -46,26 +61,29 @@
             <TextBox Grid.Row="2" Margin="7,3,0,5" Text="{Binding Message, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                      FontSize="12pt" FontFamily="Segoe UI" KeyDown="TextBox_KeyDown"
                      VerticalContentAlignment="Center"/>
-            <Button Name="btnHelp" Background="White" Grid.Column="2" Content="?" Margin="1,2,7,5" FontSize="15pt" FontFamily="Segoe UI" Click="BtnHelp_Click"/>
+            <Button Name="btnHelp" Background="White" Grid.Column="2" Content="?" Margin="1,2,7,5" FontSize="11pt" FontFamily="Segoe UI" Click="BtnHelp_Click"/>
         </Grid>
 
-        <StackPanel Grid.Column="1">
-        <TextBlock Text="Комнаты:" FontSize="12pt" TextAlignment="Center" Margin="0,7,4,4"/>
-        <ListView ItemsSource="{Binding Rooms}" Margin="0,0,4,3" Background="Transparent">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem">
-                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.ItemTemplate>
-                <DataTemplate>
-                    <Button Content="{Binding Name}" HorizontalAlignment="Stretch" Height="30" Click="Room_Selected" Background="White" FontSize="12pt"/>
-                </DataTemplate>
-            </ListView.ItemTemplate>
-        </ListView>
+        <StackPanel Grid.Column="1" >
+            <StackPanel>
+                <TextBlock Text="Комнаты:" FontSize="12pt" TextAlignment="Center" Margin="0,7,4,4"/>
+                <ListView ItemsSource="{Binding Rooms}" Margin="0,0,4,3" Background="Transparent">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Name}" HorizontalAlignment="Stretch" Height="34" Click="Room_Selected" Background="White" FontSize="12pt" FontWeight="Medium" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </StackPanel>
+            <CheckBox Name="cbMinimize" Content="Миниатюры изображений" IsChecked="True"/>
         </StackPanel>
 
-        <Button Name="btnSend" Background="White" Grid.Column="2" Grid.Row="2" Content="Отправить" FontSize="12pt" FontFamily="Segoe UI" Click="BtnSend_Click" Margin="0,0,4,5"/>
+        <Button Name="btnSend" Background="White" Grid.Column="2" Grid.Row="2" Content="Отправить" FontSize="12pt" FontFamily="Segoe UI" FontWeight="Medium" Click="BtnSend_Click" Margin="0,0,4,5"/>
     </Grid>
 </Page>

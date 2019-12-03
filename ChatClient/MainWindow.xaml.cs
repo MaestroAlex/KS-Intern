@@ -13,15 +13,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using ChatClient.ViewModel;
+using MahApps.Metro;
+using MahApps.Metro.Controls;
 
 namespace ChatClient
 {
     /// <summary>
     /// Логика взаимодействия для MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : MetroWindow
     {
-        //MainViewModel ViewModel { get { return DataContext as ManViewModel; } }
         ShellViewModel ViewModel { get { return DataContext as ShellViewModel; } }
         public MainWindow()
         {

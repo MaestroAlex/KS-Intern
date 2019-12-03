@@ -8,17 +8,32 @@ namespace ClientServerLib.Common
 {
     public class ChatSyntax
     {
-        public static string UserMessageDiv = "<msg:div>";
+        #region Разделители для сообщений
+        public static string MessageDiv = "<msg:div>";
+        public static string ImageDiv = "<msg:img>";
+        #endregion
+
+        #region Команды для сервера
         public static string LoginCmd = "/login";
-        public static string CreateRoomCmd = "/room";
         public static string HelpCmd = "/help";
         public static string UserListCmd = "/list";
         public static string RegCmd = "/reg";
-        public static string EnterRoomCmd = "/enterroom";
         public static string InviteToRoomCmd = "/invite";
+        #endregion
+
+        #region Команды для клиента
         public static string SignedInSignalCmd = "/signed_in";
         public static string ChatHistoryCmd = "/history";
-        //public static string[] MessageCommands = new string[] { "/login", "/room", "/help", "/list", "/w", "/reg", "/enter", "/invite" };
+        #endregion
+
+        #region Общие команды
+        public static string EnterRoomCmd = "/enterroom";
+        public static string CreateRoomCmd = "/room";
+        #endregion
+
+        #region Директории
+        public static string ResourcesDir = "ChatData";
+        #endregion
 
         public static string HelpString
         {

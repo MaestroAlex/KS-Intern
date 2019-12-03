@@ -47,5 +47,10 @@ namespace ChatClient.View
         {
             ViewModel.ChatRoomSelected(sender);
         }
+
+        private async void ListView_Drop(object sender, DragEventArgs e)
+        {
+            await ViewModel.SendFiles(e);
+        }
     }
 }

@@ -112,3 +112,10 @@ C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\Chat
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\ChatClient.csproj.CopyComplete
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\ChatClient.exe
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\ChatClient.pdb
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\ControlzEx.dll
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\MahApps.Metro.dll
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\ControlzEx.pdb
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\MahApps.Metro.pdb
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\MahApps.Metro.xml
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\Resources\Icons.baml
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\Resources\IconsNonShared.baml
