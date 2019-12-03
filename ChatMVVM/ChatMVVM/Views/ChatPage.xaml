@@ -35,6 +35,7 @@
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <Button
+                        
                         Height="30"
                         HorizontalAlignment="Stretch"
                         Click="Button_Click"

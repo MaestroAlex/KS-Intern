@@ -12,11 +12,6 @@ using ChatHandler;
 
 namespace ChatMVVM.ViewModels
 {
-    /*struct User
-    {
-        public string Name;
-        public Socket Socket;
-    }*/
 
     class AuthViewModel : INotifyPropertyChanged
     {
@@ -31,8 +26,6 @@ namespace ChatMVVM.ViewModels
 
         private ClientChatHandler _ChatHandler = ClientChatHandler.Instance();        
 
-        //public static User _User;
-
         public string UserName
         {
             get
@@ -44,14 +37,6 @@ namespace ChatMVVM.ViewModels
                 _ChatHandler.UserName = value;
                 OnPropertyChanged(nameof(UserName));
             }
-        }
-
-        ~AuthViewModel()
-        {
-           /* #region DLL
-            _User.Socket.Shutdown(SocketShutdown.Both);
-            _User.Socket.Close();
-            #endregion*/
         }
 
         public async void ConnectUser(object obj)

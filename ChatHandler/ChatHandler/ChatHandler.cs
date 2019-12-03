@@ -10,7 +10,7 @@ namespace ChatHandler
     {
         string _Name;
         Socket _Socket;
-        public User(Socket socket=null, string name = "")
+        public User(Socket socket = null, string name = "")
         {
             _Name = name;
             _Socket = socket;
@@ -19,12 +19,16 @@ namespace ChatHandler
         public string Name { get => _Name; set => _Name = value; }
         public Socket Socket { get => _Socket; private set => _Socket = value; }
     }
-    public struct MsgKeys 
+    public struct MsgKeys
     {
-        public static readonly string ToEveryone = "$e";
-        public static readonly string ToUser = "$u";
+        public static readonly string GeneralChat = "$g";
+        public static readonly string ToChat = "$c";
         public static readonly string LogIn = "$l";
         public static readonly string NewChat = "$n";
+        public static readonly string ServerAnswer = "$s";
+        public static readonly string JoinedRoom = "$j";
+        public static readonly int KeyLenght = 3;
+
     }
 
     public class ClientChatHandler
@@ -34,25 +38,9 @@ namespace ChatHandler
         private const int _Port = 904;
         private const string _IpAddress = "127.0.0.1";
 
-        public string UserName
-        {
-            get
-            {
-                return _User.Name;
-            }
-            set
-            {
-                _User.Name = value;
-            }
-        }
+        public string UserName { get => _User.Name; set => _User.Name = value; }
 
-        public Socket socket
-        {
-            get
-            {
-                return _User.Socket;
-            }
-        }
+        public Socket socket { get => _User.Socket; }
 
         private ClientChatHandler() { }
 

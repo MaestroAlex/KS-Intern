@@ -3,3 +3,4 @@ C:\Users\Vanya\Source\Repos\ChatHandler\ChatHandler\bin\Debug\ChatHandler.dll
 C:\Users\Vanya\Source\Repos\ChatHandler\ChatHandler\bin\Debug\ChatHandler.pdb
 C:\Users\Vanya\Source\Repos\ChatHandler\ChatHandler\obj\Debug\ChatHandler.dll
 C:\Users\Vanya\Source\Repos\ChatHandler\ChatHandler\obj\Debug\ChatHandler.pdb
+C:\Users\Vanya\Source\Repos\ChatHandler\ChatHandler\obj\Debug\ChatHandler.csprojAssemblyReference.cache

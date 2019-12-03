@@ -72,6 +72,7 @@
     </Compile>
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModels\AuthViewModel.cs" />
+    <Compile Include="ViewModels\Chat.cs" />
     <Compile Include="ViewModels\ChatItemViewModel.cs" />
     <Compile Include="ViewModels\Commands\DelegateCommand.cs" />
     <Compile Include="ViewModels\ChatViewModel.cs" />
