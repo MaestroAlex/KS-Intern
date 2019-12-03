@@ -4,31 +4,31 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ClientServerLib
+namespace ClientServerLib.Common
 {
-    public class Room
+    public class ChatRoom
     {
         string name;
         List<ClientObject> clients;
         public List<ClientObject> ClientsInRoom { get { return clients; } } 
         public string Name { get { return name; } }
 
-        public Room(string name)
+        public ChatRoom(string name)
         {
-            clients = new List<ClientObject>();
             this.name = name;
+            clients = new List<ClientObject>();
         }
 
         public void AddClientToRoom(ClientObject newClient)
         {
             clients.Add(newClient);
-            newClient.ChatRoom = this;
+            newClient.ClientsChatRooms.Add(this);
         }
 
         public void RemoveClientFromRoom(ClientObject client)
         {
             clients.Remove(client);
-            client.ChatRoom = null;
+            client.ClientsChatRooms.Remove(this);
         }
     }
 }

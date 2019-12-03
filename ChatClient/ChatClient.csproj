@@ -72,7 +72,9 @@
     <Compile Include="Services\NavigationTransitionInfo.cs" />
     <Compile Include="Services\NetworkService.cs" />
     <Compile Include="ViewModel\AuthViewModel.cs" />
+    <Compile Include="ViewModel\ChatRoomItem.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
+    <Compile Include="ViewModel\MessageItem.cs" />
     <Compile Include="ViewModel\ShellViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />
     <Compile Include="View\AuthPage.xaml.cs">

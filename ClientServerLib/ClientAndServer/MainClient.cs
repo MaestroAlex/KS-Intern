@@ -7,10 +7,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Diagnostics;
+using ClientServerLib.Additional;
 
-namespace ClientServerLib
+namespace ClientServerLib.ClientAndServer
 {
-    public class MainClient
+    public class MainClient : ClientServerBase
     {
         private TcpClient client;
         public delegate void MessageHandler(string message);
@@ -40,12 +41,8 @@ namespace ClientServerLib
         {
             try
             {
-                byte[] buffer = new byte[message.Length + 4];
-                NetworkStream dataStream = client.GetStream();
-                byte[] messageLength = BitConverter.GetBytes(message.Length);
-                byte[] messageBytes = Encoding.UTF8.GetBytes(message);
-                buffer = messageLength.Concat(messageBytes).ToArray();
-                dataStream.Write(buffer, 0, message.Length + 4);
+                string ecnryptedMessage = await Crypto.Encrypt(message);
+                await base.SendMessageToClient(client, await base.GetMessageBytes(ecnryptedMessage));
             }
             catch (Exception ex)
             {
@@ -55,18 +52,20 @@ namespace ClientServerLib
 
         private async Task StartListeningServer()
         {
-            while (client.Connected)
+            try
             {
-                byte[] buffer = new byte[4];
-                NetworkStream dataStream = client.GetStream();
-                await dataStream.ReadAsync(buffer, 0, 4);
-                int length = BitConverter.ToInt32(buffer, 0);
-                buffer = new byte[length];
-                await dataStream.ReadAsync(buffer, 0, length);
-                string message = Encoding.UTF8.GetString(buffer);
-                onMessageReceived?.Invoke(message);
+                while (client.Connected)
+                {
+                    string message = await base.WaitMessage(client);
+                    string decryptedMessage = await Crypto.Decrypt(message);
+                    onMessageReceived?.Invoke(decryptedMessage);
+                }
+                client.Close();
             }
-            client.Close();
+            catch(Exception ex)
+            {
+                Debug.WriteLine("Error: " + ex.Message);
+            }
         }
     }
 }

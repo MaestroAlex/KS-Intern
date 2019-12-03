@@ -18,19 +18,25 @@
         </Grid.Background>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="635*"/>
-            <ColumnDefinition Width="165*"/>
+            <ColumnDefinition Width="200*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="40"/>
         </Grid.RowDefinitions>
+        
+            <ListView ItemsSource="{Binding MessageHistory}" Margin="7,7,7,2" Background="#FEFEFE">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel>
+                            <TextBlock Text="{Binding UserName}" FontWeight="Bold" FontSize="13pt" Margin="0,4,0,1" Visibility="{Binding Visible}"/>
+                            <TextBlock Text="{Binding Message}" FontSize="12pt" Margin="0,0,0,2"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
 
-
-        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Hidden">
-            <TextBlock FontSize="12pt" FontFamily="Segoe UI" Margin="7,7,7,2" Background="White" Text="{Binding ChatHistory}"><InlineUIContainer>
-                </InlineUIContainer></TextBlock>
-        </ScrollViewer>
-        <StackPanel Grid.Column="2"/>
+            <StackPanel Grid.Column="2"/>
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="588*"/>
@@ -46,15 +52,15 @@
         <StackPanel Grid.Column="1">
         <TextBlock Text="Комнаты:" FontSize="12pt" TextAlignment="Center" Margin="0,7,4,4"/>
         <ListView ItemsSource="{Binding Rooms}" Margin="0,0,4,3" Background="Transparent">
-            <ListView.ItemContainerStyle>
-                <Style TargetType="ListViewItem">
-                    <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                </Style>
-            </ListView.ItemContainerStyle>
-            <ListView.ItemTemplate>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
                 <DataTemplate>
-                    <Button Content="{Binding Name}" HorizontalAlignment="Stretch" Height="30" Click="Room_Selected" />
+                    <Button Content="{Binding Name}" HorizontalAlignment="Stretch" Height="30" Click="Room_Selected" Background="White" FontSize="12pt"/>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
