@@ -14,47 +14,38 @@ namespace QChat.CLient.Services
 
         }
 
-        public async Task<bool> Register(string login, int passwordHash)
+        public async Task<RegistrationResult> Register(string login, int passwordHash)
         {
             var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connect();
 
-            if (connection == null) return false;
+            if (connection == null) return RegistrationResult.Fail;
+
+            var requestHeaderBytes = new RequestHeader(RequestIntention.Registration).AsBytes();
+            var registrationBytes = new RegistrationInfo()
+            {
+                Login = login,
+                PasswordHash = passwordHash
+            }.AsBytes();
 
             Task.WaitAll(
             connection.LockReadAsync(),
             connection.LockWriteAsync()
             );
 
-                var requestHeaderBytes = new RequestHeader(RequestIntention.Registration).AsBytes();
+            try
+            {
+                await connection.WriteAsync(requestHeaderBytes, 0, RequestHeader.ByteLength);
+                await connection.WriteAsync(registrationBytes, 0, registrationBytes.Length);
 
-                if (!await connection.WriteAsync(requestHeaderBytes, 0, RequestHeader.ByteLength))
-                    return false;
+                var responceInfo = RegistrationResponce.FromConnection(connection);
 
-                var registrationBytes = new RegistrationInfo()
-                {
-                    Login = login,
-                    PasswordHash = passwordHash
-                }.AsBytes();
-
-                if (!await connection.WriteAsync(registrationBytes, 0, registrationBytes.Length)) return false;
-
-                connection.ReleaseWrite();
-
-                RegistrationResponceInfo responceInfo;
-
-                try
-                {
-                    var responceHeader = ResponceHeader.FromConnection(connection);
-                    responceInfo = RegistrationResponceInfo.FromConnection(connection);
-                }
-                catch
-                {
-                    return false;
-                }
-
-
+                return responceInfo.Result;
+            }
+            finally
+            {
                 connection.ReleaseRead();
-                return responceInfo.Success;
+                connection.ReleaseWrite();
+            }
         }
     }
 }

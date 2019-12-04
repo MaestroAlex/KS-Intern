@@ -42,8 +42,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AuthorizationInfo.cs" />
-    <Compile Include="AuthorizationResponceInfo.cs" />
-    <Compile Include="Collections\CapacityArray.cs" />
+    <Compile Include="AuthorizationResponce.cs" />
+    <Compile Include="HistorySynchronizationHeader.cs" />
+    <Compile Include="NetString.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="ContentType.cs" />
     <Compile Include="Net\IConnection.cs" />
@@ -60,14 +61,22 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecieverInfo.cs" />
     <Compile Include="RegistrationInfo.cs" />
-    <Compile Include="RegistrationResponceInfo.cs" />
+    <Compile Include="RegistrationResponce.cs" />
     <Compile Include="RequestHeader.cs" />
     <Compile Include="ResponceHeader.cs" />
     <Compile Include="RoomConnectionInfo.cs" />
+    <Compile Include="RoomConnectionResponce.cs" />
     <Compile Include="RoomCreationInfo.cs" />
+    <Compile Include="RoomCreationResponce.cs" />
+    <Compile Include="RoomDisconnectionInfo.cs" />
     <Compile Include="RoomInfo.cs" />
     <Compile Include="RoomingHeader.cs" />
+    <Compile Include="RoomingResponceHeader.cs" />
     <Compile Include="RoomInvitationInfo.cs" />
+    <Compile Include="RoomInvitationNotification.cs" />
+    <Compile Include="RoomInvitationResponce.cs" />
+    <Compile Include="RoomJoiningResponce.cs" />
+    <Compile Include="RoomSynchronizationInfo.cs" />
     <Compile Include="SenderInfo.cs" />
     <Compile Include="UserInfo.cs" />
   </ItemGroup>

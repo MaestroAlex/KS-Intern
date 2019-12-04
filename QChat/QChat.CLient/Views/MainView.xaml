@@ -7,105 +7,373 @@
       xmlns:vm="clr-namespace:QChat.CLient.ViewModels"
       mc:Ignorable="d" 
       d:DesignHeight="450" d:DesignWidth="800"
-      DataContext="{Binding MainVM,Source={StaticResource VMLocator}}"
+      DataContext="{Binding MainVM, Source={StaticResource VMLocator}}"
       Title="ChatView">
 
     <Page.Resources>
+        <!--Key bind comands-->
+        <RoutedUICommand x:Key="SendMessageCommand" Text="Send"/>
+
+        <!--Send button resources-->
+        <RadialGradientBrush x:Key="SendButtonHoveredOpacityMask"
+                             RadiusX="0.45"
+                             RadiusY="0.9">
+            <RadialGradientBrush.GradientOrigin>
+                <Point X="0.5" Y="0.5"/>
+            </RadialGradientBrush.GradientOrigin>
+            <RadialGradientBrush.GradientStops>
+                <GradientStop Color="#FFFFFFFF" Offset="0.0"/>
+                <GradientStop Color="#FFFFFFFF" Offset="0.5"/>
+                <GradientStop Color="#00FFFFFF" Offset="1"/>
+            </RadialGradientBrush.GradientStops>
+        </RadialGradientBrush>
+
+
         <Style TargetType="Control">
             <Setter Property="BorderThickness" Value="0 0 0 0"/>
             <Setter Property="Background" Value="Transparent"/>
         </Style>
+
+
+        <!--Top panel resources-->
+        <SolidColorBrush x:Key="ChatChoiceButtonBackground" 
+                         Color="Aquamarine" Opacity="0.7"/>
+        <SolidColorBrush x:Key="ChatChoiceButtonBorderBrush"
+                         Color="Aquamarine"/>
+        <LinearGradientBrush x:Key="ChatChoiceButtonOpacityMask"
+                             StartPoint="0.5 1" EndPoint="0.5 0">
+            <GradientStop Color="#FFFFFFFF" Offset="0"/>
+            <GradientStop Color="#FFFFFFFF" Offset="0.3"/>
+            <GradientStop Color="#00FFFFFF" Offset="1"/>
+        </LinearGradientBrush>
+
+        <Style x:Key="ChatChoiceButtonStyle" TargetType="Button">
+            <Setter Property="BorderThickness" Value="0 0 0 2"/>
+            <Setter Property="Background">
+                <Setter.Value>
+                    <LinearGradientBrush StartPoint="0.5 1" EndPoint="0.5 0">
+                        <GradientStop Color="Aquamarine" Offset="0"/>
+                        <GradientStop Color="Transparent" Offset="0.5"/>
+                    </LinearGradientBrush>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Foreground" Value="Bisque"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ChatChoiceButtonBorderBrush}"/>
+            <Setter Property="Width" Value="80"/>
+            <Setter Property="Margin" Value="25 0"/>
+        </Style>
+
+        <!--Send button styles!-->
+        <Style x:Key="SendButtonStyle" TargetType="Button">
+            <Setter Property="Foreground">
+                <Setter.Value>
+                    <SolidColorBrush Color="Aquamarine"/>
+                </Setter.Value>
+            </Setter>
+            <Setter Property="Width" Value="Auto"/>
+            <Setter Property="Margin" Value="10"/>
+        </Style>
+
+        <Style x:Key="SendButtonStyleMousedOver" TargetType ="Button" 
+               BasedOn="{StaticResource SendButtonStyle}">
+            <Setter Property="OpacityMask" Value="{StaticResource SendButtonHoveredOpacityMask}"/>
+            <Setter Property="Background" Value="#F01010"/>
+        </Style>
     </Page.Resources>
 
+    <!--Command Bindings-->
+    <Page.CommandBindings>
+    </Page.CommandBindings>
+
+    <!-- Page content!-->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="3.5*"/>
-            <ColumnDefinition MinWidth="100" Width="*"/>            
+            <ColumnDefinition Width="10"/>
+            <ColumnDefinition MinWidth="100" Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
+            <RowDefinition Height="20"/>
             <RowDefinition/>
-            <RowDefinition Height="50"/>
         </Grid.RowDefinitions>
 
+        <!--Background brush-->
         <Grid.Background>
             <LinearGradientBrush StartPoint="0 0.5" EndPoint="1 0.5">
                 <GradientStop Color="#D01010" Offset="0"/>
                 <GradientStop Color="DarkBlue" Offset="0.03"/>
                 <GradientStop Color="DarkBlue" Offset="0.75"/>
-                <GradientStop Color="#D01010" Offset="0.80"/>
+                <GradientStop Color="#D01010" Offset="0.83"/>
             </LinearGradientBrush>
         </Grid.Background>
-        
-        <ScrollViewer Grid.Column ="0" Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+
+
+        <!--Currently unavailable feature-->
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center"
+                    Visibility="Hidden">
+            <Button x:Name="UserChatButton" 
+                    MaxWidth="70" MinWidth="50"
+                    Style="{StaticResource ChatChoiceButtonStyle}">
+                User Chats
+            </Button>
+            <Button x:Name="GroupChatButton" 
+                    MaxWidth="70" MinWidth="50"
+                    Style="{StaticResource ChatChoiceButtonStyle}">
+                Groups
+            </Button>
+            <Button x:Name="RoomChatButton" 
+                                      
+                    Style="{StaticResource ChatChoiceButtonStyle}">
+                Rooms
+            </Button>
+        </StackPanel>
+
+
+
+        <!--Chat list-->
+        <Grid Grid.Column ="2" Grid.RowSpan="2" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition/>
+                <RowDefinition Height="40"/>
+            </Grid.RowDefinitions>
+
+            <Viewbox Grid.Row="0"
+                     HorizontalAlignment="Right"
+                     Margin="0 0 5 3">
+                <TextBlock
+                    Text="{Binding UserLogin, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0.5 1" EndPoint="0.5 0">
+                                        <GradientStop Color="Aquamarine" Offset="0.1"/>
+                                        <GradientStop Color="Transparent" Offset="0.35"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Foreground" Value="Aquamarine"/>
+                            <Setter Property="TextAlignment" Value="Right"/>
+                            <Setter Property="HorizontalAlignment" Value="Right"/>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </Viewbox>
+
+            <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                          Grid.Row="1">
+                <ListView x:Name="ChatList" SelectionMode="Single" BorderThickness="0" Background="Transparent"
+                      ItemsSource="{Binding CurrentChatList, UpdateSourceTrigger=PropertyChanged, Mode=OneWay}" 
+                          SelectedItem="{Binding SelectedChat, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="BorderThickness" Value="0 0 1 1"/>
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush StartPoint="0.5 1" EndPoint="0.5 0">
+                                        <GradientStop Color="#FFFF0202" Offset="0"/>
+                                        <GradientStop Color="#00FF0000" Offset="0.3"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+
+                            <Setter Property="HorizontalContentAlignment" Value="Right"/>
+
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Connected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Value="True">
+                                    <Setter Property="Background">
+                                        <Setter.Value>
+                                            <SolidColorBrush Color="Green" Opacity="0.4"/>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+
+                    <!--Chat template-->
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0 2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+
+                                <Viewbox Grid.Row="0" 
+                                     MinHeight="25" MaxHeight="30"
+                                     Width="100"
+                                     HorizontalAlignment="Right">
+                                    <TextBlock 
+                                    Text="{Binding Name}"
+                                    Foreground="Bisque"
+                                    HorizontalAlignment="Right"
+                                    TextAlignment="Right"
+                                    >
+                                    </TextBlock>
+                                </Viewbox>
+
+                                <TextBlock  Grid.Row="1"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+
+
+                <Button x:Name="ConnectButton"
+                        Grid.Column="0"
+                        Click="ConnectButton_Click"
+                        Style="{StaticResource ChatChoiceButtonStyle}"
+                        Margin="1"
+                        HorizontalContentAlignment="Center"
+                        Width="Auto">
+                    <Button.Content>
+                        <TextBlock HorizontalAlignment="Center"
+                                   TextAlignment="Center">                            
+                            Connect
+                        </TextBlock>
+                    </Button.Content>
+                </Button>
+
+                <Button x:Name="DisonnectButton"
+                        Click="DisonnectButton_Click"
+                        Style="{StaticResource ChatChoiceButtonStyle}"
+                        Margin="1"
+                        Grid.Column="1"
+                        HorizontalContentAlignment="Center"
+                        Width="Auto"
+                        >
+                    <Button.Content>
+                        <TextBlock HorizontalAlignment="Center"
+                                   TextAlignment="Center">                            
+                            Disconnect
+                        </TextBlock>
+                    </Button.Content>
+                </Button>
+
+                <Button x:Name="CreateRoomButton"
+                        Click="CreateRoomButton_Click"
+                        Style="{StaticResource ChatChoiceButtonStyle}"
+                        Grid.Column="2" Margin="1"
+                        Width="Auto">
+                    +
+                </Button>
+            </Grid>
+        </Grid>
+
+        <Grid Grid.Row="2" Grid.Column="0"
+              DataContext="{Binding ChatVM}"
+              x:Name="ChatGrid">
+
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+
+
+
+            <!--Message list scrollbox-->
+            <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
                       Background="Transparent"
                       BorderThickness="0 0 0 0">
-            <ListBox x:Name="MessageList" Background="Transparent"
-                     BorderThickness="0 0 0 0">
-            </ListBox>
-        </ScrollViewer>
+                <ListView x:Name="MessageList" Background="Transparent"
+                     BorderThickness="0 0 0 0" ItemsSource="{Binding MessageList, Mode=OneWay, UpdateSourceTrigger=PropertyChanged}"
+                     Margin="15 0">
 
-        <ScrollViewer Grid.Column ="2" Grid.RowSpan="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <ListBox x:Name="ChatList" SelectionMode="Single" BorderThickness="0" Background="Transparent">
-                
-                <!--Chat template-->
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition/>
-                                <RowDefinition/>                                
-                            </Grid.RowDefinitions>
-                            
-                            <TextBlock  Grid.Row="0"/>
-                        </Grid>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-        </ScrollViewer>
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="IsHitTestVisible" Value="False"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
 
-        
-        <!--Nested grid for chatting line-->
-        <Grid Background="Transparent" Grid.Column="0" Grid.Row="1" Margin="0 0 0 5">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="5*"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Focusable="False">
+                                <TextBlock 
+                                    TextAlignment="Left"
+                                    Foreground="Aquamarine"
+                                    FontSize="16"
+                                    FontWeight="DemiBold"
+                                    Text="{Binding Sender}"/>
+                                <TextBlock
+                                    TextAlignment="Left"
+                                    FontSize="15"
+                                    Foreground="Bisque"
+                                    TextWrapping="Wrap"
+                                    Text="{Binding Content}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </ScrollViewer>
 
-            <Border BorderThickness="0" CornerRadius="20" Margin="25 5 5 10">
-                <Border.Background>
-                    <SolidColorBrush Color="Blue" Opacity="0.9"/>
-                </Border.Background>
-                <TextBox Background="Transparent"
+            <!--Nested grid for chatting line-->
+            <Grid Background="Transparent" Grid.Row="1" Margin="0 0 0 5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="5*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border BorderThickness="0" CornerRadius="20" Margin="25 5 5 10">
+                    <Border.Background>
+                        <SolidColorBrush Color="Blue" Opacity="0.9"/>
+                    </Border.Background>
+
+                    <TextBox Background="Transparent"
                      BorderThickness="0 0 0 0"
                      TextAlignment="Left"
                      VerticalAlignment="Center"
                      FontSize="15"
                      Margin="15 5 15 5"
-                     Foreground="Aquamarine">
-                </TextBox>
-            </Border>
+                     Foreground="Aquamarine"
+                             Text="{Binding MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                    </TextBox>
+                </Border>
 
-            <Button Grid.Column="1"
-                    Width="Auto"
-                    Margin="10">
-                <Button.Foreground>
-                    <SolidColorBrush Color="Aquamarine"/>
-                </Button.Foreground>
+                <Button Grid.Column="1"
+                    Click="On_SendButton_Click"
+                    x:Name ="SendButton">
+
+                    <Button.Foreground>
+                        <SolidColorBrush Color="Aquamarine"/>
+                    </Button.Foreground>
+
 
                     <Button.Template>
                         <ControlTemplate>
-                            <TextBlock FontSize="20"
+                            <Grid OpacityMask="{StaticResource SendButtonHoveredOpacityMask}"
+                        Background="#F01010">
+                                <TextBlock FontSize="20"
                                    Text="Send"
                                    VerticalAlignment="Center"
                                    HorizontalAlignment="Center"
                                        Margin="0 0 0 5"/>
-                            <ControlTemplate.Triggers>
-
-                            </ControlTemplate.Triggers>
+                            </Grid>
                         </ControlTemplate>
                     </Button.Template>
-            </Button>
+                </Button>
+            </Grid>
         </Grid>
 
+
+
+
+        <!--Separator between message list and chat list-->
+        <Border Grid.RowSpan="2" Grid.Column="1"
+                   Margin="4 20" CornerRadius="5">
+            <Border.Background>
+                <SolidColorBrush Color="Aquamarine"/>
+            </Border.Background>
+        </Border>
     </Grid>
 </Page>

@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\App.xaml
-4-910517394
+7951371169
 
-31284319365
+42-1824359144
 14-1284528241
-Views\AuthorizationView.xaml;Views\MainView.xaml;MainWindow.xaml;Views\RegistrationView.xaml;
+Views\AuthorizationView.xaml;Views\JoinRoomView.xaml;Views\MainView.xaml;MainWindow.xaml;Views\RegistrationView.xaml;Views\RoomCreationView.xaml;Views\RoomDialogWindow.xaml;
 
 False
 

@@ -9,10 +9,19 @@
       Title="AuthorizationView"
       DataContext="{Binding AuthorizationVM, Source={StaticResource VMLocator}}">
 
+    
+    
     <Page.Resources>
-       
+        <RoutedUICommand x:Key="AuthroizeCommand"
+                        Text="Authorize"/>
     </Page.Resources>
 
+    <Page.CommandBindings>
+        <CommandBinding Command="{StaticResource AuthroizeCommand}"
+                        Executed="CommandBinding_Executed"/>
+    </Page.CommandBindings>
+    
+    <!--Page content-->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/>
@@ -95,9 +104,9 @@
         <Button Grid.Column="1" 
                 Grid.Row="4"
                 Width="100"
-                Click="LoginButton_Click"
                 Margin="10"
-                BorderThickness="0">            
+                BorderThickness="0"
+                Click="LoginButton_Click">            
 
             <Button.Background>
                 <SolidColorBrush Opacity="0"/>

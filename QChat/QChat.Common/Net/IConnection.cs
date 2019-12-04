@@ -16,7 +16,12 @@ namespace QChat.Common.Net
         Task LockWriteAsync();
         void ReleaseWrite();
 
+        void Close();
+
+        bool WaitForData(int miliseconds);
+
         bool Connected { get; }
         int Id { get; }
+        int DataAvailable { get; }
     }
 }

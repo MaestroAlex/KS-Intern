@@ -1,0 +1,6 @@
+D:\Gram\Dev\KS-Intern\QChat\QChat.Common\bin\Release\QChat.Common.dll
+D:\Gram\Dev\KS-Intern\QChat\QChat.Common\bin\Release\QChat.Common.pdb
+D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Release\QChat.Common.csprojAssemblyReference.cache
+D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Release\QChat.Common.csproj.CoreCompileInputs.cache
+D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Release\QChat.Common.dll
+D:\Gram\Dev\KS-Intern\QChat\QChat.Common\obj\Release\QChat.Common.pdb

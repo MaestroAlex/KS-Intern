@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Net.Sockets;
 using System.Net;
 using QChat.Common.Net;
@@ -15,21 +16,16 @@ namespace QChat.CLient.Services
         private IPAddress _ipAdress;
         private int _port;
 
-        public Connection Connection { get; private set; } 
-
-        private ConnectionClosedEventHandler _connectionClosedEventHandler;
-
+        public IConnection Connection { get; private set; }
 
         public NetworkingService(IPAddress iPAddress, int port)
         {
             _ipAdress = iPAddress;
             _port = port;
-
-            _connectionClosedEventHandler = HandleClosedConnection;
         }
 
 
-        public Connection Connect()
+        public IConnection Connect()
         {
             if (Connection == null ? false : Connection.Connected) return Connection;
 
@@ -45,11 +41,11 @@ namespace QChat.CLient.Services
             }
 
             Connection = new Connection(tcpClient, 0);
-            Connection.ConnectionClosed += _connectionClosedEventHandler;
+            Connection.ConnectionClosed += HandleClosedConnection;
 
             return Connection;
         }
-        public async Task<Connection> ConnectAsync()
+        public async Task<IConnection> ConnectAsync()
         {
             if (Connection == null ? false : Connection.Connected) return Connection;
 
@@ -65,14 +61,15 @@ namespace QChat.CLient.Services
             }
 
             Connection = new Connection(tcpClient, 0);
-            Connection.ConnectionClosed += _connectionClosedEventHandler;
+            Connection.ConnectionClosed += HandleClosedConnection;
 
             return Connection;
         }        
 
-        private void HandleClosedConnection(Connection connection, EventArgs eventArgs)
+        private void HandleClosedConnection(IConnection connection, EventArgs eventArgs)
         {
             Connection = null;
+            MessageBox.Show("Connection was closed");
         }
     }
 }

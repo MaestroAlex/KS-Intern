@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.IO;
 using QChat.Common.Net;
 using QChat.Server.Messaging;
 using QChat.Common;
@@ -43,29 +44,69 @@ namespace QChat.Server.Sessioning
             Task.Run(Serve);
         }
 
-        private void Serve()
+        private async void Serve()
         {
             try
             {
-                while (_continue)
-                {
-                    var request = RequestHeader.FromConnection(Connection);
+                var silenceCount = 0;
 
-                    switch (request.Intention)
+                while (_continue && Connection.Connected)
+                {
+                    Task.WaitAll(
+                        Connection.LockReadAsync(),
+                        Connection.LockWriteAsync()
+                        );
+
+                    try
                     {
-                        case RequestIntention.Messaging:
-                            _messenger.HandleMessage(this);
-                            break;
-                        case RequestIntention.Rooming:
-                            _roomManager.HandleRooming(this);
-                            break;
+                        if (Connection.WaitForData(200))
+                        {
+                            silenceCount = 0;
+
+                            var request = RequestHeader.FromConnection(Connection);
+
+                            switch (request.Intention)
+                            {
+                                case RequestIntention.Messaging:
+                                    _messenger.HandleMessage(this);
+                                    break;
+                                case RequestIntention.Rooming:
+                                    _roomManager.HandleRooming(this);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            silenceCount += 200;
+
+                            if (silenceCount >= 1000 * 15)
+                            {
+                                Connection.Write(
+                                 new ResponceHeader(ResponceIntention.ConnectionCheck).AsBytes(),
+                                 0,
+                                 ResponceHeader.ByteLength);
+                                silenceCount = 0;
+                            }
+                        }
+                    }
+                    catch(Exception e)
+                    {
+                        if (e is IOException)
+                            throw e;
+                    }
+                    finally
+                    {
+                        Connection.ReleaseRead();
+                        Connection.ReleaseWrite();
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-                Connection.Dispose();
+
             }
+
+            Connection.Close();
         }
 
         private void HandleClosedConnection(IConnection sender, EventArgs args)

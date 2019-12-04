@@ -17,6 +17,7 @@ namespace QChat.Common
         public void AsBytes(byte[] buff, int offset)
         {
             RoomInfo.AsBytes(buff, offset);
+            offset += RoomInfo.ByteLength;
             UserInfo.AsBytes(buff, offset);
         }
         public byte[] AsBytes()
@@ -36,7 +37,7 @@ namespace QChat.Common
         {
             var buff = new byte[ByteLength];
 
-            if (connection.Read(buff, 0, ByteLength) <= 0) throw new Exception();
+            connection.ReadAll(buff, 0, ByteLength);
 
             return FromBytes(buff, 0);
         }
@@ -44,7 +45,7 @@ namespace QChat.Common
         {
             var buff = new byte[ByteLength];
 
-            if (await connection.ReadAsync(buff, 0, ByteLength) <= 0) throw new Exception();
+            await connection.ReadAllAsync(buff, 0, ByteLength);
 
             return FromBytes(buff, 0);
         }

@@ -12,6 +12,7 @@ namespace QChat.Server.Authorization
     class Registrator
     {
         private UserDataManager _userDataManager;
+        private RoomDataManager _roomDataManager;
 
         public Registrator()
         {
@@ -30,61 +31,54 @@ namespace QChat.Server.Authorization
             try
             {
                 registrationInfo = await RegistrationInfo.FromConnectionAsync(connection);
-            }
-            catch
-            {
-                return;
-            }
 
-            var headerTask = connection.WriteAsync(new ResponceHeader(ResponceIntention.Registration).AsBytes(), 0, ResponceHeader.ByteLength);
-
-            if (await _userDataManager.UserRegisteredAsync(registrationInfo.Login))
-            {
-                if (await headerTask)
+                if (await _userDataManager.UserRegisteredAsync(registrationInfo.Login))
                 {
                     await connection.WriteAsync(
-                        new RegistrationResponceInfo
+                        new RegistrationResponce
                         {
-                            Success = false,
+                            Result = RegistrationResult.NicknameAlreadyRegistered,
                             UserInfo = UserInfo.Null
                         }.AsBytes(),
                         0,
-                        RegistrationResponceInfo.ByteLength);
+                        RegistrationResponce.ByteLength);
+
+                    return;
                 }
 
-                return;
-            }
-
-            if (!await _userDataManager.RegisterUserAsync(registrationInfo.Login, registrationInfo.PasswordHash))
-            {
-                if (await headerTask)
+                if (!await _userDataManager.RegisterUserAsync(registrationInfo.Login, registrationInfo.PasswordHash))
                 {
                     await connection.WriteAsync(
-                        new RegistrationResponceInfo
+                        new RegistrationResponce
                         {
-                            Success = false,
+                            Result = RegistrationResult.Fail,
                             UserInfo = UserInfo.Null
                         }.AsBytes(),
                         0,
-                        RegistrationResponceInfo.ByteLength);
+                        RegistrationResponce.ByteLength);
+
+                    return;
                 }
 
-                return;
-            }
-            
-            if (await headerTask)
-            {
                 await connection.WriteAsync(
-                        new RegistrationResponceInfo
+                        new RegistrationResponce
                         {
-                            Success = true,
+                            Result = RegistrationResult.Success,
                             UserInfo = { Id = registrationInfo.Login.GetHashCode() }
                         }.AsBytes(),
                         0,
-                        RegistrationResponceInfo.ByteLength);
+                        RegistrationResponce.ByteLength);
+            }
+            catch(Exception e)
+            {
+                return;
+            }
+            finally
+            { 
+                connection.Close();
             }
 
-            connection.Dispose();
-        }        
+            await _roomDataManager.AddMemberToRoomAsync(registrationInfo.Login.GetHashCode(), 2);
+        }     
     }
 }

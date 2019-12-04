@@ -13,80 +13,73 @@ namespace QChat.CLient.ViewModels
 {
     class ChatVM : DependencyObject
     {
-        private Chat _currentChat;
-        public Chat CurrentChat
+        private MessagingService _messagingService;
+        private MessageHistoryService _historyService;
+
+        public string MessageText
         {
-            get => _currentChat;
+            get { return (string)GetValue(MessageTextProperty); }
+            set { SetValue(MessageTextProperty, value); }
+        }
+        public static readonly DependencyProperty MessageTextProperty =
+            DependencyProperty.Register("MessageText", typeof(string), typeof(ChatVM), new PropertyMetadata(string.Empty));
+
+        public ObservableCollection<MessageVM> MessageList
+        {
+            get { return (ObservableCollection<MessageVM>)GetValue(MessageListProperty); }
+            set { SetValue(MessageListProperty, value); }
+        }
+        public static readonly DependencyProperty MessageListProperty =
+            DependencyProperty.Register("MessageList", typeof(ObservableCollection<MessageVM>), typeof(ChatVM), new PropertyMetadata(null));
+
+        public string Type { get; set; }
+
+        private int _id = 0;
+        public int Id
+        {
+            get => _id;
             set
             {
-                _currentChat = value;
-                Update();
+                if (value == _id) return;
+
+                _id = value;
+                MessageList = _historyService.GetHistory(Type, _id);
             }
         }
-
-
-
-        public string Name
-        {
-            get { return (string)GetValue(NameProperty); }
-            set
-            {
-                _currentChat.Name = value;
-                SetValue(NameProperty, value);
-            }
-        }
-        public static readonly DependencyProperty NameProperty =
-            DependencyProperty.Register("Name", typeof(string), typeof(ChatVM), new PropertyMetadata(string.Empty));
-
-
-
-        public string TextDraft
-        {
-            get { return (string)GetValue(TextDraftProperty); }
-            set
-            {
-                _currentChat.TextDraft = value;
-                SetValue(TextDraftProperty, value);                
-            }
-        }
-        public static readonly DependencyProperty TextDraftProperty =
-            DependencyProperty.Register("TextDraft", typeof(string), typeof(ChatVM), new PropertyMetadata(string.Empty));
-
-        public ObservableCollection<ClientMessage> Messages
-        {
-            get { return (ObservableCollection<ClientMessage>)GetValue(MessagesProperty); }
-            set { SetValue(MessagesProperty, value); }
-        }
-        public static readonly DependencyProperty MessagesProperty =
-            DependencyProperty.Register("Messages", typeof(ObservableCollection<ClientMessage>), typeof(ChatVM), new PropertyMetadata(null));
-
 
         public ChatVM()
         {
-            CurrentChat = StaticProvider.GetInstanceOf<ChattingService>().GetDeafultChat(ChatType.RoomChat);
+            _messagingService = StaticProvider.GetInstanceOf<MessagingService>();
+            _historyService = StaticProvider.GetInstanceOf<MessageHistoryService>();
         }
 
-        public void Update()
+        public async Task SendMessage()
         {
-            Name = _currentChat.Name;
-            TextDraft = _currentChat.TextDraft;
-            Messages = _currentChat.Messages;
+            if (string.IsNullOrWhiteSpace(MessageText)) return;
+            var messageText = MessageText;
+            MessageText = string.Empty;
+            await Task.Run(() => _messagingService.SendTextMessage(
+                messageText, 
+                new RecieverInfo
+                {
+                    Type = GetRecieverType(Type),
+                    Id = this.Id}
+                )
+            );
         }
 
-        public void SendTextMessage()
-        {
-            StaticProvider.GetInstanceOf<MessagingService>().
-                SendTextMessage(TextDraft, new RecieverInfo { Id = _currentChat.Id, Type = GetRecieverType(_currentChat.Type)});
-        }
-
-        private RecieverType GetRecieverType(ChatType type)
+        private RecieverType GetRecieverType(string type)
         {
             switch (type)
             {
-                case ChatType.GroupChat: return RecieverType.Group;
-                case ChatType.RoomChat: return RecieverType.Room;
-                case ChatType.UserChat: return RecieverType.User;
-                default: throw new ArgumentException();
+                case "room":
+                    return RecieverType.Room;
+                case "group":
+                    return RecieverType.Group;
+                case "user":
+                    return RecieverType.User;
+                default:
+                    return RecieverType.None;
             }
         }
     }

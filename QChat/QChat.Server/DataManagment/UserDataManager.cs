@@ -21,7 +21,7 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"INSERT INTO users(id, login, password) VALUES ('{login.GetHashCode()}','{login}','{password}')", _connection))
+                using (var command = new NpgsqlCommand($"INSERT INTO users(id, login, password) VALUES ({login.GetHashCode()},'{login}',{password})", _connection))
                 {
                     await command.ExecuteNonQueryAsync();
                 }
@@ -38,15 +38,15 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"INSERT INTO users(id, login, password) VALUES ('{login.GetHashCode()}','{login}','{password}')", _connection))
+                using (var command = new NpgsqlCommand($"INSERT INTO users(id, login, password) VALUES ({login.GetHashCode()},'{login}',{password})", _connection))
                 {
                     command.ExecuteNonQuery();
                 }
                 return true;
             }
-            catch
+            catch (Exception e)
             {
-
+                Console.WriteLine(e);
             }
 
             return false;
@@ -87,9 +87,52 @@ namespace QChat.Server.DataManagment
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                Console.WriteLine(e);
+            }
 
+            return false;
+        }
+
+        public async Task<bool> UserRegisteredAsync(int id)
+        {
+            try
+            {
+                using (var command = new NpgsqlCommand("SELECT id FROM users", _connection))
+                {
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                            if (id.Equals(reader.GetInt32(0)))
+                                return true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            return false;
+        }
+        public bool UserRegistered(int id)
+        {
+            try
+            {
+                using (var command = new NpgsqlCommand("SELECT id FROM users", _connection))
+                {
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                            if (id.Equals(reader.GetInt32(0)))
+                                return true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
 
             return false;
@@ -99,7 +142,7 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"SELECT password FROM users WHERE Id='{id}'", _connection))
+                using (var command = new NpgsqlCommand($"SELECT password FROM users WHERE Id={id}", _connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {
@@ -117,9 +160,9 @@ namespace QChat.Server.DataManagment
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
-
+                Console.WriteLine(e);
             }
 
             return new AuthorizationInfo
@@ -132,7 +175,7 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"SELECT Password FROM Users WHERE Id='{id}'", _connection))
+                using (var command = new NpgsqlCommand($"SELECT Password FROM Users WHERE Id={id}", _connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -150,9 +193,9 @@ namespace QChat.Server.DataManagment
                     }
                 }
             }
-            catch
+            catch(Exception e)
             {
-
+                Console.WriteLine(e);
             }
 
             return new AuthorizationInfo

@@ -39,10 +39,8 @@ namespace QChat.Server.Authorization
             switch (header.Intention)
             {
                 case RequestIntention.Authorization:
-                    Console.WriteLine("User authorizing");
                     return _authorizator.Authorize(connection);
                 case RequestIntention.Registration:
-                    Console.WriteLine("User Registrating");
                     _registrator.Register(connection);
                     return AuthorizationResultInfo.GetRegistrationResult();
                 default:
@@ -65,7 +63,10 @@ namespace QChat.Server.Authorization
             switch (header.Intention)
             {
                 case RequestIntention.Authorization:
-                    return _authorizator.Authorize(connection);
+                    return await _authorizator.AuthorizeAsync(connection);
+                case RequestIntention.Registration:
+                    _registrator.Register(connection);
+                    return AuthorizationResultInfo.GetRegistrationResult();
                 default:
                     return AuthorizationResultInfo.GetFailedResult(null);
             }

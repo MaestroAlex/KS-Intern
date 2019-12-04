@@ -42,33 +42,32 @@ namespace QChat.Server
             _initialized = true;
         }
 
-        public void Start()
+        public async Task Start()
         {
             if (!_initialized) throw new InvalidOperationException("Server is not initialized");
 
             _connectionManager.Start(200);
 
             _continue = true;
-            var workThread = new Thread(new ThreadStart(Work));
-            Console.WriteLine("Initialized. Starting Work...");
-            workThread.Start();
+
+            Console.WriteLine("Initialized. Starting Work");
+
+            await Task.Run(Work);
         }
 
-        private void Work()
+        private async Task Work()
         {
             while (_continue)
             {
-               var connection = _connectionManager.GetConnection();
+                var connection = _connectionManager.GetConnection();
 
-               var authorizationResult = _authorizationManager.TryAuthorize(connection);
+                var authorizationResult = await _authorizationManager.TryAuthorizeAsync(connection);
 
-                if (authorizationResult.Result == AuthorizationResult.Registration)
+                if (authorizationResult.Result == Authorization.AuthorizationResult.Registration)
                     continue;
-                if (authorizationResult.Result == AuthorizationResult.Fail)
+                if (authorizationResult.Result == Authorization.AuthorizationResult.Fail)
                 {
-                    connection.Dispose();
-                    Debug.WriteLine("Authorization failed. Disconnecting..");
-                    Debug.WriteLine("Disconected");
+                    connection.Close();
                     continue;
                 }
 
@@ -78,11 +77,13 @@ namespace QChat.Server
 
         private void InitializeManagerProvider(IPAddress ipAddress, int port)
         {
-            _managerProvider.Register(new ConnectionManager(ipAddress, port));
-            _managerProvider.Register(new AuthorizationManager(new Authorizator(), new Registrator()));
             _managerProvider.Register(new UserManager());
             _managerProvider.Register(new GroupManager());
             _managerProvider.Register(new RoomManager());
+            _managerProvider.Register(new ConnectionManager(ipAddress, port));
+            _managerProvider.Register(new AuthorizationManager(new Authorizator(), new Registrator()));
+
+            //Manager provider needed for initialization, so registered last
             _managerProvider.Register(new MessagingManager(_managerProvider, new ContentRecieverTable(), new ContentSenderTable()));
             _managerProvider.Register(new SessionManager(_managerProvider));
         }

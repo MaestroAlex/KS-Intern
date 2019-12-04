@@ -43,32 +43,18 @@ namespace QChat.Common
             return new RequestHeader() { Version = BitConverter.ToInt32(buff, offset), Intention = (RequestIntention)buff[offset + sizeof(int)] };
         }
 
-        public static RequestHeader FromStream<T>(T stream) where T : Stream
-        {
-            var buff = new byte[ByteLength];
-            if (stream.Read(buff, 0, ByteLength) <= 0) throw new Exception();
-
-            return FromBytes(buff, 0);
-        }
-        public static async Task<RequestHeader> FromStreamAsync<T>(T stream) where T : Stream
-        {
-            var buff = new byte[ByteLength];
-            if (await stream.ReadAsync(buff, 0, ByteLength) <= 0) throw new Exception();
-
-            return FromBytes(buff, 0);
-        }
-
         public static RequestHeader FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buff = new byte[ByteLength];
-            if (connection.Read(buff, 0, ByteLength) <= 0) throw new Exception();
+
+            connection.ReadAll(buff, 0, ByteLength);
 
             return FromBytes(buff, 0);
         }
         public static async Task<RequestHeader> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buff = new byte[ByteLength];
-            if (await connection.ReadAsync(buff, 0, ByteLength) <=0) throw new Exception();
+            await connection.ReadAllAsync(buff, 0, ByteLength);
 
             return FromBytes(buff, 0);
         }        
@@ -80,6 +66,8 @@ namespace QChat.Common
         Messaging,
         Registration,
         Disconecting,
-        Rooming,        
+        Rooming,  
+        HistorySynchronization,
+        ConnectionCheck
     }
 }

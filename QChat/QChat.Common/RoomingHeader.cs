@@ -13,6 +13,12 @@ namespace QChat.Common
 
         public static readonly int ByteLength = sizeof(RoomingIntention);  
 
+
+        public RoomingHeader(RoomingIntention intention)
+        {
+            Intention = intention;
+        }
+
         public byte[] AsBytes()
         {
             var bytes = new byte[ByteLength];
@@ -33,23 +39,25 @@ namespace QChat.Common
         public static RoomingHeader FromConnection<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            if (connection.Read(bytes, 0, ByteLength) <= 0) throw new Exception();
+            connection.ReadAll(bytes, 0, ByteLength);
             return FromBytes(bytes, 0);
         }
         public static async Task<RoomingHeader> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            if (await connection.ReadAsync(bytes, 0, ByteLength) <= 0) throw new Exception();
+            await connection.ReadAllAsync(bytes, 0, ByteLength);
             return FromBytes(bytes, 0);
         }
     }
 
-    public enum RoomingIntention
+    public enum RoomingIntention : byte
     {
         Create = 0,
         Join,
         Connect,
+        Disconnect,
         Remove,
-        Invitation
+        Invitation,
+        Synchronization
     }
 }

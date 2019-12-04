@@ -20,14 +20,15 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"INSERT INTO Groups(Id, Name) VALUES ({name.GetHashCode()},'{name}')", _connection))
+                using (var command = new NpgsqlCommand($"INSERT INTO Groups(Name) VALUES ('{name}') RETURNING id", _connection))
                 {
-                    await command.ExecuteNonQueryAsync();
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        return reader.GetInt32(0);
+                    }
                 }
-
-                return name.GetHashCode();
             }
-            catch
+            catch (Exception e)
             {
 
             }
@@ -38,14 +39,15 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"INSERT INTO Groups(Name) VALUES ('{name}')", _connection))
+                using (var command = new NpgsqlCommand($"INSERT INTO groups(Name) VALUES ('{name}') RETURNING id", _connection))
                 {
-                    command.ExecuteNonQuery();
+                    using (var reader = command.ExecuteReader())
+                    {
+                        return reader.GetInt32(0);
+                    }
                 }
-
-                return name.GetHashCode();
             }
-            catch
+            catch(Exception e)
             {
 
             }
@@ -104,7 +106,7 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"SELECT Name FROM Groups WHERE Id ='{id}'", _connection))
+                using (var command = new NpgsqlCommand($"SELECT Name FROM Groups WHERE Id ={id}", _connection))
                 {
                     using (var reader = await command.ExecuteReaderAsync())
                     {
@@ -125,7 +127,7 @@ namespace QChat.Server.DataManagment
         {
             try
             {
-                using (var command = new NpgsqlCommand($"SELECT Name FROM Groups WHERE Id ='{id}'", _connection))
+                using (var command = new NpgsqlCommand($"SELECT Name FROM Groups WHERE Id ={id}", _connection))
                 {
                     using (var reader = command.ExecuteReader())
                     {

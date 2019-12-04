@@ -13,7 +13,7 @@ namespace QChat.Server
         {
             var server = new Server();
             server.Initialize(IPAddress.Parse("127.0.0.1"), 47000);
-            server.Start();
+            server.Start().Wait();
         }
     }
 }

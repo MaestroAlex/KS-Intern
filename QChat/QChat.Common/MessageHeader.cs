@@ -33,14 +33,14 @@ namespace QChat.Common
         public static MessageHeader FromConnection<C>(C connection) where C : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            if (connection.Read(buffer, 0, ByteLength) <= 0) throw new Exception();
+            connection.ReadAll(buffer, 0, ByteLength);
 
             return FromBytes(buffer, 0);
         }
         public static async Task<MessageHeader> FromConnectionAsync<C>(C connection) where C : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            if (await connection.ReadAsync(buffer, 0, ByteLength) <= 0) throw new Exception();
+            await connection.ReadAllAsync(buffer, 0, ByteLength);
 
             return FromBytes(buffer, 0);
         }

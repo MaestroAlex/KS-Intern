@@ -51,12 +51,12 @@ namespace QChat.Common
         {
             var buffer = new byte[sizeof(int)];
 
-            if (connection.Read(buffer, 0, sizeof(int)) <= 0) throw new Exception();
+            connection.ReadAll(buffer, 0, sizeof(int));
 
             var loginLength = BitConverter.ToInt32(buffer, 0);
             var loginBuffer = new byte[loginLength + sizeof(int)];
 
-            if (connection.Read(loginBuffer, 0, loginLength + sizeof(int)) <= 0) throw new Exception();
+            connection.ReadAll(loginBuffer, 0, loginLength + sizeof(int));
             var login = Encoding.Unicode.GetString(loginBuffer, 0, loginLength);
             var passwordHash = BitConverter.ToInt32(loginBuffer, loginLength);
 
@@ -70,12 +70,12 @@ namespace QChat.Common
         {
             var buffer = new byte[sizeof(int)];
 
-            if (await connection.ReadAsync(buffer, 0, sizeof(int)) <= 0) throw new Exception();
+            await connection.ReadAllAsync(buffer, 0, sizeof(int));
 
             var loginLength = BitConverter.ToInt32(buffer, 0);
             var loginBuffer = new byte[loginLength + sizeof(int)];
 
-            if (await connection.ReadAsync(loginBuffer, 0, loginLength + sizeof(int)) <= 0) throw new Exception();
+            await connection.ReadAllAsync(loginBuffer, 0, loginLength + sizeof(int));
             var login = Encoding.Unicode.GetString(loginBuffer, 0, loginLength);
             var passwordHash = BitConverter.ToInt32(loginBuffer, loginLength);
 

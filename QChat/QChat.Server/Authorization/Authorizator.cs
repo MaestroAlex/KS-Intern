@@ -26,16 +26,20 @@ namespace QChat.Server.Authorization
 
                 var verificationInfo = _userDataManager.GetAuthorizationInfo(info.UserInfo.Id);
 
-                if (info.Equals(verificationInfo))
+                if (info.UserInfo.Id != verificationInfo.UserInfo.Id)
                 {
-                    SendAuthorizationResponce(connection, new AuthorizationResponceInfo { Success = true });
-                    return AuthorizationResultInfo.GetSuccessfullResult(ref info.UserInfo);
-                }
-                else
-                {
-                    SendAuthorizationResponce(connection, new AuthorizationResponceInfo { Success = false });
+                    SendAuthorizationResponce(connection, new AuthorizationResponce { Result = Common.AuthorizationResult.UserNotFound });
                     return AuthorizationResultInfo.GetFailedResult(null);
                 }
+                
+                if(info.PasswordHash != verificationInfo.PasswordHash)
+                {
+                    SendAuthorizationResponce(connection, new AuthorizationResponce { Result = Common.AuthorizationResult.IncorrectPassword });
+                    return AuthorizationResultInfo.GetFailedResult(null);
+                }
+
+                SendAuthorizationResponce(connection, new AuthorizationResponce { Result = Common.AuthorizationResult.Success });
+                return AuthorizationResultInfo.GetSuccessfullResult(ref info.UserInfo);
             }
             catch
             {
@@ -50,16 +54,21 @@ namespace QChat.Server.Authorization
 
                 var verificationInfo = await _userDataManager.GetAuthorizationInfoAsync(info.UserInfo.Id);
 
-                if (info.Equals(verificationInfo))
+                if (info.UserInfo.Id != verificationInfo.UserInfo.Id)
                 {
-                    await SendAuthorizationResponceAsync(connection, new AuthorizationResponceInfo { Success = true });
-                    return AuthorizationResultInfo.GetSuccessfullResult(ref info.UserInfo);
-                }
-                else
-                {
-                    await SendAuthorizationResponceAsync(connection, new AuthorizationResponceInfo { Success = false });
+                    await SendAuthorizationResponceAsync(connection, new AuthorizationResponce { Result = Common.AuthorizationResult.UserNotFound });
                     return AuthorizationResultInfo.GetFailedResult(null);
                 }
+
+                if (info.PasswordHash != verificationInfo.PasswordHash)
+                {
+                    await SendAuthorizationResponceAsync(connection, new AuthorizationResponce { Result = Common.AuthorizationResult.IncorrectPassword });
+                    return AuthorizationResultInfo.GetFailedResult(null);
+                }
+
+                await SendAuthorizationResponceAsync(connection, new AuthorizationResponce { Result = Common.AuthorizationResult.Success });
+
+                return AuthorizationResultInfo.GetSuccessfullResult(ref info.UserInfo);
             }
             catch
             {
@@ -67,15 +76,15 @@ namespace QChat.Server.Authorization
             }
         }
 
-        private void SendAuthorizationResponce(IConnection connection, AuthorizationResponceInfo responceInfo)
+        private void SendAuthorizationResponce(IConnection connection, AuthorizationResponce responceInfo)
         {
             var responceInfoBytes = responceInfo.AsBytes();
-            connection.Write(responceInfoBytes, 0, AuthorizationResponceInfo.ByteLength);
+            connection.Write(responceInfoBytes, 0, AuthorizationResponce.ByteLength);
         }
-        private async Task SendAuthorizationResponceAsync(IConnection connection, AuthorizationResponceInfo responceInfo)
+        private async Task SendAuthorizationResponceAsync(IConnection connection, AuthorizationResponce responceInfo)
         {
             var responceInfoBytes = responceInfo.AsBytes();
-            await connection.WriteAsync(responceInfoBytes, 0, AuthorizationResponceInfo.ByteLength);
+            await connection.WriteAsync(responceInfoBytes, 0, AuthorizationResponce.ByteLength);
         }
     }
 }

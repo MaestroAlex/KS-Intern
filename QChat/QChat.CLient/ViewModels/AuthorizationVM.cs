@@ -7,13 +7,14 @@ using System.Windows;
 using System.Windows.Controls;
 using QChat.CLient.Services;
 using QChat.CLient.Views;
+using QChat.Common;
+using System.Threading;
 
 namespace QChat.CLient.ViewModels
 {
     class AuthorizationVM : DependencyObject
     {
         private AuthorizationService _authorizationService;
-
 
         public string Login
         {
@@ -38,17 +39,28 @@ namespace QChat.CLient.ViewModels
                 );
         }
 
-        public async Task Authorize(int password)
+        public async Task<AuthorizationResult> Authorize(int password)
         {
             if (_authorizationService == null) _authorizationService = StaticProvider.GetInstanceOf<AuthorizationService>();
 
             _authorizationService.UpdateAuthorizationInfo(new Common.UserInfo { Id = Login.GetHashCode() }, password);
 
             var connection = StaticProvider.GetInstanceOf<NetworkingService>().Connect();
-            var authorizationSuccess = await _authorizationService.AuthorizeAsync(connection);
-            if (authorizationSuccess)
+
+            try
             {
-                StaticProvider.GetInstanceOf<NavigationService>().NavigateTo<MainView>();
+                var authorizationResult = await _authorizationService.AuthorizeAsync(connection);
+
+                if (authorizationResult == AuthorizationResult.Success)
+                {
+                    StaticProvider.GetInstanceOf<NavigationService>().NavigateTo<MainView>();
+                }                
+
+                return authorizationResult;
+            }
+            catch
+            {
+                return AuthorizationResult.Fail;
             }
         }
 

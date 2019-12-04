@@ -12,7 +12,8 @@ namespace QChat.CLient.Services
 {
     class AuthorizationService
     {
-        private AuthorizationInfo _authorizationInfo;
+        public AuthorizationInfo AuthorizationInfo { get; set; }
+        public bool Authorized { get; private set; }
 
         private AuthorizationVM _authorizationVM;
 
@@ -26,29 +27,28 @@ namespace QChat.CLient.Services
         }
 
 
-        public bool Authorize(IConnection connection)
+        public AuthorizationResult Authorize(IConnection connection)
         {
-            if (connection == null) return false;
+            if (connection == null) return AuthorizationResult.Fail;
 
             var requestHeader = new RequestHeader(RequestIntention.Authorization);
 
+            Task.WaitAll(
+                connection.LockReadAsync(),
+                connection.LockWriteAsync()
+                );
+
             try
             {
-                connection.LockWrite();
-                connection.LockRead();
+                connection.Write(requestHeader.AsBytes(), 0, RequestHeader.ByteLength);
+                connection.Write(AuthorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength);
 
-                if (!connection.Write(requestHeader.AsBytes(), 0, RequestHeader.ByteLength)) return false;
-                if (!connection.Write(_authorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength)) return false;
+                
+                var authorizationResponceInfo = AuthorizationResponce.FromConnection(connection);
 
-                try
-                {
-                    var authorizationResponceInfo = AuthorizationResponceInfo.FromConnection(connection);
-                    return authorizationResponceInfo.Success;
-                }
-                catch
-                {
-                    return false;
-                }
+                Authorized = authorizationResponceInfo.Result == AuthorizationResult.Success;
+
+                return authorizationResponceInfo.Result;
             }
             finally
             {
@@ -56,32 +56,27 @@ namespace QChat.CLient.Services
                 connection.ReleaseWrite();
             }
         }
-        public async Task<bool> AuthorizeAsync(IConnection connection)
+        public async Task<AuthorizationResult> AuthorizeAsync(IConnection connection)
         {
-            if (connection == null) return false;
+            if (connection == null) return AuthorizationResult.Fail;
 
             var requestHeader = new RequestHeader(RequestIntention.Authorization);
 
+            Task.WaitAll(
+                connection.LockReadAsync(),
+                connection.LockWriteAsync()
+                );
+
             try
             {
-                var writeLock = connection.LockWriteAsync();
-                var readLock = connection.LockReadAsync();
+                await connection.WriteAsync(requestHeader.AsBytes(), 0, RequestHeader.ByteLength);
+                await connection.WriteAsync(AuthorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength);               
 
-                await writeLock;
-                await readLock;
+                var authorizationResponceInfo = await AuthorizationResponce.FromConnectionAsync(connection);
 
-                if (!await connection.WriteAsync(requestHeader.AsBytes(), 0, RequestHeader.ByteLength)) return false;
-                if (!await connection.WriteAsync(_authorizationInfo.AsBytes(), 0, AuthorizationInfo.ByteLength)) return false;
+                Authorized = authorizationResponceInfo.Result == AuthorizationResult.Success;
 
-                try
-                {
-                    var authorizationResponceInfo = await AuthorizationResponceInfo.FromConnectionAsync(connection);
-                    return authorizationResponceInfo.Success;
-                }
-                catch
-                {
-                    return false;
-                }
+                return authorizationResponceInfo.Result;
             }
             finally
             {
@@ -92,8 +87,11 @@ namespace QChat.CLient.Services
 
         public void UpdateAuthorizationInfo(UserInfo userInfo, int passwordHash)
         {
-            _authorizationInfo.UserInfo = userInfo;
-            _authorizationInfo.PasswordHash = passwordHash;
+            AuthorizationInfo = new AuthorizationInfo
+            {
+                UserInfo = userInfo,
+                PasswordHash = passwordHash,
+            };
         }
     }
 }

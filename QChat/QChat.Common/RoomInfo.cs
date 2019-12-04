@@ -10,34 +10,45 @@ namespace QChat.Common
     public struct RoomInfo
     {
         public int Id;
+        public bool IsPublic;
 
-        public static readonly int ByteLength = sizeof(ulong);
+        public static readonly int ByteLength = sizeof(ulong) + sizeof(bool);
 
 
         public byte[] AsBytes()
         {
-            return BitConverter.GetBytes(Id);
+            var bytes = new byte[ByteLength];
+            AsBytes(bytes, 0);
+            return bytes;
         }
         public void AsBytes(byte[] buffer, int offset)
         {
             Array.Copy(BitConverter.GetBytes(Id), 0, buffer, offset, sizeof(int));
+            offset += sizeof(int);
+            Array.Copy(BitConverter.GetBytes(IsPublic), 0, buffer, offset, sizeof(bool));
         }
 
         public static RoomInfo FromBytes(byte[] buffer, int offset)
         {
-            return new RoomInfo { Id = BitConverter.ToInt32(buffer, offset) };
+            var result = new RoomInfo();
+
+            result.Id = BitConverter.ToInt32(buffer, offset);
+            offset += sizeof(int);
+            result.IsPublic = BitConverter.ToBoolean(buffer, offset);
+
+            return result;
         }
         
         public static RoomInfo FromConnection<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            if (connection.Read(buffer, 0, ByteLength) <= 0) throw new Exception();
+            connection.ReadAll(buffer, 0, ByteLength);
             return FromBytes(buffer, 0);
         }
         public static async Task<RoomInfo> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var buffer = new byte[ByteLength];
-            if (await connection.ReadAsync(buffer, 0, ByteLength) <= 0) throw new Exception();
+            await connection.ReadAllAsync(buffer, 0, ByteLength);
             return FromBytes(buffer, 0);
         }        
     }

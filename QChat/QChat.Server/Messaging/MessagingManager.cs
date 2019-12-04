@@ -18,41 +18,26 @@ namespace QChat.Server.Messaging
 
         public MessagingManager(IManagerProvider managerProvider, ContentRecieverTable recievers, ContentSenderTable senders)
         {
-            
+            _roomMessenger = new RoomMessenger(managerProvider, new ContentSenderTable(), new ContentRecieverTable());
 
-            
+            //TODO: Other chat messengers
         }
 
         public MessagingResult HandleMessage(Session session)
         {
             MessageHeader header;
-            var connection = session.Connection;
+            var connection = session.Connection;                
+                
+            header = MessageHeader.FromConnection(connection);
 
-            connection.LockRead();
-
-            try
+            switch (header.RecieverInfo.Type)
             {
-                try
-                {
-                    header = MessageHeader.FromConnection(connection);
-                }
-                catch
-                {
-                    return new MessagingResult { Success = false };
-                }
-
-                switch (header.RecieverInfo.Type)
-                {
-                    case RecieverType.Room:
-                        return _roomMessenger.Handle(connection, header);
-                    default:
-                        throw new NotImplementedException();
-                }
+                case RecieverType.Room:
+                    return _roomMessenger.Handle(connection, header);
+                default:
+                    return new MessagingResult();
             }
-            finally
-            {
-                connection.ReleaseRead();
-            }
+                
         }
         public async Task<MessagingResult> HandleMessageAsync(Session session)
         {

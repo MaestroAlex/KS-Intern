@@ -9,7 +9,7 @@ namespace QChat.Common
         Audio   = 0x2,
         Video   = 0x3,
         Image   = 0x4,
-        Png     = 0x5,
+        Gif     = 0x5,
         File    = 0x6,
     } 
 }

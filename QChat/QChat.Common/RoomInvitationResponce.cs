@@ -1,0 +1,60 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using QChat.Common.Net;
+
+namespace QChat.Common
+{
+    public struct RoomInvitationResponce
+    {
+        public RoomInvitationResult Result;
+
+        public static readonly int ByteLength = sizeof(RoomInvitationResult);
+        
+
+        public RoomInvitationResponce(RoomInvitationResult result)
+        {
+            Result = result;
+        }
+
+
+        public void AsBytes(byte[] buff,int offset)
+        {
+            buff[offset] = (byte)Result;
+        }
+        public byte[] AsBytes() => new byte[]
+        {
+            (byte)Result
+        };
+
+        public static RoomInvitationResponce FromBytes(byte[] bytes, int offset) => new RoomInvitationResponce
+        {
+            Result = (RoomInvitationResult)bytes[offset]
+        };
+
+        public static RoomInvitationResponce FromConnection<T>(T connection) where T : IConnection
+        {
+            var bytes = new byte[ByteLength];
+            connection.ReadAll(bytes, 0, ByteLength);
+            return FromBytes(bytes, 0);
+        }
+        public static async Task<RoomInvitationResponce> FromConnectionAsync<T>(T connection) where T : IConnection
+        {
+            var bytes = new byte[ByteLength];
+            await connection.ReadAllAsync(bytes, 0, ByteLength);
+            return FromBytes(bytes, 0);
+        }
+    }
+
+    public enum RoomInvitationResult : byte
+    {
+        Success,
+        RoomNotFound,
+        UserNotFound,
+        NoPermission,
+        InnerError,
+        Fail
+    }
+}

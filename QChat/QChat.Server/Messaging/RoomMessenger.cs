@@ -22,10 +22,13 @@ namespace QChat.Server.Messaging
         public override MessagingResult Handle(IConnection connection, MessageHeader header)
         {
             var message = RecieveMessage(connection, header);
-            if (message == null) return new MessagingResult { Success = false };
+            if (message == null) return new MessagingResult { Success = false };            
 
             var room = _roomManager.GetRoom(header.RecieverInfo.Id);
-            SendMessage(room, message);
+            if (!room.MemberConnected(header.SenderInfo.UserInfo.Id, connection.Id)) return new MessagingResult { Success = false };
+
+            Console.WriteLine($"message recieved from {message.Header.SenderInfo.UserInfo.Id}");
+            Task.Run(() => SendMessage(room, message));
 
             return new MessagingResult { Success = true };
         }
@@ -50,13 +53,20 @@ namespace QChat.Server.Messaging
                 {
                     var connection = session.Connection;
 
-                    connection.LockWrite();
+                    connection.LockWriteAsync().Wait();
 
-                    SendMessageResponce(connection);
-                    SendMessageHeader(message.Header, connection);
-                    sender.SendContent(connection, message.Content);
+                    try
+                    {
+                        SendMessageResponce(connection);
+                        SendMessageHeader(message.Header, connection);
+                        sender.SendContent(connection, message.Content);
 
-                    connection.ReleaseWrite();
+                        Console.WriteLine($"Message sent to {session.UserId}");
+                    }
+                    finally
+                    {
+                        connection.ReleaseWrite();
+                    }
                 }
             }
         }

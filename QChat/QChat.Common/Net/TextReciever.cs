@@ -13,7 +13,7 @@ namespace QChat.Common.Net
         {
             var buffer = new byte[header.Length];
 
-            connection.Read(buffer, 0, header.Length);
+            connection.ReadAll(buffer, 0, header.Length);
 
             return Content.Wrap(buffer);
         }
@@ -22,7 +22,7 @@ namespace QChat.Common.Net
         {
             var buffer = new byte[header.Length];
 
-            await connection.ReadAsync(buffer, 0, header.Length);
+            await connection.ReadAllAsync(buffer, 0, header.Length);
 
             return Content.Wrap(buffer);
         }

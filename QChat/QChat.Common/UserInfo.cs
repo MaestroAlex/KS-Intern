@@ -31,7 +31,8 @@ namespace QChat.Common
         public static UserInfo FromConnection<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            if (connection.Read(bytes, 0, ByteLength) <= 0) throw new Exception();
+            connection.ReadAll(bytes, 0, ByteLength);
+
             return new UserInfo
             {
                 Id = BitConverter.ToInt32(bytes, 0)
@@ -40,7 +41,8 @@ namespace QChat.Common
         public static async Task<UserInfo> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            if (await connection.ReadAsync(bytes, 0, ByteLength) <= 0) throw new Exception();
+            await connection.ReadAsync(bytes, 0, ByteLength);
+
             return new UserInfo
             {
                 Id = BitConverter.ToInt32(bytes, 0)

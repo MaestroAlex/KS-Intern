@@ -20,5 +20,28 @@ namespace QChat.Common.Net
         {
             return (T)_textReciever;
         }        
+
+        public IContentReciever DefineReciever(MessageHeader header) => DefineReciever(header.ContentType);
+        public IContentReciever DefineReciever(ContentType type)
+        {
+            switch (type)
+            {
+                case ContentType.Text:
+                    return _textReciever;
+                default:
+                    return null;
+            }
+        }
+
+        public object ToObject(ContentType type, Content content)
+        {
+            switch (type)
+            {
+                case ContentType.Text:
+                    return Encoding.Unicode.GetString(content.AsBytes());
+                default:
+                    return null;
+            }
+        }
     }
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using QChat.CLient.Services;
 using QChat.CLient.Views;
+using QChat.Common;
 
 namespace QChat.CLient.ViewModels
 {
@@ -29,13 +30,17 @@ namespace QChat.CLient.ViewModels
 
         public async Task Register(string login, int passwordHash)
         {
-            if (await StaticProvider.GetInstanceOf<RegistrationService>().Register(login, passwordHash))
+            switch (await StaticProvider.GetInstanceOf<RegistrationService>().Register(login, passwordHash))
             {
-                StaticProvider.GetInstanceOf<NavigationService>().NavigateTo<AuthorizationView>();
-            }
-            else
-            {
-                MessageBox.Show("RegistrationFailed");
+                case RegistrationResult.Success:
+                    StaticProvider.GetInstanceOf<NavigationService>().NavigateTo<AuthorizationView>();
+                    break;
+                case RegistrationResult.NicknameAlreadyRegistered:
+                    MessageBox.Show("Nickname already registered.");
+                    break;
+                case RegistrationResult.Fail:
+                    MessageBox.Show("Registration failed");
+                    break;
             }
         }
     }

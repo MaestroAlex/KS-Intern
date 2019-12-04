@@ -46,13 +46,13 @@ namespace QChat.Common
         public static ResponceHeader FromConnection<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            if (connection.Read(bytes, 0, ByteLength) <= 0) throw new Exception();
+            connection.ReadAll(bytes, 0, ByteLength);
             return FromBytes(bytes);
         }
         public static async Task<ResponceHeader> FromConnectionAsync<T>(T connection) where T : IConnectionStream
         {
             var bytes = new byte[ByteLength];
-            if (await connection.ReadAsync(bytes, 0, ByteLength) <= 0) throw new Exception();
+            await connection.ReadAllAsync(bytes, 0, ByteLength);
             return FromBytes(bytes);
         }
     }
@@ -64,5 +64,6 @@ namespace QChat.Common
         Registration,
         Disconecting,
         Rooming,
+        ConnectionCheck
     }
 }

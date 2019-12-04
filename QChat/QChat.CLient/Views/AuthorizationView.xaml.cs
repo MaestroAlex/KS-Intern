@@ -38,5 +38,10 @@ namespace QChat.CLient.Views
         {
             _authorizationVM.GoToRegistration();
         }
+
+        private void CommandBinding_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+
+        }
     }
 }

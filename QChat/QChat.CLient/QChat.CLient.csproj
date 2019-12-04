@@ -55,14 +55,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Messaging\Chat.cs" />
-    <Compile Include="Messaging\ChatSelectionItem.cs" />
-    <Compile Include="Messaging\ClientMessage.cs" />
+    <Compile Include="Converters\BoolToChatListItemBackground.cs" />
+    <Compile Include="Grouping\Group.cs" />
     <Compile Include="Navigation\NavigationFailedException.cs" />
-    <Compile Include="Services\ChattingService.cs" />
+    <Compile Include="Rooming\RoomInvitationRecievedEvent.cs" />
+    <Compile Include="Services\GroupingService.cs" />
+    <Compile Include="Services\IHandler.cs" />
+    <Compile Include="Services\MessageHistoryService.cs" />
     <Compile Include="Services\NavigationService.cs" />
     <Compile Include="Services\RegistrationService.cs" />
-    <Compile Include="Services\SessioningService.cs" />
+    <Compile Include="Services\ServerListnerService.cs" />
+    <Compile Include="Services\SocialService.cs" />
     <Compile Include="StaticProvider.cs" />
     <Compile Include="ViewModels\AuthorizationVM.cs" />
     <Compile Include="Messaging\MessagingEventHandlers.cs" />
@@ -72,14 +75,32 @@
     <Compile Include="Services\MessagingService.cs" />
     <Compile Include="Services\NetworkingService.cs" />
     <Compile Include="Services\RoomingService.cs" />
+    <Compile Include="ViewModels\ChatListItemVM.cs" />
     <Compile Include="ViewModels\ChatVM.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
+    <Compile Include="ViewModels\MessageVM.cs" />
     <Compile Include="ViewModels\RegistrationVM.cs" />
+    <Compile Include="ViewModels\RoomCreationVM.cs" />
+    <Compile Include="ViewModels\RoomJoiningVM.cs" />
+    <Compile Include="ViewModels\RoomDialogVM.cs" />
+    <Compile Include="Views\JoinRoomView.xaml.cs">
+      <DependentUpon>JoinRoomView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\RegistrationView.xaml.cs">
       <DependentUpon>RegistrationView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\RoomCreationView.xaml.cs">
+      <DependentUpon>RoomCreationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\RoomDialogWindow.xaml.cs">
+      <DependentUpon>RoomDialogWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\ViewLocator.cs" />
     <Page Include="Views\AuthorizationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\JoinRoomView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -108,6 +129,14 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\RegistrationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\RoomCreationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\RoomDialogWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -24,3 +24,9 @@ D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\MainView.g.cs
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\MainView.baml
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RegistrationView.g.cs
 D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RegistrationView.baml
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RoomCreationView.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RoomCreationView.baml
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\JoinRoomView.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RoomDialogWindow.g.cs
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\JoinRoomView.baml
+D:\Gram\Dev\KS-Intern\QChat\QChat.CLient\obj\Debug\Views\RoomDialogWindow.baml

@@ -11,7 +11,7 @@ namespace QChat.Common
     {
         public bool IsPublic;
         public string Name;
-        public int NameLength { get => Name.Length; }
+        public int NameLength { get => Encoding.Unicode.GetByteCount(Name); }
 
         public void AsBytes(byte[] buffer, int offset)
         {
@@ -51,13 +51,14 @@ namespace QChat.Common
         {
             var buffer = new byte[sizeof(bool) + sizeof(int)];
 
-            if (connection.Read(buffer, 0, sizeof(bool) + sizeof(int)) <= 0) throw new Exception();
+            connection.ReadAll(buffer, 0, sizeof(bool) + sizeof(int));
+
             var isPublic = BitConverter.ToBoolean(buffer, 0);
             var nameLength = BitConverter.ToInt32(buffer, sizeof(bool));
 
             Array.Resize(ref buffer, nameLength);
 
-            if (connection.Read(buffer, 0, nameLength) <= 0) throw new Exception();
+            connection.ReadAll(buffer, 0, nameLength);
             var name = Encoding.Unicode.GetString(buffer);
 
             return new RoomCreationInfo
@@ -70,14 +71,14 @@ namespace QChat.Common
         {
             var buffer = new byte[sizeof(bool) + sizeof(int)];
 
-            if (await connection.ReadAsync(buffer, 0, sizeof(bool) + sizeof(int)) <= 0) throw new Exception();
+            await connection.ReadAllAsync(buffer, 0, sizeof(bool) + sizeof(int));
 
             var isPublic = BitConverter.ToBoolean(buffer, 0);
             var nameLength = BitConverter.ToInt32(buffer, sizeof(bool));
 
             Array.Resize(ref buffer, nameLength);
 
-            if (await connection.ReadAsync(buffer, 0, nameLength) <= 0) throw new Exception();
+            await connection.ReadAllAsync(buffer, 0, nameLength);
             var name = Encoding.Unicode.GetString(buffer);
 
             return new RoomCreationInfo

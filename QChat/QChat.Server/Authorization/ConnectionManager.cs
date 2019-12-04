@@ -49,7 +49,7 @@ namespace QChat.Server.Authorization
             return connection;
         }
 
-        private void HandleClosedConnection(Connection connection, EventArgs eventArgs)
+        private void HandleClosedConnection(IConnection connection, EventArgs eventArgs)
         {
             lock (_connections)
             {

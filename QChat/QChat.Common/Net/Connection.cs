@@ -22,7 +22,8 @@ namespace QChat.Common.Net
         private bool _disposed = false;
 
         public int Id { get; private set; }
-        public bool Connected { get; private set; }
+        public bool Connected => _tcpClient.Connected;
+        public int DataAvailable => _tcpClient.Available;
 
         public event ConnectionClosedEventHandler ConnectionClosed;
 
@@ -30,6 +31,8 @@ namespace QChat.Common.Net
         {
             _tcpClient = tcpClient;
             Id = id;
+            _tcpClient.ReceiveTimeout = 20000;
+            _tcpClient.SendTimeout = 20000;
 
             _readLock = new SemaphoreSlim(1, 1);
             _writeLock = new SemaphoreSlim(1, 1);
@@ -43,54 +46,75 @@ namespace QChat.Common.Net
             {
                 return _stream.Read(buffer, offset, length);
             }
-            catch
+            catch(IOException e)
             {
-                _tcpClient.Close();
-                Dispose();
-                return -1;
+                Close();
+                throw e;
             }
         }
         public async Task<int> ReadAsync(byte[] buffer, int offset, int length)
         {
             try
             {
-                return await _stream.ReadAsync(buffer, offset, length);
+                //.NET 4.7.2 NetworkStream's implementation of ReadAsync is not overriden and base "Stream" implementation doesn't work properly,
+                //so transition from APM to TAP pattern is used
+                return await Task<int>.Factory.FromAsync(_stream.BeginRead,
+                    _stream.EndRead, buffer,
+                    offset, length, null);
             }
-            catch
+            catch (Exception e)
             {
-
-                _tcpClient.Close();
-                Dispose();
-                return -1;
+                if (e.InnerException is IOException)
+                {
+                    Close();
+                }
+                throw e.InnerException;
             }
         }
 
-        public bool Write(byte[] buffer, int offset, int length)
+        public void Write(byte[] buffer, int offset, int length)
         {
             try
             {
                 _stream.Write(buffer, offset, length);
-                return true;
             }
-            catch
+            catch (IOException e)
             {
-                _tcpClient.Close();
-                Dispose();
-                return false;
+                Close();
+                throw e;
             }
         }
-        public async Task<bool> WriteAsync(byte[] buffer, int offset, int length)
+        public async Task WriteAsync(byte[] buffer, int offset, int length)
         {
             try
             {
-                await _stream.WriteAsync(buffer, offset, length);
-                return true;
-            }
-            catch
+                await Task.Factory.FromAsync(_stream.BeginWrite,
+                    _stream.EndWrite, buffer, offset, length,
+                    null);
+            }             
+            catch (Exception e)
             {
-                _tcpClient.Close();
-                Dispose();
-                return false;
+                if (e.InnerException is IOException) Close();
+                throw e.InnerException;
+            }
+}
+
+        public void ReadAll(byte[] buffer, int offset, int length)
+        {
+            while (length > 0)
+            {
+                var byteCount = Read(buffer, offset, length);
+                offset += byteCount;
+                length -= byteCount;
+            }            
+        }
+        public async Task ReadAllAsync(byte[] buffer, int offset, int length)
+        {
+            while (length > 0)
+            {
+                var byteCount = await ReadAsync(buffer, offset, length);
+                offset += byteCount;
+                length -= byteCount;
             }
         }
 
@@ -120,24 +144,45 @@ namespace QChat.Common.Net
             _writeLock.Release();
         }
 
+        public bool WaitForData(int miliseconds)
+        {
+            if (DataAvailable > 0) return true;
+
+            Thread.Sleep(miliseconds);
+
+            return DataAvailable > 0;
+        }
+
+        public void Close()
+        {
+            _tcpClient.Close();
+            Dispose(false);
+        }
+
         public void Dispose()
         {
+            Close();
+        }
+        
+        public void Dispose(bool disposing)
+        {
             if (_disposed) return;
-
-            Connected = false;
-
+            
             _tcpClient.Dispose();
-            _readLock.Dispose();
-            _writeLock.Dispose();
+            if (disposing)
+            {
+                _readLock.Dispose();
+                _writeLock.Dispose();
+            }
             ConnectionClosed?.Invoke(this, null);
             _disposed = true;
         }
 
         ~Connection()
         {
-            Dispose();
+            Dispose(true);
         }
     }
 
-    public delegate void ConnectionClosedEventHandler(Connection sender, EventArgs eventArgs);
+    public delegate void ConnectionClosedEventHandler(IConnection sender, EventArgs eventArgs);
 }
