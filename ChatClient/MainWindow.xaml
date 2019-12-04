@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient"
         mc:Ignorable="d"
-        Title="Fast Talker" Height="450" Width="800"
+        Title="TraShTalker" Height="450" Width="800"
         DataContext="{Binding ShellViewModel, Source={StaticResource Locator}}"
         Loaded="Window_Loaded">
     <Controls:MetroWindow.RightWindowCommands>

@@ -98,6 +98,7 @@ namespace ClientServerLib.ClientAndServer
                 TcpClient socket = client.Socket;
                 while (socket.Connected)
                 {
+
                     string message = await base.WaitMessage(socket);
                     HandleMessage(message, client);
                 }
@@ -107,11 +108,11 @@ namespace ClientServerLib.ClientAndServer
             {
                 try
                 {
-                    RemoveClientFromRooms(client);
                     onServerInform?.Invoke($"{client.UserLogin} отключается");
+                    RemoveClientFromRooms(client);
                     if (!string.IsNullOrEmpty(client.UserLogin))
                         NotifyAllClients($"{client.UserLogin} disconnects.");
-                    RemoveEmptyRooms();
+                    //RemoveEmptyRooms();
                 }
                 catch (Exception exx) { onServerInform?.Invoke(exx.Message); }
             }
@@ -128,12 +129,15 @@ namespace ClientServerLib.ClientAndServer
             }
         }
 
-        private void RemoveClientFromRooms(ClientObject client)
+        private async Task RemoveClientFromRooms(ClientObject client)
         {
-            //foreach (ChatRoom r in client.ClientsChatRooms)
-            for (int i= client.ClientsChatRooms.Count - 1; i>=0; i--)
+            //for (int i = client.ClientsChatRooms.Count - 1; i>=0; i--)
+            //{
+            //    client.ClientsChatRooms[i].RemoveClientFromRoom(client);
+            //}
+            foreach(ChatRoom r in rooms.Values)
             {
-                client.ClientsChatRooms[i].RemoveClientFromRoom(client);
+                r.RemoveClientFromRoom(client);
             }
         }
 

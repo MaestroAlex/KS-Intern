@@ -11,6 +11,27 @@ namespace ClientServerLib.Additional
 {
     internal class Crypto
     {
+        public static string GetSha256(string input)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(input);
+            SHA256Managed hashstring = new SHA256Managed();
+            byte[] hash = hashstring.ComputeHash(bytes);
+            string hashString = string.Empty;
+            foreach (byte x in hash)
+            {
+                hashString += String.Format("{0:x2}", x);
+            }
+            return hashString;
+        }
+
+        //private static readonly byte[] PrivateKey =
+        //{
+        //    0x11, 0xe1, 0xff, 0x3d, 0x91, 0x00, 0x11, 0x11,
+        //    0xe4, 0x9a, 0x11, 0xd3, 0xf1, 0x91, 0x44, 0x44,
+        //    0xa3, 0xa2, 0x88, 0x20, 0x13, 0x88, 0x14, 0xc1,
+        //    0x71, 0x2b, 0x11, 0x88, 0x88, 0xf5, 0xbb, 0x30
+        //};
+
         private static readonly byte[] PrivateKey =
         {
             0x00, 0x22, 0x11, 0x11, 0x26, 0x47, 0x23, 0xb3,
@@ -77,20 +98,6 @@ namespace ClientServerLib.Additional
             }
             return decrypted;
 
-        }
-
-
-        public static string GetSha256(string input)
-        {
-            byte[] bytes = Encoding.UTF8.GetBytes(input);
-            SHA256Managed hashstring = new SHA256Managed();
-            byte[] hash = hashstring.ComputeHash(bytes);
-            string hashString = string.Empty;
-            foreach (byte x in hash)
-            {
-                hashString += String.Format("{0:x2}", x);
-            }
-            return hashString;
         }
     }
 }

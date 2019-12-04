@@ -1,0 +1,132 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SettingsAP</name>
+    </assembly>
+    <members>
+        <member name="P:SettingsAP.Settings.CurrentFile">
+            <summary>
+            Имя текущего файла настроек.
+            </summary>
+        </member>
+        <member name="P:SettingsAP.Settings.SeparationSymbol">
+            <summary>
+            Получить или установить новый символ разделения ключа и его значения в файле (например, для разделителя ':', файл настроек должен иметь вид key:value).
+            </summary>
+        </member>
+        <member name="P:SettingsAP.Settings.ReadyToWork">
+            <summary>
+            Готовность к работе.
+            </summary>
+        </member>
+        <member name="P:SettingsAP.Settings.Info">
+            <summary>
+            Информация о библиотеке.
+            </summary>
+        </member>
+        <member name="P:SettingsAP.Settings.UseCryptography">
+            <summary>
+            Задает или возвращает, должен ли использоваться режим шифрования конечного файла настроек. 
+            Чтение незашифрованного файла с включенным режимом шифрования или наоборот, чтение зашифрованного файла с выключенным режимом шифрования, повлечет за собой неминуемое искажение данных.
+            Любое изменение зашифрованного файла вручную влечет за собой неминуемую ошибку в его расшифровке библиотекой.
+            </summary>
+        </member>
+        <member name="P:SettingsAP.Settings.CryptoKey">
+            <summary>
+            Задает или возвращает ключ шифрования. 
+            Ключ шифрования должен быть больше 0 (по умолчанию 84115).
+            </summary>
+        </member>
+        <member name="P:SettingsAP.Settings.EndOfLineType">
+            <summary>
+            Задает или возвращает тип завершения строк в файле настроек ("\n" для UNIX-подобных систем (LF) и "\r\n" для Windows (CR-LF)). 
+            </summary>
+        </member>
+        <member name="M:SettingsAP.Settings.#ctor">
+            <summary>
+            Инициализирует экземпляр класса.
+            По умолчанию задается файл настроек "settings.ini".
+            При отсутствии файла настроек, он будет создан.
+            Режим шифрования отключен.
+            </summary>
+        </member>
+        <member name="M:SettingsAP.Settings.#ctor(System.String)">
+            <summary>
+            Инициализирует экземпляр класса.
+            При отсутствии файла настроек, он будет создан.
+            Режим шифрования отключен.
+            </summary>
+            <param name="FileName">Имя файла настроек.</param>
+        </member>
+        <member name="M:SettingsAP.Settings.#ctor(System.String,System.Boolean)">
+            <summary>
+            Инициализирует экземпляр класса.
+            Режим шифрования отключен.
+            </summary>
+            <param name="FileName">Имя файла настроек.</param>
+            <param name="CreateIfNotExists">Указывает, нужно ли создать новый файл, если указанного файла не существует.</param>
+        </member>
+        <member name="M:SettingsAP.Settings.#ctor(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Инициализирует экземпляр класса.
+            </summary>
+            <param name="FileName">Имя файла настроек.</param>
+            <param name="CreateIfNotExists">Указывает, нужно ли создать новый файл, если указанного файла не существует.</param>
+            <param name="UseCryptography">Указывает, использовать ли режим шифрования.</param>
+        </member>
+        <member name="M:SettingsAP.Settings.#ctor(System.String,System.Boolean,System.Boolean,System.Int32)">
+            <summary>
+            Инициализирует экземпляр класса.
+            </summary>
+            <param name="FileName">Имя файла настроек.</param>
+            <param name="CreateIfNotExists">Указывает, нужно ли создать новый файл, если указанного файла не существует.</param>
+            <param name="UseCryptography">Указывает, использовать ли режим шифрования.</param>
+            <param name="CryptoKey">Указывает ключ шифрования.</param>
+        </member>
+        <member name="M:SettingsAP.Settings.Finalize">
+            <summary>
+            Деструктор по умолчанию.
+            </summary>
+        </member>
+        <member name="M:SettingsAP.Settings.SetDefaults(System.String)">
+            <summary>
+            Проверяет файл настроек на наличие всех необходимых ключей. При отсутствии настройки в файле, ей будет задано значение по умолчанию. Если настройка с таким ключом уже существует в файле, она не будет изменена.
+            </summary>
+            <param name="SettingsLines">Набор настроек вида ([ключ] [разделительный символ] [значение]) по умолчанию. Настройки разделяются между собой символом переноса строки.</param>
+        </member>
+        <member name="M:SettingsAP.Settings.SetDefaults(System.String[])">
+            <summary>
+            Проверяет файл настроек на наличие всех необходимых ключей. При отсутствии настройки в файле, ей будет задано значение по умолчанию. Если настройка с таким ключом уже существует в файле, она не будет изменена.
+            </summary>
+            <param name="SettingsLines">Набор настроек вида ([ключ] [разделительный символ] [значение]) по умолчанию. Каждый элемент массива хранит свою пару ключа и его значения.</param>
+        </member>
+        <member name="M:SettingsAP.Settings.GetValue(System.String)">
+            <summary>
+            Получить строковое значение настройки по ключу.
+            </summary>
+            <param name="Key">Строковое обозначение ключа.</param>
+            <returns>Возвращает строковое значение настройки.</returns>
+        </member>
+        <member name="M:SettingsAP.Settings.GetNumValue(System.String)">
+            <summary>
+            Получить целочисленное значение настройки по ключу.
+            </summary>
+            <param name="Key">Строковое обозначение ключа.</param>
+            <returns>Возвращает целочисленное значение настройки.</returns>
+        </member>
+        <member name="M:SettingsAP.Settings.SetValue(System.String,System.String)">
+            <summary>
+            Установить строковое значение настройки по ключу.
+            </summary>
+            <param name="Key">Строковое обозначение ключа.</param>
+            <param name="Value">Новое строковое значение настройки.</param>
+        </member>
+        <member name="M:SettingsAP.Settings.SetValue(System.String,System.Int32)">
+            <summary>
+            Установить целочисленное значение настройки по ключу.
+            </summary>
+            <param name="Key">Строковое обозначение ключа.</param>
+            <param name="Value">Новое целочисленное значение настройки.</param>
+        </member>
+    </members>
+</doc>

@@ -119,3 +119,6 @@ C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\MahA
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\MahApps.Metro.xml
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\Resources\Icons.baml
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\obj\Debug\Resources\IconsNonShared.baml
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\SettingsAP.dll
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\SettingsAP.pdb
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatClient\bin\Debug\SettingsAP.xml

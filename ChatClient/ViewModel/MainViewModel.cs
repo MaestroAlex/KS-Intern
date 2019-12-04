@@ -36,7 +36,7 @@ namespace ChatClient.ViewModel
 
         ~MainViewModel()
         {
-            Directory.Delete(ChatSyntax.ResourcesDir, true);
+            //Directory.Delete(ChatSyntax.ResourcesDir, true);
         }
 
         private void NewRoomCreated(string roomName)
@@ -75,7 +75,7 @@ namespace ChatClient.ViewModel
                 {
                     image = await GetImageFromMessage(message);
                 }
-                catch { image = null; }
+                catch(Exception ex) { image = null;  MessageBox.Show(ex.Message, "", MessageBoxButton.OK, MessageBoxImage.Error); }
                 MessagesInChats[roomName].Add(new MessageItem(userName, image));
             }
             else
@@ -86,17 +86,18 @@ namespace ChatClient.ViewModel
 
         private async Task<BitmapImage> GetImageFromMessage(string message)
         {
-            Directory.CreateDirectory(ChatSyntax.ResourcesDir);
+            //Directory.CreateDirectory(ChatSyntax.ResourcesDir);
             message = message.Substring(ChatSyntax.ImageDiv.Length);
             byte[] imageBytes = Convert.FromBase64String(message);
-            var time = DateTime.Now;
+            //var time = DateTime.Now;
             
-            string filePath = ChatSyntax.ResourcesDir + "\\file-" + time.ToString("hh_mm_ss_dd_MM_yyyy") + rnd.Next(100000) + ".bmp";
-            File.WriteAllBytes(filePath, imageBytes);
+            //string filePath = ChatSyntax.ResourcesDir + "\\file-" + time.ToString("hh_mm_ss_dd_MM_yyyy") + rnd.Next(100000) + ".bmp";
+            //File.WriteAllBytes(filePath, imageBytes);
 
             BitmapImage image = new BitmapImage();
             image.BeginInit();
-            image.UriSource = new Uri(filePath, UriKind.Relative);
+            //image.UriSource = new Uri(filePath, UriKind.Relative);
+            image.StreamSource = new MemoryStream(imageBytes);
             image.EndInit();
             image.Freeze();
             while (image.IsDownloading)

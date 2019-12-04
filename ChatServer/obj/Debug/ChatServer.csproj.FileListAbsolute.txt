@@ -62,3 +62,6 @@ C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatServer\obj\Debug\Chat
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatServer\obj\Debug\ChatServer.csproj.CopyComplete
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatServer\obj\Debug\ChatServer.exe
 C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatServer\obj\Debug\ChatServer.pdb
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatServer\bin\Debug\SettingsAP.dll
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatServer\bin\Debug\SettingsAP.pdb
+C:\Users\HobaY\source\repos\ClientServerChat\KS-Intern\ChatServer\bin\Debug\SettingsAP.xml

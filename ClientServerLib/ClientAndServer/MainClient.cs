@@ -8,6 +8,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Diagnostics;
 using ClientServerLib.Additional;
+using System.IO;
 
 namespace ClientServerLib.ClientAndServer
 {

@@ -31,8 +31,9 @@ namespace ClientServerLib.Common
         public static string CreateRoomCmd = "/room";
         #endregion
 
-        #region Директории
+        #region Директории и файлы
         public static string ResourcesDir = "ChatData";
+        public static string SettingsFile = "Settings.ini";
         #endregion
 
         public static string HelpString

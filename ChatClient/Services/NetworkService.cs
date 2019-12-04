@@ -7,6 +7,7 @@ using ClientServerLib.ClientAndServer;
 using ClientServerLib.Additional;
 using ClientServerLib.Common;
 using System.IO;
+using SettingsAP;
 
 namespace ChatClient.Services
 {
@@ -75,7 +76,10 @@ namespace ChatClient.Services
 
         private async Task StartWork()
         {
-            await client.ConnectToServer("127.0.0.1", 14778);
+            Settings st = new Settings(ChatSyntax.SettingsFile, true);
+            st.SetDefaults("ip:127.0.0.1\r\nport:15000");
+            
+            await client.ConnectToServer(st.GetValue("ip"), (ushort)st.GetNumValue("port"));
         }
 
         public void SignIn(string login, string password)
