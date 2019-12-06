@@ -1,0 +1,12 @@
+D:\Gram\Dev\KS-Intern\QChat\Testing\bin\Debug\Testing.exe.config
+D:\Gram\Dev\KS-Intern\QChat\Testing\bin\Debug\Testing.exe
+D:\Gram\Dev\KS-Intern\QChat\Testing\bin\Debug\Testing.pdb
+D:\Gram\Dev\KS-Intern\QChat\Testing\bin\Debug\QChat.Encryption.dll
+D:\Gram\Dev\KS-Intern\QChat\Testing\bin\Debug\QChat.Common.dll
+D:\Gram\Dev\KS-Intern\QChat\Testing\bin\Debug\QChat.Encryption.pdb
+D:\Gram\Dev\KS-Intern\QChat\Testing\bin\Debug\QChat.Common.pdb
+D:\Gram\Dev\KS-Intern\QChat\Testing\obj\Debug\Testing.csprojAssemblyReference.cache
+D:\Gram\Dev\KS-Intern\QChat\Testing\obj\Debug\Testing.csproj.CoreCompileInputs.cache
+D:\Gram\Dev\KS-Intern\QChat\Testing\obj\Debug\Testing.csproj.CopyComplete
+D:\Gram\Dev\KS-Intern\QChat\Testing\obj\Debug\Testing.exe
+D:\Gram\Dev\KS-Intern\QChat\Testing\obj\Debug\Testing.pdb

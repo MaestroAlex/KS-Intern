@@ -1,0 +1,9 @@
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\bin\Release\QChat.Encryption.dll
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\bin\Release\QChat.Encryption.pdb
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\bin\Release\QChat.Common.dll
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\bin\Release\QChat.Common.pdb
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\obj\Release\QChat.Encryption.csprojAssemblyReference.cache
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\obj\Release\QChat.Encryption.csproj.CoreCompileInputs.cache
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\obj\Release\QChat.Encryption.csproj.CopyComplete
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\obj\Release\QChat.Encryption.dll
+D:\Gram\Dev\KS-Intern\QChat\QChat.Encryption\obj\Release\QChat.Encryption.pdb

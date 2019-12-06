@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.Server", "QChat.Serve
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.CLient", "QChat.CLient\QChat.CLient.csproj", "{214E026B-0C6A-407A-AC87-20E88D040F20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QChat.Encryption", "QChat.Encryption\QChat.Encryption.csproj", "{E6800748-3A58-4569-B601-6952BA95BAE5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Testing", "Testing\Testing.csproj", "{C671454E-0C7B-49F3-B791-17356F47D900}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{214E026B-0C6A-407A-AC87-20E88D040F20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{214E026B-0C6A-407A-AC87-20E88D040F20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{214E026B-0C6A-407A-AC87-20E88D040F20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6800748-3A58-4569-B601-6952BA95BAE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6800748-3A58-4569-B601-6952BA95BAE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6800748-3A58-4569-B601-6952BA95BAE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6800748-3A58-4569-B601-6952BA95BAE5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C671454E-0C7B-49F3-B791-17356F47D900}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C671454E-0C7B-49F3-B791-17356F47D900}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C671454E-0C7B-49F3-B791-17356F47D900}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C671454E-0C7B-49F3-B791-17356F47D900}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

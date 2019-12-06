@@ -13,7 +13,7 @@ namespace QChat.Common.Net
 {
     public class Connection : IConnection
     {
-        private TcpClient _tcpClient;
+        private readonly TcpClient _tcpClient;
         private readonly NetworkStream _stream;
 
         private SemaphoreSlim _readLock;

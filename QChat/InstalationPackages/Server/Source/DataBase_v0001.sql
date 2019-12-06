@@ -59,6 +59,9 @@ group_id INTEGER REFERENCES groups(id),
 sender_id INTEGER REFERENCES users(id),
 content_id BIGINT REFERENCES contents(id)
 );
+
+
+INSERT IN rooms(id, name) VALUES(2, 'General');
  
 
 
