@@ -4,7 +4,7 @@ namespace ChatMVVM.ViewModels
 {
     public class ChatItemViewModel
     {
-        private static int chatCounter = 0;
+        private static int chatCounter = 1;
         private int _ID;
 
         public int ID => _ID;

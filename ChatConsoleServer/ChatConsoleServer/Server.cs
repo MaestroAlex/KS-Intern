@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ChatHandler;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -10,40 +11,68 @@ namespace ChatConsoleServer
 {
     class Server
     {
-        private int port;//904
-        private IPEndPoint ipPoint;//127.0.0.1
-        private Socket serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        private int _Port;//904
+        private IPEndPoint _IpPoint;//127.0.0.1
+        private TcpListener _ServerSocket;
         private List<HandleClient> _Clients = new List<HandleClient>();
-        
+        DBManager _DBManager = DBManager.GetInstance();
 
         public Server(string IP, int port)
         {
-            this.port = port;
-            ipPoint = new IPEndPoint(IPAddress.Parse(IP), port);
-            serverSocket.Bind(ipPoint);
+            this._Port = port;
+            _IpPoint = new IPEndPoint(IPAddress.Parse(IP), port);
+            _ServerSocket = new TcpListener(_IpPoint);
+            HandleClient.FillChatsAsync().Wait();
+
         }
 
-        public void StartServer()
+        public async Task StartServer()
         {
-            serverSocket.Listen(10);
+            _ServerSocket.Start();
 
-            Console.WriteLine($"Port : {port}");
-            Console.WriteLine($"IP address : {ipPoint.Address.ToString()}");
+            Console.WriteLine($"Port : {_Port}");
+            Console.WriteLine($"IP address : {_IpPoint.Address.ToString()}");
             Console.WriteLine("Chat Server Started ....");
 
+            await StartAcceptingUser();
+        }
+
+        private async Task StartAcceptingUser()
+        {
             while (true)
             {
-                var listener = serverSocket.Accept();
-                byte[] buffer = new byte[256];
-                string userName = null;
+                if (_ServerSocket.Pending())
+                {
+                    try
+                    {
+                        var listener = _ServerSocket.AcceptTcpClient();
 
-                listener.Receive(buffer);
+                        
+                        var clientStream = listener.GetStream();
 
-                userName = Encoding.Unicode.GetString(buffer);
-                userName = userName.Substring(0, userName.LastIndexOf("$"));
+                        var size = listener.ReceiveBufferSize;
+                        byte[] buffer = new byte[size];
+                        string data = null;
 
-                _Clients.Add(new HandleClient(listener, userName));
+                        clientStream.Read(buffer, 0, (int)size);
+                        data = Encoding.Unicode.GetString(buffer);
+                        data = data.Substring(0, data.LastIndexOf(MsgKeys.End));
+
+                        var parsedData = HandleClient.ParseLogin(data);
+                        var name = parsedData[1];
+                        var password = parsedData[2];
+                        var userAcceptLogin = await _DBManager.AcceptUserLogin(name, password);
+
+                        HandleClient client = new HandleClient(listener, name, password, !userAcceptLogin);
+
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                }
             }
+
         }
     }
 }

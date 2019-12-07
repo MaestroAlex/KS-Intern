@@ -2,7 +2,7 @@
 {
     class Chat
     {
-        static public int CurentChatID;
+        //static public int CurentChatID;
         private string _Name;
         private string _History = "";
         private int _ID;
@@ -27,10 +27,11 @@
         }
         public int ID => _ID;
 
-        public Chat(string chatName, int chatID)
+        public Chat(int chatID, string chatName, string chatHistory = "")
         {
-            _Name = chatName;
             _ID = chatID;
+            _Name = chatName;
+            _History = chatHistory;
         }
 
         

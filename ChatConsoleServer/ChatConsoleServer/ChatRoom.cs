@@ -11,79 +11,111 @@ namespace ChatConsoleServer
 {
     class ChatRoom
     {
-        private static int ChatCounter = 0;
-        private Dictionary<string, Socket> _ChatMembers = new Dictionary<string, Socket>();
-        private int _ID;
+        public static int ChatCounter = 1;
+        private Dictionary<string, TcpClient> _ChatMembers = new Dictionary<string, TcpClient>();
+        private int _ChatID;
+        private string _Name;
+        private string _ChatHistory = "";
+        public int ChatID => _ChatID;
+        public string Name => _Name;
+        public Dictionary<string, TcpClient> ChatMembers => _ChatMembers;
 
-        public int ID => _ID;
-        public Dictionary<string, Socket> ChatMembers => _ChatMembers;
 
-        public ChatRoom()
+
+        private DBManager DB = DBManager.GetInstance();
+
+        public ChatRoom(int ID, string name)
         {
-            _ID = ChatCounter;
-            ChatCounter++;
+            _ChatID = ID;
+
+            _Name = name;
+
+            LoadHistory();
         }
 
-        public ChatRoom(KeyValuePair<string, Socket> member1, KeyValuePair<string, Socket> member2)
+        public ChatRoom(KeyValuePair<string, TcpClient> member1, KeyValuePair<string, TcpClient> member2)
         {
+            _ChatID = ChatCounter;
+            DB.InsertNewChat($"{member1.Key}:{member2.Key}",_ChatID);
 
+            _Name = $"{member1.Key}:{member2.Key}";
+
+            Console.WriteLine($"{MsgKeys.NewChat}|{_ChatID}|{_Name}");
+ 
             AddMember(member1.Key, member1.Value);
             AddMember(member2.Key, member2.Value);
-
-            _ID = ChatCounter;
-
-            Broadcast($"{MsgKeys.NewChat}|{_ID}|{member1.Key}", member2.Value);
-
-            Broadcast($"{MsgKeys.NewChat}|{_ID}|{member2.Key}", member1.Value);
             ChatCounter++;
 
         }
-        public void AddMember(string name, Socket socket)
+
+        public void ConnectMember(string name, TcpClient socket)
         {
             if (!_ChatMembers.ContainsKey(name))
             {
                 _ChatMembers.Add(name, socket);
             }
+            SendMessage($"{MsgKeys.ChatHistory}|{_ChatID}|{_ChatHistory}", socket);
 
-            //Broadcast($"{MsgKeys.JoinedRoom}|{name}");
+
         }
 
-        public bool RemoveMember(string name)
+        public async void AddMember(string name, TcpClient socket)
+        {
+            DB.InsertUserToChat(name, ChatID).Wait();
+
+            SendMessage($"{MsgKeys.NewChat}|{_ChatID}|{_Name}", socket);
+
+            ConnectMember(name, socket);
+        }
+
+        public bool DisconnectMember(string name)
         {
             bool result = false;
-            if (ChatMembers.ContainsKey(name))
+            if (_ChatMembers.ContainsKey(name))
             {
-                ChatMembers.Remove(name);
+                _ChatMembers.Remove(name);
                 result = true;
             }
             return result;
         }
 
-        public void Broadcast(string message, Socket socket = null)
+        private void LoadHistory()
         {
+            Task.Run(async () =>
+            {
+                _ChatHistory = await DB.LoadChatHistory(ChatID);
+
+            }).Wait();
+        }
+
+        public void Broadcast(string message, string sender = "", TcpClient socket = null)
+        {
+            message += MsgKeys.End;
             if (socket == null)
             {
                 foreach (var member in _ChatMembers)
                 {
                     SendMessage(message, member.Value);
+                    _ChatHistory += message;
                 }
+                DBManager.GetInstance().InsertNewMessage(ChatID, sender, message);
             }
             else
             {
                 SendMessage(message, socket);
             }
-            //Console.WriteLine($"{DateTime.Now.ToString()}|{_ClientName }:{message}");
         }
 
-        private void SendMessage(string message, Socket receiver)
+        public void SendMessage(string message, TcpClient receiver)
         {
-            byte[] buffer = null;
+            if (!message.EndsWith(MsgKeys.End))
+            {
+                message += MsgKeys.End;
+            }
+            var byteSize = Encoding.Unicode.GetBytes(message).Count();
 
-            message = message + "$";
-
-            buffer = Encoding.Unicode.GetBytes(message);
-
-            receiver.Send(buffer);
+            byte[] buffer = Encoding.Unicode.GetBytes(message);
+            receiver.GetStream().Write(buffer, 0, buffer.Length);
         }
 
         public bool ContainsMember(string memberName)
@@ -100,8 +132,6 @@ namespace ChatConsoleServer
         {
             return _ChatMembers.Count;
         }
-
-
     }
 
 

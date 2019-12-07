@@ -15,7 +15,16 @@ namespace ChatMVVM.ViewModels
 
     class AuthViewModel : INotifyPropertyChanged
     {
-        public ICommand LogIn => new DelegateCommand(ConnectUser, (obj) => !string.IsNullOrEmpty(_ChatHandler.UserName));
+        public ICommand LogIn => new DelegateCommand(ConnectUser, (obj) =>
+        {
+            bool result = true;
+            if ((string.IsNullOrEmpty(Username) ||
+                string.IsNullOrEmpty(Password)))
+            {
+                result = false;
+            }
+            return result;
+        });
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -24,25 +33,34 @@ namespace ChatMVVM.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }
 
-        private ClientChatHandler _ChatHandler = ClientChatHandler.Instance();        
+        private ClientChatHandler _ChatHandler = ClientChatHandler.Instance();
 
-        public string UserName
+        public string Username
         {
-            get
-            {
-                return _ChatHandler.UserName;
-            }
+            get => _ChatHandler.Username;
             set
             {
-                _ChatHandler.UserName = value;
-                OnPropertyChanged(nameof(UserName));
+                _ChatHandler.Username = value;
+                OnPropertyChanged(nameof(Username));
             }
         }
 
-        public async void ConnectUser(object obj)
+        public string Password
         {
-            await _ChatHandler.ConnectUser(UserName);
-            MainWindowModel.GetInstance().setChatPage();
+            get => _ChatHandler.Password;
+            set
+            {
+                _ChatHandler.Password = value;
+                OnPropertyChanged(nameof(Password));
+            }
+        }
+
+        public void ConnectUser(object obj)
+        {
+            if (_ChatHandler.ConnectUser())
+            {
+                MainWindowModel.GetInstance().setChatPage();
+            }
         }
     }
 }

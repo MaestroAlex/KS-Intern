@@ -7,8 +7,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:ChatMVVM.ViewModels"
     Title="AuthPage"
-    d:DesignHeight="450"
-    d:DesignWidth="800"
+    d:DesignHeight="200"
+    d:DesignWidth="400"
     mc:Ignorable="d">
 
     <Page.DataContext>
@@ -19,17 +19,42 @@
         Margin="100,0"
         HorizontalAlignment="Center"
         VerticalAlignment="Center">
-        <StackPanel Orientation="Horizontal">
-            <Label>
-                User name:
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="40*" />
+                <ColumnDefinition Width="60*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Label Grid.Row="0" Grid.Column="0">
+                Username:
             </Label>
             <TextBox
-                x:Name="NickName"
+                Grid.Row="0"
+                Grid.Column="1"
                 Width="120"
                 Height="auto"
                 VerticalAlignment="Center"
-                Text="{Binding UserName, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True}" />
-        </StackPanel>
+                HorizontalContentAlignment="Stretch"
+                Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}" />
+
+            <Label Grid.Row="1" Grid.Column="0">
+                Password:
+            </Label>
+            <TextBox
+                Grid.Row="1"
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                HorizontalContentAlignment="Stretch"
+                Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}" />
+        </Grid>
+
+
+
 
         <Button
             Width="auto"

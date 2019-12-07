@@ -17,36 +17,27 @@ namespace ChatMVVM.ViewModels
 {
     class ChatViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<ChatItemViewModel> _ChatNames { get; } = new ObservableCollection<ChatItemViewModel>();
+        public ObservableCollection<Chat> _Chats { get; } = new ObservableCollection<Chat>();
 
-
-       // public ObservableCollection<Chat> _Chats { get; } = new ObservableCollection<Chat>();
-
-            
-
-        private Dictionary<string, string> _ChatHistories = new Dictionary<string, string>();
         public ICommand SendMsgPressed => new DelegateCommand(SendMessageButton, (obj) => !string.IsNullOrEmpty(_Message));
         public ICommand ChatRoomPressed => new DelegateCommand(ChatRoomButton);
 
 
         private Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
-        private string _CurrentChatRoom;
-        private const string _GeneralChatRoom = "General";
+        private int _CurrentChatID = 1;
+        private const int _GeneralChatRoomID = 1;
 
         private ClientChatHandler _ChatHandler = ClientChatHandler.Instance();
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private string _History = "";
-
         private string _Message;
 
-        public string UserName => _ChatHandler.UserName;
+        public string UserName => _ChatHandler.Username;
 
         public string Message
         {
             get => _Message;
-
             set
             {
                 _Message = value;
@@ -56,27 +47,44 @@ namespace ChatMVVM.ViewModels
 
         public string CurrentChatHistory
         {
-            get => _ChatHistories[_CurrentChatRoom];
+            get
+            {
+                string result = "";
+                foreach (var chat in _Chats)
+                {
+                    if (chat.ID == CurrentChatID)
+                    {
+                        result = chat.History;
+                    }
+                }
+                return result;
+            }
             set
             {
-                _ChatHistories[_CurrentChatRoom] = value;
+                foreach (var chat in _Chats)
+                {
+                    if (chat.ID == CurrentChatID)
+                    {
+                        chat.History = value;
+                    }
+                }
                 OnPropertyChanged(nameof(CurrentChatHistory));
             }
         }
 
-        public string CurrentChatRoom
+        public int CurrentChatID
         {
-            get => _CurrentChatRoom;
+            get => _CurrentChatID;
             set
             {
-                _CurrentChatRoom = value;
+                _CurrentChatID = value;
                 OnPropertyChanged(nameof(CurrentChatHistory));
             }
         }
 
         public ChatViewModel()
         {
-            CreateNewChatRoom(_GeneralChatRoom,0);
+            CreateNewChatRoom(_GeneralChatRoomID, "General", -1);
             Task.Run(StartChatListening);
         }
 
@@ -87,43 +95,55 @@ namespace ChatMVVM.ViewModels
 
         public void ChatRoomButton(object obj)
         {
-            CurrentChatRoom = (obj as Button).Content.ToString();
+            var chatName = (obj as Button).Content.ToString();
+            if (chatName == "General")
+                CurrentChatID = 1;
+
+            foreach (var chat in _Chats)
+            {
+                if (chat.Name == chatName)
+                {
+                    CurrentChatID = chat.ID;
+                }
+            }
         }
 
         public async void SendMessageButton(object obj)
         {
-            if (Message.StartsWith("!new") && _CurrentChatRoom == _GeneralChatRoom)
+            if (Message.StartsWith("!new") && _CurrentChatID == _GeneralChatRoomID)
             {
                 Message = Message.Replace(" ", "");
                 Message = Message.Substring("!new".Length);
                 Message = $"{MsgKeys.NewChat}|{Message}";
             }
 
-            else if (_CurrentChatRoom == _GeneralChatRoom)
+            else if (_CurrentChatID == _GeneralChatRoomID)
             {
                 Message = $"{MsgKeys.GeneralChat}|{UserName}|{Message}";
             }
 
-            else if (_CurrentChatRoom != _GeneralChatRoom)
+            else if (_CurrentChatID != _GeneralChatRoomID)
             {
-                int ID = 0;
-                foreach(var chat in _ChatNames)
+                int ID = 1;
+                string chatName = "";
+                foreach (var chat in _Chats)
                 {
-                    if(chat.Name==_CurrentChatRoom)
+                    if (chat.ID == _CurrentChatID)
                     {
                         ID = chat.ID;
+                        chatName = chat.Name;
                         break;
                     }
                 }
 
-                Message = $"{MsgKeys.ToChat}|{UserName}|{ID}|{Message}";
+                Message = $"{MsgKeys.ToChat}|{UserName}|{ID}|{chatName}|{Message}";
             }
             else
             {
-                CurrentChatHistory += DateTime.Now.ToShortTimeString() + "| " + _ChatHandler.UserName + " : " + Message + "\n";
+                CurrentChatHistory += DateTime.Now.ToShortTimeString() + "| " + _ChatHandler.Username + " : " + Message + "\n";
             }
 
-            await _ChatHandler.SendMessage(Message, "");
+            _ChatHandler.SendMessage(Message, "");
             Message = "";
         }
 
@@ -132,13 +152,20 @@ namespace ChatMVVM.ViewModels
             return false;
         }
 
-        private void CreateNewChatRoom(string chatName,int ID)
+        private void CreateNewChatRoom(int ID, string chatName, int a)
         {
-            _ChatHistories.Add(chatName, "");
-            _ChatHistories[chatName] += $"{UserName} to {chatName}\n";
-            _ChatNames.Add(new ChatItemViewModel(chatName,ID));
 
-            CurrentChatRoom = chatName;
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                foreach (var chat in _Chats)
+                {
+                    if (chat.ID == ID || chat.Name == chatName)
+                        return;
+                }
+                var b = a;
+                _Chats.Add(new Chat(ID, chatName, $"{UserName} to {chatName}\n"));
+            }));
         }
 
         private void ParseReceivedMessage(string message)
@@ -146,7 +173,7 @@ namespace ChatMVVM.ViewModels
             if (message.StartsWith(MsgKeys.ServerAnswer))
             {
                 message = message.Substring((MsgKeys.ServerAnswer + "|").Length);
-                WriteToChatHistory(message, _GeneralChatRoom, false);
+                WriteToChatHistory(message, _GeneralChatRoomID);
 
             }
 
@@ -154,38 +181,38 @@ namespace ChatMVVM.ViewModels
             {
                 var messageData = message.Split('|');
 
-                
-                _dispatcher.Invoke(new Action(() =>
-               {
-                   CreateNewChatRoom(messageData[2], int.Parse(messageData[1]));
-               }));
+                CreateNewChatRoom(int.Parse(messageData[1]), messageData[2], 0);
+
             }
 
             else if (message.StartsWith(MsgKeys.GeneralChat))
             {
-                message = message.Substring((MsgKeys.GeneralChat + "|").Length);
                 string[] data = message.Split('|');
-                message = $"{data[0]}:{data[1]}";
-                WriteToChatHistory(message, _GeneralChatRoom);
-
+                message = $"{data[1]}:{data[2]}";
+                WriteToChatHistory(message, _GeneralChatRoomID);
             }
 
-            else if(message.StartsWith(MsgKeys.ToChat))
+            else if (message.StartsWith(MsgKeys.ToChat))
             {
+                bool chatExists = false;
                 var messageData = message.Split('|');
-
                 var sender = messageData[1];
                 var chatID = int.Parse(messageData[2]);
-                var msg = messageData[3];
-                msg = $"{sender}:{msg}";
+                var chatName = messageData[3];
+                var msg = $"{sender}:{messageData[4]}";
 
-                foreach(var chat in _ChatNames)
+                foreach (var chat in _Chats)
                 {
-                    if(chat.ID==chatID)
+                    if (chat.ID == chatID)
                     {
-                        WriteToChatHistory(msg, chat.Name);
-                        //_ChatHistories[chat.Name] += msg;
+                        WriteToChatHistory(msg, chat.ID);
+                        chatExists = true;
                     }
+                }
+                if (!chatExists)
+                {
+                    CreateNewChatRoom(chatID, chatName, 1);
+                    WriteToChatHistory(msg, chatID);
                 }
             }
 
@@ -193,22 +220,38 @@ namespace ChatMVVM.ViewModels
             {
                 message = message.Substring((MsgKeys.JoinedRoom + "|").Length);
                 message = $"User {message} joined the room.";
-                WriteToChatHistory(message, _GeneralChatRoom);
+                WriteToChatHistory(message, _GeneralChatRoomID);
             }
 
-            else if (message.Contains(UserName + "$"))
+            else if (message.StartsWith(MsgKeys.ChatHistory))
             {
-                message = message.Substring(message.IndexOf(UserName + "$"));
+                message = message.Substring(5);
+                var messageData = message.Split('*');
+
+                Task.Run(() =>
+                {
+                    foreach (var msg in messageData)
+                    {
+                        ParseReceivedMessage(msg);
+                    }
+                });
+            }
+
+            else if (message.Contains(UserName + MsgKeys.End))
+            {
+                message = message.Substring(message.IndexOf(UserName + MsgKeys.End));
             }
         }
 
-        private void WriteToChatHistory(string message, string chatHistory, bool timeMark = true)
+        private void WriteToChatHistory(string message, int chatID, bool timeMark = false)
         {
-            if (_ChatHistories.ContainsKey(chatHistory))
+            foreach (var chat in _Chats)
             {
-                //CurrentChatRoom =
-                _ChatHistories[chatHistory] += (timeMark ? (DateTime.Now.ToShortTimeString() + "| ") : ("")) + message + "\n";
-                OnPropertyChanged(nameof(CurrentChatHistory));
+                if (chat.ID == chatID)
+                {
+                    chat.History += (timeMark ? (DateTime.Now.ToShortTimeString() + "| ") : ("")) + message + "\n";
+                    OnPropertyChanged(nameof(CurrentChatHistory));
+                }
             }
         }
 
@@ -218,7 +261,7 @@ namespace ChatMVVM.ViewModels
             {
                 try
                 {
-                    if (_ChatHandler.socket.Connected)
+                    if (_ChatHandler.client.Connected)
                     {
                         var data = _ChatHandler.ReceiveMessage();
                         if (!string.IsNullOrEmpty(data))

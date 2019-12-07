@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Sockets;
 using System.Text;
@@ -6,31 +7,6 @@ using System.Threading.Tasks;
 
 namespace ChatHandler
 {
-    class User
-    {
-        string _Name;
-        Socket _Socket;
-        public User(Socket socket = null, string name = "")
-        {
-            _Name = name;
-            _Socket = socket;
-        }
-
-        public string Name { get => _Name; set => _Name = value; }
-        public Socket Socket { get => _Socket; private set => _Socket = value; }
-    }
-    public struct MsgKeys
-    {
-        public static readonly string GeneralChat = "$g";
-        public static readonly string ToChat = "$c";
-        public static readonly string LogIn = "$l";
-        public static readonly string NewChat = "$n";
-        public static readonly string ServerAnswer = "$s";
-        public static readonly string JoinedRoom = "$j";
-        public static readonly int KeyLenght = 3;
-
-    }
-
     public class ClientChatHandler
     {
         private static ClientChatHandler _Instance;
@@ -38,9 +14,10 @@ namespace ChatHandler
         private const int _Port = 904;
         private const string _IpAddress = "127.0.0.1";
 
-        public string UserName { get => _User.Name; set => _User.Name = value; }
+        public string Username { get => _User.Name; set => _User.Name = value; }
+        public string Password { get => _User.Password; set => _User.Password = value; }
 
-        public Socket socket { get => _User.Socket; }
+        public TcpClient client { get => _User.tcpCLient; }
 
         private ClientChatHandler() { }
 
@@ -53,25 +30,36 @@ namespace ChatHandler
             return _Instance;
         }
 
-        public async Task ConnectUser(string userName)
+        public bool ConnectUser()
         {
+            bool result = false;
 
-            _User = new User(new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp), userName);
             try
             {
-                _User.Socket.Connect(_IpAddress, _Port);
-                _User.Socket.Send(Encoding.Unicode.GetBytes(_User.Name + MsgKeys.LogIn));
+                _User.Connect(new TcpClient(_IpAddress, _Port), Username, Password);
+
+                if (_User.tcpCLient.Connected)
+                    SendMessage($"{MsgKeys.LogIn}|{Username}|{Password}");
+
+                var data = ReceiveMessage();
+                if (data.StartsWith(MsgKeys.LogIn) && data.Contains(Username))
+                {
+                    result = true;
+                }
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e.ToString());
             }
+            return result;
 
         }
 
-        public async Task SendMessage(string message, string key)
+        public void SendMessage(string message, string key = "")
         {
-            _User.Socket.Send(Encoding.Unicode.GetBytes(key + message + "$"));
+            var buffer = Encoding.Unicode.GetBytes(key + message + MsgKeys.End);
+
+            _User.tcpCLient.GetStream().WriteAsync(buffer, 0, buffer.Length);
         }
 
         public string ReceiveMessage()
@@ -79,19 +67,18 @@ namespace ChatHandler
             string result = null;
             try
             {
-                if (_User.Socket.Connected)
+                if (_User.tcpCLient.Connected)
                 {
-                    var bytes = _User.Socket.Available;
-                    byte[] buffer = new byte[256];
+                    byte[] buffer = new byte[client.ReceiveBufferSize];
+                    int bufferCount = client.GetStream().Read(buffer, 0, client.ReceiveBufferSize);
                     string data = null;
-                    _User.Socket.Receive(buffer);
                     data = Encoding.Unicode.GetString(buffer);
-                    data = data.Substring(0, data.LastIndexOf("$"));
+                    data = data.Substring(0, data.LastIndexOf(MsgKeys.End));
                     result = data;
                 }
                 else
                 {
-                    _User.Socket.Close();
+                    _User.tcpCLient.Close();
                 }
             }
             catch (Exception ex)
@@ -100,5 +87,7 @@ namespace ChatHandler
             }
             return result;
         }
+
+
     }
 }
