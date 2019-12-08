@@ -84,8 +84,9 @@ namespace ChatMVVM.ViewModels
 
         public ChatViewModel()
         {
-            CreateNewChatRoom(_GeneralChatRoomID, "General", -1);
-            Task.Run(StartChatListening);
+            CreateNewChatRoom(_GeneralChatRoomID, "General");
+            _ChatHandler.SendMessage(MsgKeys.ChatHistory + MsgKeys.End);
+            Task.Factory.StartNew(StartChatListening);
         }
 
         public void OnPropertyChanged([CallerMemberName]string prop = "")
@@ -152,24 +153,23 @@ namespace ChatMVVM.ViewModels
             return false;
         }
 
-        private void CreateNewChatRoom(int ID, string chatName, int a)
+        private void CreateNewChatRoom(int ID, string chatName)
         {
-
-
-            _dispatcher.Invoke(new Action(() =>
+            _dispatcher?.Invoke(new Action(() =>
             {
                 foreach (var chat in _Chats)
                 {
                     if (chat.ID == ID || chat.Name == chatName)
                         return;
                 }
-                var b = a;
                 _Chats.Add(new Chat(ID, chatName, $"{UserName} to {chatName}\n"));
             }));
         }
 
-        private void ParseReceivedMessage(string message)
+        private async Task ParseReceivedMessage(string message)
         {
+            message = message.Substring(0, message.LastIndexOf(MsgKeys.End));
+
             if (message.StartsWith(MsgKeys.ServerAnswer))
             {
                 message = message.Substring((MsgKeys.ServerAnswer + "|").Length);
@@ -181,7 +181,7 @@ namespace ChatMVVM.ViewModels
             {
                 var messageData = message.Split('|');
 
-                CreateNewChatRoom(int.Parse(messageData[1]), messageData[2], 0);
+                CreateNewChatRoom(int.Parse(messageData[1]), messageData[2]);
 
             }
 
@@ -211,7 +211,7 @@ namespace ChatMVVM.ViewModels
                 }
                 if (!chatExists)
                 {
-                    CreateNewChatRoom(chatID, chatName, 1);
+                    CreateNewChatRoom(chatID, chatName);
                     WriteToChatHistory(msg, chatID);
                 }
             }
@@ -226,20 +226,13 @@ namespace ChatMVVM.ViewModels
             else if (message.StartsWith(MsgKeys.ChatHistory))
             {
                 message = message.Substring(5);
-                var messageData = message.Split('*');
+                var messageData = message.Split('~');
 
-                Task.Run(() =>
+                for (int i = 0; i < messageData.Length; i++)
                 {
-                    foreach (var msg in messageData)
-                    {
-                        ParseReceivedMessage(msg);
-                    }
-                });
-            }
-
-            else if (message.Contains(UserName + MsgKeys.End))
-            {
-                message = message.Substring(message.IndexOf(UserName + MsgKeys.End));
+                    var msg = Encrypt.DecodeMessage(messageData[i]);
+                    await ParseReceivedMessage(msg);
+                }
             }
         }
 
@@ -263,10 +256,11 @@ namespace ChatMVVM.ViewModels
                 {
                     if (_ChatHandler.client.Connected)
                     {
-                        var data = _ChatHandler.ReceiveMessage();
+                        var data = await _ChatHandler.ReceiveMessage();
+                        //data = await Encrypt.DecodeMessage(data);
                         if (!string.IsNullOrEmpty(data))
                         {
-                            ParseReceivedMessage(data);
+                             ParseReceivedMessage(data).Wait();
                         }
                     }
                 }

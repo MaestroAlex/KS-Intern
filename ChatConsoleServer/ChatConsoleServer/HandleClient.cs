@@ -12,8 +12,8 @@ namespace ChatConsoleServer
     #region DLL
     public class HandleClient
     {
-        private static ChatRoom GeneralChat = new ChatRoom(1, "General");
-        private static List<ChatRoom> PrivateChats = new List<ChatRoom>();
+        private static Chat GeneralChat = new Chat(1, "General");
+        private static List<Chat> PrivateChats = new List<Chat>();
         private DBManager DB = DBManager.GetInstance();
         private List<int> _ClientsChatsID = new List<int>();
 
@@ -29,8 +29,13 @@ namespace ChatConsoleServer
             _ClientName = clientName;
             _Password = password;
 
-            var buffer = Encoding.Unicode.GetBytes($"{MsgKeys.LogIn}|{clientName}{MsgKeys.End}");
-            listener.GetStream().Write(buffer, 0, buffer.Length);
+            var loginAnswer = $"{MsgKeys.LogIn}|{clientName}";
+
+
+            //var buffer = Encoding.Unicode.GetBytes(loginAnswer);
+            Chat.SendMessage(loginAnswer,_Listener).Wait();
+
+            //listener.GetStream().Write(buffer, 0, buffer.Length);
 
             if (newClient)
             {
@@ -39,11 +44,11 @@ namespace ChatConsoleServer
             }
             else
             {
-                GeneralChat.ConnectMember(clientName, listener);
+                //GeneralChat.ConnectMember(clientName, listener);
 
                 Task.Run(async () => _ClientsChatsID = await DB.GetUsersChats(_ClientName)).Wait();
 
-                ConnectUserToChats();
+                //ConnectUserToChats();
             }
 
             Console.WriteLine($"{clientName} Joined the room.");
@@ -52,9 +57,10 @@ namespace ChatConsoleServer
 
         ~HandleClient() { }
 
-        private void ParseMessage(ref string message)
+        private async void ParseMessage(string message)
         {
             message = message.Substring(0, message.LastIndexOf(MsgKeys.End));
+            message = Encrypt.DecodeMessage(message);
 
             if (message.StartsWith(MsgKeys.NewChat))
             {
@@ -66,11 +72,11 @@ namespace ChatConsoleServer
                     var chat = GetChat(_ClientName, receiverName);
                     if (chat != null)
                     {
-                        chat.SendMessage($"Personal chat with {receiverName} already exists.", _Listener);
+                        Chat.SendMessage($"Personal chat with {receiverName} already exists.", _Listener).Wait();
                     }
                     else
                     {
-                        chat = new ChatRoom(
+                        chat = new Chat(
                             new KeyValuePair<string, TcpClient>(receiverName, GeneralChat.ChatMembers[receiverName]),
                             new KeyValuePair<string, TcpClient>(_ClientName, _Listener));
 
@@ -79,12 +85,12 @@ namespace ChatConsoleServer
                 }
                 else
                 {
-                    GeneralChat.SendMessage($"{MsgKeys.ServerAnswer}|Client {receiverName} doesn't exist", _Listener);
+                    Chat.SendMessage($"{MsgKeys.ServerAnswer}|Client {receiverName} doesn't exist", _Listener).Wait();
                 }
                 return;
             }
 
-            if (message.StartsWith(MsgKeys.ToChat))
+            else if (message.StartsWith(MsgKeys.ToChat))
             {
                 var messageData = message.Split('|');
                 var chatID = int.Parse(messageData[2]);
@@ -97,21 +103,29 @@ namespace ChatConsoleServer
                 }
                 else
                 {
-                    GeneralChat.SendMessage($"Chat {chatID} is not available", _Listener);
+                    Chat.SendMessage($"Chat {chatID} is not available", _Listener).Wait();
                 }
                 return;
             }
 
-            if (message.StartsWith(MsgKeys.GeneralChat))
+            else if (message.StartsWith(MsgKeys.GeneralChat))
             {
                 var messageData = message.Split('|');
                 GeneralChat.Broadcast(message, _ClientName);
+            }
+
+            else if(message.StartsWith(MsgKeys.ChatHistory))
+            {
+                // Chat.SendMessage($"{MsgKeys.ChatHistory}|{_ChatID}|{_ChatHistory}", _Listener).Wait();
+                ConnectUserToChats();
             }
 
         }
 
         private void ConnectUserToChats()
         {
+            GeneralChat.ConnectMember(_ClientName, _Listener);
+
             foreach (var id in _ClientsChatsID)
             {
                 foreach (var chat in PrivateChats)
@@ -119,13 +133,13 @@ namespace ChatConsoleServer
                     if (chat.ChatID == id)
                     {
                         chat.ConnectMember(_ClientName, _Listener);
-                        Console.WriteLine($"Connect {_ClientName}");
+                        Console.WriteLine($"Connect {_ClientName} to {chat.Name}");
                     }
                 }
             }
         }
 
-        private bool IsClientOnline(string clientName, ChatRoom chat)
+        private bool IsClientOnline(string clientName, Chat chat)
         {
             bool result = false;
             foreach (var client in chat.ChatMembers)
@@ -139,9 +153,9 @@ namespace ChatConsoleServer
             return result;
         }
 
-        private ChatRoom GetChat(int chatID)
+        private Chat GetChat(int chatID)
         {
-            ChatRoom result = null;
+            Chat result = null;
             foreach (var chat in PrivateChats)
             {
                 if (chat.ChatID == chatID)
@@ -153,9 +167,9 @@ namespace ChatConsoleServer
             return result;
         }
 
-        private ChatRoom GetChat(params string[] membersNames)
+        private Chat GetChat(params string[] membersNames)
         {
-            ChatRoom result = null;
+            Chat result = null;
             foreach (var chat in PrivateChats)
             {
                 var chatSize = chat.MemberCount();
@@ -180,7 +194,7 @@ namespace ChatConsoleServer
             return result;
         }
 
-        private void StartListening()
+        private async void StartListening()
         {
             while (_Listener.Connected)
             {
@@ -195,11 +209,10 @@ namespace ChatConsoleServer
 
                     clientStream.Read(buffer, 0, (int)size);
                     data = Encoding.Unicode.GetString(buffer);
+                    
+                    ParseMessage(data);
 
-                    ParseMessage(ref data);
-
-                    var message = DateTime.Now.ToString() + "|" + _ClientName + " :" + data;
-                    Console.WriteLine(message);
+                    
                 }
                 catch (Exception e)
                 {
@@ -219,17 +232,17 @@ namespace ChatConsoleServer
         public static async Task FillChatsAsync()
         {
             var chats = await DBManager.GetInstance().GetChats();
-            int lastID = 0;
+            int lastID = 1;
             foreach (var chat in chats)
             {
                 if (chat.Key > 1)
                 {
                     if (chat.Key > lastID)
                         lastID = chat.Key;
-                    PrivateChats.Add(new ChatRoom(chat.Key, chat.Value));
+                    PrivateChats.Add(new Chat(chat.Key, chat.Value));
                 }
             }
-            ChatRoom.ChatCounter = lastID+1;
+            Chat.ChatCounter = lastID+1;
         }
 
         public static string[] ParseLogin(string message)

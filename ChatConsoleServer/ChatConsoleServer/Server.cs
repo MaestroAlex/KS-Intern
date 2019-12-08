@@ -47,16 +47,17 @@ namespace ChatConsoleServer
                     {
                         var listener = _ServerSocket.AcceptTcpClient();
 
-                        
+
                         var clientStream = listener.GetStream();
 
                         var size = listener.ReceiveBufferSize;
                         byte[] buffer = new byte[size];
                         string data = null;
 
-                        clientStream.Read(buffer, 0, (int)size);
+                        clientStream.Read(buffer, 0, size);
                         data = Encoding.Unicode.GetString(buffer);
                         data = data.Substring(0, data.LastIndexOf(MsgKeys.End));
+                        data = Encrypt.DecodeMessage(data);
 
                         var parsedData = HandleClient.ParseLogin(data);
                         var name = parsedData[1];

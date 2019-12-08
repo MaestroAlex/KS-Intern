@@ -55,12 +55,16 @@ namespace ChatMVVM.ViewModels
             }
         }
 
-        public void ConnectUser(object obj)
+        public async void ConnectUser(object obj)
         {
-            if (_ChatHandler.ConnectUser())
-            {
-                MainWindowModel.GetInstance().setChatPage();
-            }
+           /* Task.Run(async()=>
+            {*/
+                if (await _ChatHandler.ConnectUser())
+                {
+                    MainWindowModel.GetInstance().setChatPage();
+                }
+            //}).Wait();
+            
         }
     }
 }

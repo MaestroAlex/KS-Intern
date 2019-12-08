@@ -113,7 +113,7 @@ namespace ChatConsoleServer
                     {
                         while (await reader.ReadAsync())
                         {
-                            result += reader["message"].ToString();
+                            result += (reader["message"].ToString()+'~');
                         }
                     }
                 }
@@ -141,7 +141,7 @@ namespace ChatConsoleServer
             }
         }
 
-        public async void InsertNewMessage(int chatID, string sender, string message)
+        public async Task InsertNewMessage(int chatID, string sender, string message)
         {
             try
             {
@@ -237,7 +237,7 @@ namespace ChatConsoleServer
             return result;
         }
 
-        public async void InsertNewChat(string name,int id)
+        public async Task InsertNewChat(string name,int id)
         {
             try
             {

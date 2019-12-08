@@ -30,7 +30,7 @@ namespace ChatHandler
             return _Instance;
         }
 
-        public bool ConnectUser()
+        public async Task<bool> ConnectUser()
         {
             bool result = false;
 
@@ -39,12 +39,14 @@ namespace ChatHandler
                 _User.Connect(new TcpClient(_IpAddress, _Port), Username, Password);
 
                 if (_User.tcpCLient.Connected)
+                {
                     SendMessage($"{MsgKeys.LogIn}|{Username}|{Password}");
 
-                var data = ReceiveMessage();
-                if (data.StartsWith(MsgKeys.LogIn) && data.Contains(Username))
-                {
-                    result = true;
+                    var data = await ReceiveMessage();
+                    if (data.StartsWith(MsgKeys.LogIn) && data.Contains(Username))
+                    {
+                        result = true;
+                    }
                 }
             }
             catch (Exception e)
@@ -55,26 +57,40 @@ namespace ChatHandler
 
         }
 
-        public void SendMessage(string message, string key = "")
+        public async void SendMessage(string message, string key = "")
         {
-            var buffer = Encoding.Unicode.GetBytes(key + message + MsgKeys.End);
+            message = await Encrypt.EncodeMessage(message);
+            message += MsgKeys.End;
 
-            _User.tcpCLient.GetStream().WriteAsync(buffer, 0, buffer.Length);
+            var buffer = Encoding.Unicode.GetBytes(message);
+
+            await _User.tcpCLient.GetStream().WriteAsync(buffer, 0, buffer.Length);
         }
 
-        public string ReceiveMessage()
+        public async Task<string> ReceiveMessage()
         {
             string result = null;
             try
             {
                 if (_User.tcpCLient.Connected)
                 {
-                    byte[] buffer = new byte[client.ReceiveBufferSize];
-                    int bufferCount = client.GetStream().Read(buffer, 0, client.ReceiveBufferSize);
+                    var stream = client.GetStream();
+                    var size = client.ReceiveBufferSize;
+                    byte[] buffer = new byte[size];
+                    int bufferCount = await stream.ReadAsync(buffer, 0, size);
                     string data = null;
                     data = Encoding.Unicode.GetString(buffer);
                     data = data.Substring(0, data.LastIndexOf(MsgKeys.End));
-                    result = data;
+
+                    var a = data.Split(MsgKeys.End.ToCharArray());
+                    for (int i = 0; i < a.Length; i++)
+                    {
+                        result += Encrypt.DecodeMessage(a[i]);
+                    }
+
+                    //result = await Encrypt.DecodeMessage(data);
+                    // data = data.Substring(0, data.LastIndexOf(MsgKeys.End));
+                    //result = data;
                 }
                 else
                 {
