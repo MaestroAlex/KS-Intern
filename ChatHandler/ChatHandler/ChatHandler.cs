@@ -12,7 +12,7 @@ namespace ChatHandler
         private static ClientChatHandler _Instance;
         private static User _User = new User();
         private const int _Port = 904;
-        private const string _IpAddress = "127.0.0.1";
+        private const string _IpAddress = "192.168.1.108"; //"127.0.0.1";
 
         public string Username { get => _User.Name; set => _User.Name = value; }
         public string Password { get => _User.Password; set => _User.Password = value; }
