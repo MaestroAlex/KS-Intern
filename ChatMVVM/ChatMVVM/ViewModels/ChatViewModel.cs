@@ -267,7 +267,7 @@ namespace ChatMVVM.ViewModels
                     var msg = Encrypt.DecodeMessage(a);
                     ParseReceivedMessage(msg);
                 }
-            }
+            } 
         }
 
         private void WriteToChatHistory(string message, int chatID, bool timeMark = false)
