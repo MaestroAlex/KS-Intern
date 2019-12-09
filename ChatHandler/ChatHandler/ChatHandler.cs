@@ -42,7 +42,7 @@ namespace ChatHandler
                 {
                     SendMessage($"{MsgKeys.LogIn}|{Username}|{Password}");
 
-                    var data = await ReceiveMessage();
+                    var data = ReceiveMessage();
                     if (data.StartsWith(MsgKeys.LogIn) && data.Contains(Username))
                     {
                         result = true;
@@ -67,7 +67,7 @@ namespace ChatHandler
             await _User.tcpCLient.GetStream().WriteAsync(buffer, 0, buffer.Length);
         }
 
-        public async Task<string> ReceiveMessage()
+        public string ReceiveMessage()
         {
             string result = null;
             try
@@ -77,7 +77,7 @@ namespace ChatHandler
                     var stream = client.GetStream();
                     var size = client.ReceiveBufferSize;
                     byte[] buffer = new byte[size];
-                    int bufferCount = await stream.ReadAsync(buffer, 0, size);
+                    int bufferCount = stream.Read(buffer, 0, size);
                     string data = null;
                     data = Encoding.Unicode.GetString(buffer);
                     data = data.Substring(0, data.LastIndexOf(MsgKeys.End));

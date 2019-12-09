@@ -31,11 +31,8 @@ namespace ChatConsoleServer
 
             var loginAnswer = $"{MsgKeys.LogIn}|{clientName}";
 
-
-            //var buffer = Encoding.Unicode.GetBytes(loginAnswer);
+            
             Chat.SendMessage(loginAnswer,_Listener).Wait();
-
-            //listener.GetStream().Write(buffer, 0, buffer.Length);
 
             if (newClient)
             {
@@ -44,11 +41,7 @@ namespace ChatConsoleServer
             }
             else
             {
-                //GeneralChat.ConnectMember(clientName, listener);
-
                 Task.Run(async () => _ClientsChatsID = await DB.GetUsersChats(_ClientName)).Wait();
-
-                //ConnectUserToChats();
             }
 
             Console.WriteLine($"{clientName} Joined the room.");
@@ -116,7 +109,6 @@ namespace ChatConsoleServer
 
             else if(message.StartsWith(MsgKeys.ChatHistory))
             {
-                // Chat.SendMessage($"{MsgKeys.ChatHistory}|{_ChatID}|{_ChatHistory}", _Listener).Wait();
                 ConnectUserToChats();
             }
 

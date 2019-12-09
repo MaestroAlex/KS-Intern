@@ -48,25 +48,27 @@ namespace ChatConsoleServer
 
         }
 
-        public async void SendHistory(TcpClient socket)
+        public void SendHistory(TcpClient socket)
         {
             SendMessage($"{MsgKeys.ChatHistory}|{_ChatID}|{_ChatHistory}", socket).Wait();
         }
 
-        public async void ConnectMember(string name, TcpClient socket)
+        public void ConnectMember(string name, TcpClient socket)
         {
             if (!_ChatMembers.ContainsKey(name))
             {
                 _ChatMembers.Add(name, socket);
             }
-            await SendMessage($"{MsgKeys.ChatHistory}|{_ChatID}|{_ChatHistory}", socket);
+
+            var historyMessage = $"{MsgKeys.ChatHistory}|{_ChatID}|{_ChatHistory}";
+            SendMessage(historyMessage, socket).Wait();
 
 
         }
 
         public async void AddMember(string name, TcpClient socket)
         {
-            await DB.InsertUserToChat(name, ChatID);
+            DB.InsertUserToChat(name, ChatID).Wait();
 
             SendMessage($"{MsgKeys.NewChat}|{_ChatID}|{_Name}", socket).Wait();
 
@@ -100,23 +102,26 @@ namespace ChatConsoleServer
 
         public async void Broadcast(string message, string sender)
         {
+            bool toDataBase =true;
             foreach (var member in _ChatMembers)
             {
-                SendMessage(message, member.Value, true, ChatID, sender).Wait();
-                LoadHistory();
+                SendMessage(message, member.Value, toDataBase, this, sender).Wait();
+                toDataBase = false;
+                //LoadHistory();
                 //_ChatHistory = await DBManager.GetInstance().LoadChatHistory(_ChatID);
             }
 
         }
 
-        public static async Task SendMessage(string message, TcpClient receiver, bool insertToDataBase = false, int chatID = 0, string sender = "")
+        public static async Task SendMessage(string message, TcpClient receiver, bool insertToDataBase = false, Chat chat = null, string sender = "")
         {
             message += MsgKeys.End;
             message = await Encrypt.EncodeMessage(message);
 
             if (insertToDataBase)
             {
-                DBManager.GetInstance().InsertNewMessage(chatID, sender, message).Wait();
+                chat._ChatHistory += message+"~";
+                DBManager.GetInstance().InsertNewMessage(chat.ChatID, sender, message).Wait();
             }
 
             byte[] buffer = Encoding.Unicode.GetBytes(message + MsgKeys.End);

@@ -166,9 +166,26 @@ namespace ChatMVVM.ViewModels
             }));
         }
 
-        private async Task ParseReceivedMessage(string message)
+        private bool Histories(string message)
+        {
+            bool result = false;
+            int historiesCounter = 0;
+            var data = message.Split('*');
+            foreach (var a in data)
+            {
+                if (a.Contains(MsgKeys.ChatHistory))
+                    historiesCounter++;
+            }
+
+            result = historiesCounter > 0 ? true : false;
+
+            return result;
+        }
+
+        private void ParseReceivedMessage(string message)
         {
             message = message.Substring(0, message.LastIndexOf(MsgKeys.End));
+
 
             if (message.StartsWith(MsgKeys.ServerAnswer))
             {
@@ -223,15 +240,32 @@ namespace ChatMVVM.ViewModels
                 WriteToChatHistory(message, _GeneralChatRoomID);
             }
 
-            else if (message.StartsWith(MsgKeys.ChatHistory))
-            {
-                message = message.Substring(5);
-                var messageData = message.Split('~');
+            /* else if (message.StartsWith(MsgKeys.ChatHistory))
+             {
 
-                for (int i = 0; i < messageData.Length; i++)
+
+                  message = message.Substring(5);
+                  var messageData = message.Split('~');
+
+                  for (int i = 0; i < messageData.Length; i++)
+                  {
+                      var msg = Encrypt.DecodeMessage(messageData[i]);
+                      ParseReceivedMessage(msg).Wait();
+                  }
+             }*/
+        }
+
+        private void ParseHistory(string history)
+        {
+            history = history.Substring(5);
+            var messageData = history.Split('~');
+            Console.WriteLine(history);
+            foreach (var a in messageData)
+            {
+                if (!string.IsNullOrEmpty(a))
                 {
-                    var msg = Encrypt.DecodeMessage(messageData[i]);
-                    await ParseReceivedMessage(msg);
+                    var msg = Encrypt.DecodeMessage(a);
+                    ParseReceivedMessage(msg);
                 }
             }
         }
@@ -256,11 +290,21 @@ namespace ChatMVVM.ViewModels
                 {
                     if (_ChatHandler.client.Connected)
                     {
-                        var data = await _ChatHandler.ReceiveMessage();
+                        var data = _ChatHandler.ReceiveMessage();
                         //data = await Encrypt.DecodeMessage(data);
                         if (!string.IsNullOrEmpty(data))
                         {
-                             ParseReceivedMessage(data).Wait();
+                            if (Histories(data))
+                            {
+                                var histories = data.Split('*');
+                                foreach (var a in histories)
+                                {
+                                    if (!string.IsNullOrEmpty(a))
+                                        ParseHistory(a);
+                                }
+                            }
+                            else
+                                ParseReceivedMessage(data);
                         }
                     }
                 }

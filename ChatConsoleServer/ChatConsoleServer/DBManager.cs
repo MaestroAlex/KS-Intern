@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChatConsoleServer
@@ -11,6 +12,8 @@ namespace ChatConsoleServer
     {
         private static DBManager Instance;
         private NpgsqlConnection connection;
+
+        private Mutex _lockObject = new Mutex();
 
         private DBManager()
         {
@@ -127,7 +130,7 @@ namespace ChatConsoleServer
         }
 
         public async Task InsertUserToChat(string name, int id)
-        {
+        {   
             try
             {
                 using (var cmd = new NpgsqlCommand($"INSERT INTO users_by_chats VALUES('{name}','{id}');", connection))
@@ -139,6 +142,7 @@ namespace ChatConsoleServer
             {
                 Console.WriteLine(ex);
             }
+
         }
 
         public async Task InsertNewMessage(int chatID, string sender, string message)
